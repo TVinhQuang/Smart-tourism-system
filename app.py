@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 from ollama import Client
 from streamlit_extras.stylable_container import stylable_container
 
-st.set_page_config(page_title="Chat + Firebase", page_icon="💬")
+st.set_page_config(page_title="Tourism_Symstem", page_icon="💬")
 MODEL = "llama3.2:1b"
 client = Client(
-    host='http://dejix-34-132-26-43.a.free.pinggy.link'
+    host='http://nrplz-34-187-131-164.a.free.pinggy.link'
 )
 
 def ollama_stream(history_messages: list[dict]):
