@@ -1,12 +1,8 @@
 # Không track môi trường ảo
 .venv/
 
-# Không track secrets của Streamlit
-.streamlit/
-
 # File rác Python
 __pycache__/
 *.pyc
 
-# File tạm
-temp.txt
+
