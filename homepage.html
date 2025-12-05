@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Du lịch Việt Nam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        
+        .nav-menu li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .nav-menu li a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-menu li a.active {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+                        url('https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200') center/cover;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .search-box input, .search-box select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1;
+            font-size: 1rem;
+        }
+        
+        .search-box button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #5568d3;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            color: #333;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .feature-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .feature-card-content {
+            padding: 20px;
+        }
+        
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .price {
+            color: #667eea;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-menu {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">🌏</span>
+            <span>Du lịch Việt Nam</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#home" class="active">🏠 Home</a></li>
+            <li><a href="#suggestions">💡 Gợi ý</a></li>
+            <li><a href="#favorites">❤️ Yêu thích</a></li>
+            <li><a href="#help">❓ Help</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero" id="home">
+        <div>
+            <h1>🌏 Khám phá Việt Nam</h1>
+            <p>Trải nghiệm những điểm đến tuyệt vời nhất</p>
+            <div class="search-box">
+                <input type="text" placeholder="Bạn muốn đi đâu?">
+                <input type="date">
+                <select>
+                    <option>Số người</option>
+                    <option>1 người</option>
+                    <option>2 người</option>
+                    <option>3-4 người</option>
+                    <option>5+ người</option>
+                </select>
+                <button>Tìm kiếm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="features" id="suggestions">
+        <h2>🔥 Địa điểm hot nhất</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=400" alt="Hạ Long">
+                <div class="feature-card-content">
+                    <h3>🏝️ Vịnh Hạ Long</h3>
+                    <p>Di sản thiên nhiên thế giới với hàng nghìn đảo đá vôi tuyệt đẹp</p>
+                    <div class="price">Từ 2.500.000đ</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1585870607907-c7535203ed5d?w=400" alt="Phú Quốc">
+                <div class="feature-card-content">
+                    <h3>🌴 Phú Quốc</h3>
+                    <p>Đảo ngọc với bãi biển xanh trong và hải sản tươi ngon</p>
+                    <div class="price">Từ 3.200.000đ</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1557750255-c76072a7aad1?w=400" alt="Sapa">
+                <div class="feature-card-content">
+                    <h3>⛰️ Sapa</h3>
+                    <p>Thị trấn sương mù với ruộng bậc thang đẹp như tranh vẽ</p>
+                    <div class="price">Từ 1.800.000đ</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=400" alt="Hội An">
+                <div class="feature-card-content">
+                    <h3>🏮 Hội An</h3>
+                    <p>Phố cổ lung linh với hàng nghìn chiếc đèn lồng sắc màu</p>
+                    <div class="price">Từ 2.000.000đ</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=400" alt="Đà Lạt">
+                <div class="feature-card-content">
+                    <h3>🌸 Đà Lạt</h3>
+                    <p>Thành phố ngàn hoa với khí hậu mát mẻ quanh năm</p>
+                    <div class="price">Từ 1.500.000đ</div>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=400" alt="Nha Trang">
+                <div class="feature-card-content">
+                    <h3>🏖️ Nha Trang</h3>
+                    <p>Thiên đường biển với nhiều hoạt động thể thao dưới nước</p>
+                    <div class="price">Từ 2.200.000đ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
