@@ -3,12 +3,12 @@
 
     <div class="nav-center">
         <ul class="nav-menu">
+ 
             <li><a href="#home">
                 <img src="images/homeicon.png" class="nav-icon"> Trang chủ
-            </a></li>
-
-            <li><a href="#suggestions">
-                <img src="images/idea.png" class="nav-icon"> Gợi ý
+            </a></li>      
+            <li><a href="suggestions">
+                <img src="images/idea.png" class="nav-icon"> Yêu thích
             </a></li>
 
             <li><a href="#favorites">
@@ -19,9 +19,18 @@
                 <img src="images/help.png" class="nav-icon"> Giúp đỡ
             </a></li>
 
-            <li><a href="#translates">
-                <img src="images/translation.png" class="nav-icon"> Dịch
-            </a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-btn">
+                    <img src="images/translation.png" class="icon"> Dịch 🔽
+                </a>
+
+                <ul class="dropdown-menu">
+                    <li><a href="#">Tiếng Việt</a></li>
+                    <li><a href="#">English</a></li>
+                    <li><a href="#">日本語</a></li>
+                    <li><a href="#">한국어</a></li>
+                </ul>
+            </li>
         </ul>
     </div>
 
@@ -31,5 +40,6 @@
             Đăng nhập
         </a>
     </div>
+<script src="scripts/hover-video.js"></script>
 
 </nav>
