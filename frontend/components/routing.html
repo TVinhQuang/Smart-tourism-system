@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm Đường Đi - Smart Tourism</title>
+    
+    <!-- CSS của bạn -->
+    <link rel="stylesheet" href="../css/styles.css">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        /* Styles riêng cho trang routing */
+        #map {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .destination-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .route-summary {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .route-summary h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .complexity-low {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .complexity-medium {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .complexity-high {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .route-steps {
+            margin-top: 20px;
+        }
+        
+        .route-steps ol {
+            padding-left: 20px;
+        }
+        
+        .route-steps li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .info-message {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:15px; text-align:center;">
+            <div style="width:50px; height:50px; border:5px solid #f3f3f3; border-top:5px solid #667eea; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div>
+            <p style="font-size:18px; color:#333;">Đang tính toán lộ trình...</p>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <div class="recommendation-container">
+        <h1 class="page-title">🗺️ Tìm Đường Đi</h1>
+        <p class="page-description">Nhập điểm xuất phát để tính lộ trình đến nơi ở đã chọn</p>
+
+        <!-- Thông tin điểm đến -->
+        <div id="destination-info" class="destination-info"></div>
+
+        <!-- Form tìm đường -->
+        <div class="form-section">
+            <form id="route-form">
+                <!-- Hidden fields cho điểm đến -->
+                <input type="hidden" id="dest_lat">
+                <input type="hidden" id="dest_lon">
+                <input type="hidden" id="dest_name">
+
+                <div class="form-group">
+                    <label for="origin">📍 Điểm xuất phát</label>
+                    <input 
+                        type="text" 
+                        id="origin" 
+                        placeholder="Ví dụ: HCMUS, Ho Chi Minh City"
+                        value="HCMUS, Ho Chi Minh City"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🚗 Phương tiện di chuyển</label>
+                        <select id="profile">
+                            <option value="driving">Ô tô / Xe máy</option>
+                            <option value="walking">Đi bộ</option>
+                            <option value="cycling">Xe đạp</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="zoom">🔍 Mức zoom bản đồ</label>
+                        <input type="range" id="zoom" min="6" max="18" value="12">
+                        <span id="zoom-value">12</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">🚗 Tính Đường Đi</button>
+            </form>
+        </div>
+
+        <!-- Kết quả -->
+        <div id="route-results-container" style="display:none;">
+            <h2>🛣️ Kết Quả Tìm Đường</h2>
+            <div id="route-results-list"></div>
+            
+            <!-- Bản đồ -->
+            <div id="map"></div>
+        </div>
+
+        <!-- Nút quay lại -->
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="recommendpage.html" class="submit-btn" style="display:inline-block; text-decoration:none; background:#666;">
+                ⬅️ Quay lại trang gợi ý nơi ở
+            </a>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- App JS -->
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Load thông tin nơi ở đã chọn
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSelectedAccommodation();
+            
+            // Update zoom value display
+            document.getElementById('zoom').addEventListener('input', function(e) {
+                document.getElementById('zoom-value').textContent = e.target.value;
+            });
+        });
+
+        function loadSelectedAccommodation() {
+            const data = sessionStorage.getItem('selected_accommodation');
+            if (data) {
+                const acc = JSON.parse(data);
+                document.getElementById('dest_lat').value = acc.lat;
+                document.getElementById('dest_lon').value = acc.lon;
+                document.getElementById('dest_name').value = acc.name;
+                
+                // Hiển thị thông tin
+                const info = document.getElementById('destination-info');
+                info.innerHTML = `
+                    <h3>📍 Điểm đến</h3>
+                    <p><strong>${acc.name}</strong></p>
+                    <p style="color:#666; margin-top:5px;">Tọa độ: ${acc.lat.toFixed(6)}, ${acc.lon.toFixed(6)}</p>
+                `;
+            } else {
+                document.getElementById('destination-info').innerHTML = `
+                    <p style="color:#f44336;">⚠️ Chưa chọn điểm đến. Vui lòng quay lại trang gợi ý và chọn một nơi ở.</p>
+                `;
+            }
+        }
+
+        // Xử lý form
+        document.getElementById('route-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const origin = document.getElementById('origin').value;
+            const destLat = parseFloat(document.getElementById('dest_lat').value);
+            const destLon = parseFloat(document.getElementById('dest_lon').value);
+            const destName = document.getElementById('dest_name').value;
+            const profile = document.getElementById('profile').value;
+            
+            if (!destLat || !destLon) {
+                alert('Vui lòng chọn điểm đến từ trang gợi ý nơi ở!');
+                return;
+            }
+            
+            // Hiển thị loading
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/route/calculate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        origin: origin,
+                        destination: {
+                            lat: destLat,
+                            lon: destLon,
+                            name: destName
+                        },
+                        profile: profile
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayRouteResults(data.data);
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tính đường: ' + error.message);
+            } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        });
+
+        function displayRouteResults(data) {
+            const container = document.getElementById('route-results-container');
+            const resultsList = document.getElementById('route-results-list');
+            
+            // Xóa kết quả cũ
+            resultsList.innerHTML = '';
+            
+            // Thông tin tổng quan
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'route-summary';
+            summaryDiv.innerHTML = `
+                <h3>📍 ${data.src.name} → ${data.dst.name}</h3>
+                <p><strong>Khoảng cách:</strong> ${data.distance_text}</p>
+                <p><strong>Thời gian:</strong> ${data.duration_text}</p>
+                <p><strong>Phương tiện:</strong> ${translateProfile(data.profile)}</p>
+            `;
+            resultsList.appendChild(summaryDiv);
+            
+            // Độ phức tạp
+            if (data.complexity) {
+                const complexityDiv = document.createElement('div');
+                complexityDiv.className = `complexity-${data.complexity.level}`;
+                complexityDiv.innerHTML = `
+                    <h4>📊 Độ phức tạp: ${data.complexity.label}</h4>
+                    <p>${data.complexity.summary}</p>
+                    ${data.complexity.reasons.length > 0 ? 
+                        '<ul>' + data.complexity.reasons.map(r => `<li>${r}</li>`).join('') + '</ul>' 
+                        : ''}
+                `;
+                resultsList.appendChild(complexityDiv);
+            }
+            
+            // Gợi ý phương tiện
+            if (data.recommended_mode) {
+                const recDiv = document.createElement('div');
+                recDiv.className = 'info-message';
+                recDiv.innerHTML = `
+                    <p><strong>💡 Gợi ý:</strong> ${data.recommended_mode.explanation}</p>
+                `;
+                resultsList.appendChild(recDiv);
+            }
+            
+            // Hướng dẫn từng bước
+            if (data.steps && data.steps.length > 0) {
+                const stepsDiv = document.createElement('div');
+                stepsDiv.className = 'route-steps';
+                stepsDiv.innerHTML = '<h4>📜 Hướng dẫn từng bước:</h4>';
+                
+                const stepsList = document.createElement('ol');
+                data.steps.forEach(step => {
+                    const li = document.createElement('li');
+                    li.textContent = step;
+                    stepsList.appendChild(li);
+                });
+                
+                stepsDiv.appendChild(stepsList);
+                resultsList.appendChild(stepsDiv);
+            }
+            
+            // Hiển thị container
+            container.style.display = 'block';
+            
+            // Vẽ bản đồ
+            drawMap(data);
+            
+            // Scroll to results
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function drawMap(routeData) {
+            const mapContainer = document.getElementById('map');
+            mapContainer.innerHTML = '';
+            
+            // Tạo bản đồ
+            const map = L.map('map').setView(
+                [routeData.src.lat, routeData.src.lon], 
+                12
+            );
+            
+            // Thêm tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Marker điểm xuất phát
+            L.marker([routeData.src.lat, routeData.src.lon], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                })
+            })
+            .bindPopup(`<b>Xuất phát</b><br>${routeData.src.name}`)
+            .addTo(map);
+            
+            // Marker điểm đến
+            L.marker([routeData.dst.lat, routeData.dst.lon], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                })
+            })
+            .bindPopup(`<b>Điểm đến</b><br>${routeData.dst.name}`)
+            .addTo(map);
+            
+            // Vẽ đường đi
+            if (routeData.geometry && routeData.geometry.length > 0) {
+                const polyline = L.polyline(routeData.geometry, {
+                    color: 'blue',
+                    weight: 5,
+                    opacity: 0.7
+                }).addTo(map);
+                
+                // Zoom để fit toàn bộ đường
+                map.fitBounds(polyline.getBounds());
+            }
+        }
+
+        function translateProfile(profile) {
+            const map = {
+                'driving': 'Ô tô / Xe máy',
+                'walking': 'Đi bộ',
+                'cycling': 'Xe đạp'
+            };
+            return map[profile] || profile;
+        }
+    </script>
+</body>
+</html>

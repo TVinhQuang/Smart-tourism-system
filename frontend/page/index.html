@@ -1,0 +1,65 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(
+    page_title="Du lịch Việt Nam",
+    page_icon="🌏",
+    layout="wide"
+)
+
+# Initialize session state for current page
+if "current_html_page" not in st.session_state:
+    st.session_state.current_html_page = "homepage"
+
+# XỬ LÝ NAVIGATION TRƯỚC KHI RENDER
+# Check query params để chuyển trang
+nav_param = st.query_params.get("navigate")
+if nav_param == "recommend":
+    if st.session_state.current_html_page != "recommend":
+        st.session_state.current_html_page = "recommend"
+        st.query_params.clear()
+        st.rerun()
+elif nav_param == "home":
+    if st.session_state.current_html_page != "homepage":
+        st.session_state.current_html_page = "homepage"
+        st.query_params.clear()
+        st.rerun()
+
+# Đọc file HTML dựa trên trang hiện tại
+if st.session_state.current_html_page == "recommend":
+    html_file = "page/recommendpage.html"
+    height = 1500
+else:
+    html_file = "page/homepage.html"
+    height = 1200
+
+with open(html_file, "r", encoding="utf-8") as f:
+    html_content = f.read()
+
+# Render HTML component với key để force re-render khi đổi trang
+components.html(html_content, height=height, scrolling=True, key=st.session_state.current_html_page)
+
+# JavaScript để handle navigation messages từ iframe
+# Đặt ở cuối để đảm bảo DOM đã sẵn sàng
+st.markdown("""
+<script>
+    // Listen for messages from iframe (components.html)
+    window.addEventListener("message", function(event) {
+        console.log("Received message:", event.data);
+        // Kiểm tra origin để đảm bảo an toàn (có thể bỏ qua khi dev local)
+        if (event.data && event.data.type === "navigate") {
+            const page = event.data.page;
+            console.log("Navigating to:", page);
+            // Sử dụng window.location để redirect với query param
+            const url = new URL(window.location.href);
+            url.searchParams.set('navigate', page);
+            // Force reload với query param mới
+            window.location.href = url.toString();
+        }
+    }, false);
+    
+    // Debug: Log khi script được load
+    console.log("Navigation listener script loaded");
+</script>
+""", unsafe_allow_html=True)
+

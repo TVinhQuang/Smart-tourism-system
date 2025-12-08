@@ -1,0 +1,8 @@
+# Không track môi trường ảo
+.venv/
+
+# File rác Python
+__pycache__/
+*.pyc
+
+

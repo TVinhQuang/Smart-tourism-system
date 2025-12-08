@@ -1,0 +1,34 @@
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 30px;
+}
+
+.feature-card {
+	background: white;
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+	transition: transform 0.3s;
+	cursor: pointer;
+}
+
+.feature-card:hover {
+	transform: translateY(-10px);
+	box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.feature-card img {
+	width: 100%;
+	height: 200px;
+	object-fit: cover;
+}
+
+.feature-card-content { padding: 20px; }
+.feature-card h3 { color: #333; margin-bottom: 10px; font-size: 1.3rem; }
+.feature-card p { color: #666; line-height: 1.6; }
+.price { color: #667eea; font-size: 1.3rem; font-weight: bold; margin-top: 15px; }
+
+@media (max-width: 768px) {
+	.feature-card img { height: 160px; }
+}
