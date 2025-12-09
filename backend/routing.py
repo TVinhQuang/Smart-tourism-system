@@ -16,6 +16,75 @@ app = Flask(__name__)
 CORS(app)
 API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
 
+# ==================== TỪ ĐIỂN DỊCH THUẬT (Backend) ====================
+TRANS = {
+    "vi": {
+        "start": "Bắt đầu từ",
+        "start_default": "điểm xuất phát",
+        "arrive": "Đến điểm đến",
+        "right": "bên phải",
+        "left": "bên trái",
+        "turn": "rẽ",
+        "go": "Đi",
+        "onto": "vào đường",
+        "continue": "Đi tiếp",
+        "roundabout": "Vào vòng xuyến",
+        "exit": "lối ra thứ",
+        "merge": "Nhập làn/ra khỏi làn",
+        
+        "walk_short": "Quãng đường rất ngắn, đi bộ là hợp lý nhất.",
+        "walk_med": "Không quá xa, đi bộ hoặc xe đạp đều ổn.",
+        "bike_med": "Quãng đường trung bình, phù hợp đi xe máy/xe đạp.",
+        "drive_long": "Khá xa, nên đi ô tô hoặc xe máy.",
+        "fly_long": "Rất xa! Cân nhắc đi máy bay/xe khách.",
+        
+        "easy": "Dễ đi",
+        "medium": "Trung bình",
+        "hard": "Phức tạp",
+        "easy_desc": "Đường đi đơn giản, ít ngã rẽ.",
+        "med_desc": "Lộ trình có chút thử thách về khoảng cách.",
+        "hard_desc": "Lộ trình dài hoặc nhiều ngã rẽ phức tạp.",
+        "dist_warn": "Quãng đường rất dài, cần nghỉ ngơi.",
+        "turn_warn": "Nhiều ngã rẽ, chú ý quan sát.",
+        "speed_warn": "Tốc độ di chuyển dự kiến chậm."
+    },
+    "en": {
+        "start": "Start from",
+        "start_default": "starting point",
+        "arrive": "Arrive at destination",
+        "right": "on the right",
+        "left": "on the left",
+        "turn": "turn",
+        "go": "Go",
+        "onto": "onto",
+        "continue": "Continue",
+        "roundabout": "Enter roundabout",
+        "exit": "exit",
+        "merge": "Merge/Take ramp",
+        
+        "walk_short": "Very short distance, walking is best.",
+        "walk_med": "Not too far, walking or cycling is fine.",
+        "bike_med": "Medium distance, suitable for motorbike/bicycle.",
+        "drive_long": "Quite far, prefer car or motorbike.",
+        "fly_long": "Very far! Consider flying or taking a bus.",
+        
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Complex",
+        "easy_desc": "Simple route, few turns.",
+        "med_desc": "Route is a bit challenging in distance.",
+        "hard_desc": "Long route or complex turns.",
+        "dist_warn": "Very long distance, take breaks.",
+        "turn_warn": "Many turns, pay attention.",
+        "speed_warn": "Expected speed is slow."
+    }
+}
+
+# ==================== CÁC HÀM XỬ LÝ LOGIC ====================
+
+def _get_text(lang, key):
+    return TRANS.get(lang, TRANS["vi"]).get(key, "")
+
 def serpapi_geocode(q: str):
     # 1. GÁN CỨNG KEY (Để đảm bảo hàm này luôn có key đúng)
     # Bạn thay key của bạn vào đây:
@@ -169,70 +238,41 @@ def _format_distance(meters: float) -> str:
     km = meters / 1000.0
     return f"{km:.1f} km"
 
-def describe_osrm_step(step: dict) -> str:
-    """
-    Nhận 1 step từ OSRM và trả về 1 câu mô tả ngắn gọn bằng tiếng Việt.
-
-    Ví dụ:
-      - 'Đi thẳng 500 m trên đường Nguyễn Văn Cừ.'
-      - 'Rẽ phải vào đường Lê Lợi.'
-      - 'Đến điểm đến ở bên phải.'
-    """
+def describe_osrm_step(step: dict, lang="vi") -> str:
+    t = lambda k: _get_text(lang, k)
     maneuver = step.get("maneuver", {})
-    step_type = maneuver.get("type", "")
+    type = maneuver.get("type", "")
     modifier = (maneuver.get("modifier") or "").lower()
     name = (step.get("name") or "").strip()
-    distance = step.get("distance", 0.0)  # mét
-    dist_str = _format_distance(distance)
+    dist_str = _format_distance(step.get("distance", 0.0))
 
-    # Mapping hướng rẽ
     dir_map = {
-        "right": "rẽ phải",
-        "slight right": "chếch phải",
-        "sharp right": "quẹo gắt phải",
-        "left": "rẽ trái",
-        "slight left": "chếch trái",
-        "sharp left": "quẹo gắt trái",
-        "straight": "đi thẳng",
-        "uturn": "quay đầu",
+        "right": "right", "slight right": "right", "sharp right": "right",
+        "left": "left", "slight left": "left", "sharp left": "left",
+        "straight": "straight", "uturn": "uturn"
     }
+    
+    # Mapping direction words
+    action_en = dir_map.get(modifier, "turn")
+    action_vi = "rẽ phải" if "right" in action_en else ("rẽ trái" if "left" in action_en else "đi thẳng")
+    if lang == 'en': action_text = action_en
+    else: action_text = action_vi
 
-    # ---- Các trường hợp chính ----
-    if step_type == "depart":
-        if name:
-            return f"Bắt đầu từ {name}."
-        return "Bắt đầu từ điểm xuất phát."
+    if type == "depart":
+        return f"{t('start')} {name if name else t('start_default')}."
+    if type == "arrive":
+        return t("arrive") + "."
+    
+    if type in ("turn", "end of road", "fork"):
+        if name: return f"{t('go')} {dist_str}, {action_text} {t('onto')} {name}."
+        return f"{t('go')} {dist_str}, {action_text}."
 
-    if step_type == "arrive":
-        side = maneuver.get("modifier", "").lower()
-        if side in ("right", "left"):
-            side_vi = "bên phải" if side == "right" else "bên trái"
-            return f"Đến điểm đến ở {side_vi}."
-        return "Đến điểm đến."
-
-    if step_type in ("turn", "end of road", "fork"):
-        action = dir_map.get(modifier, "rẽ")
-        if name:
-            return f"Đi {dist_str} rồi {action} vào đường {name}."
-        else:
-            return f"Đi {dist_str} rồi {action}."
-
-    if step_type == "roundabout":
+    if type == "roundabout":
         exit_nr = maneuver.get("exit")
-        if exit_nr:
-            return f"Vào vòng xuyến, đi hết lối ra thứ {exit_nr}."
-        else:
-            return "Vào vòng xuyến và tiếp tục theo hướng chính."
+        return f"{t('roundabout')}, {t('exit')} {exit_nr}." if exit_nr else t('roundabout') + "."
 
-    if step_type in ("merge", "on ramp", "off ramp"):
-        if name:
-            return f"Nhập làn/ra khỏi làn và tiếp tục trên {name} khoảng {dist_str}."
-        return f"Nhập làn/ra khỏi làn và tiếp tục khoảng {dist_str}."
-
-    # Fallback: mô tả chung chung
-    if name:
-        return f"Đi tiếp {dist_str} trên đường {name}."
-    return f"Đi tiếp {dist_str}."
+    if name: return f"{t('continue')} {dist_str} ({name})."
+    return f"{t('continue')} {dist_str}."
 
 def draw_map(src, dst, route):
     """
@@ -282,98 +322,31 @@ def draw_map(src, dst, route):
 
     return m
 
-def recommend_transport_mode(distance_km: float, duration_min: float):
-    """
-    Gợi ý phương tiện di chuyển dựa trên quãng đường & thời gian ước tính.
+def recommend_transport_mode(dist_km, lang="vi"):
+    t = lambda k: _get_text(lang, k)
+    if dist_km <= 1.5: return "walking", t("walk_short")
+    elif dist_km <= 7: return "walking", t("walk_med")
+    elif dist_km <= 25: return "cycling", t("bike_med")
+    elif dist_km <= 300: return "driving", t("drive_long")
+    else: return "driving", t("fly_long")
 
-    Trả về:
-      - best_profile: "walking" / "cycling" / "driving"
-      - explanation: chuỗi tiếng Việt giải thích ngắn gọn
-    """
-    if distance_km <= 1.5:
-        return "walking", (
-            "Quãng đường rất ngắn, bạn có thể đi bộ để tiết kiệm chi phí "
-            "và thoải mái ngắm cảnh xung quanh."
-        )
-    elif distance_km <= 7:
-        return "walking", (
-            "Quãng đường không quá xa, đi bộ hoặc xe đạp đều phù hợp. "
-            "Nếu mang nhiều hành lý có thể gọi xe máy/ô tô."
-        )
-    elif distance_km <= 25:
-        return "cycling", (
-            "Quãng đường trung bình, phù hợp đi xe máy hoặc xe đạp nếu bạn quen di chuyển xa."
-        )
-    elif distance_km <= 300:
-        return "driving", (
-            "Quãng đường khá xa, nên đi ô tô/xe máy, taxi hoặc xe công nghệ "
-            "để đảm bảo thời gian và sự thoải mái."
-        )
-    else:
-        return "driving", (
-            "Đây là quãng đường rất xa. Thực tế nên cân nhắc đi máy bay, tàu hoặc xe khách "
-            "rồi bắt taxi/xe buýt đến nơi ở."
-        )
-
-def analyze_route_complexity(route: dict, profile: str):
-    """
-    Phân tích độ phức tạp dựa trên dữ liệu từ Google Maps.
-    """
-    distance_km = route.get("distance_km", 0.0)
-    # Google tính duration rất chuẩn (đã bao gồm tắc đường nếu có dữ liệu), tin tưởng nó hơn tính toán thủ công
-    duration_min = route.get("duration_min", 0.0)
-    steps_list = route.get("steps", [])
-    steps_count = len(steps_list)
-
-    difficulty_score = 0
+def analyze_route_complexity(route, profile, lang="vi"):
+    t = lambda k: _get_text(lang, k)
+    dist_km = route["distance_km"]
+    steps = len(route["steps_raw"])
+    
+    score = 0
     reasons = []
 
-    # 1. Phân tích quãng đường
-    if distance_km > 50:
-        difficulty_score += 3
-        reasons.append(f"Quãng đường rất dài ({distance_km:.1f} km), cần nghỉ ngơi giữa chừng.")
-    elif distance_km > 20:
-        difficulty_score += 2
-        reasons.append("Quãng đường khá dài, hãy chuẩn bị sức khỏe.")
+    if dist_km > 50: score += 3; reasons.append(f"{t('dist_warn')} ({dist_km:.1f} km).")
+    elif dist_km > 20: score += 2
     
-    # 2. Phân tích độ phức tạp của đường đi (số lượng ngã rẽ)
-    # Google thường gộp các hướng dẫn "đi thẳng" nên nếu steps nhiều nghĩa là phải rẽ nhiều
-    if steps_count > 25:
-        difficulty_score += 2
-        reasons.append(f"Lộ trình rất phức tạp với {steps_count} chỉ dẫn chuyển hướng.")
-    elif steps_count > 15:
-        difficulty_score += 1
-        reasons.append(f"Lộ trình có khá nhiều ngã rẽ ({steps_count} bước).")
+    if steps > 25: score += 2; reasons.append(f"{t('turn_warn')} ({steps}).")
+    elif steps > 15: score += 1
 
-    # 3. Phân tích tốc độ trung bình (để phát hiện tắc đường/đường xấu)
-    if duration_min > 0 and distance_km > 0:
-        avg_speed = distance_km / (duration_min / 60.0) # km/h
-        
-        if profile == "driving":
-            if avg_speed < 20: # Ô tô/xe máy mà < 20km/h là rất chậm
-                difficulty_score += 2
-                reasons.append("Tốc độ di chuyển dự kiến rất chậm (đường đông hoặc xấu).")
-        elif profile == "cycling":
-            if avg_speed < 8:
-                difficulty_score += 1
-                reasons.append("Tốc độ đạp xe dự kiến chậm hơn bình thường.")
-
-    # 4. Kết luận
-    if difficulty_score <= 1:
-        level = "low"
-        label_vi = "Dễ đi"
-        summary = "Lộ trình đơn giản, đường thông thoáng."
-    elif difficulty_score <= 3:
-        level = "medium"
-        label_vi = "Trung bình"
-        summary = "Lộ trình có chút thử thách về khoảng cách hoặc các ngã rẽ."
-    else:
-        level = "high"
-        label_vi = "Phức tạp"
-        summary = "Lộ trình khó, tốn nhiều thời gian hoặc đường đi phức tạp."
-
-    return level, label_vi, summary, reasons
-
+    if score <= 1: return "low", t("easy"), t("easy_desc"), reasons
+    elif score <= 3: return "medium", t("medium"), t("med_desc"), reasons
+    return "high", t("hard"), t("hard_desc"), reasons
 # ==============================================================================
 #3. API ENDPOINT (Kết nối với Frontend)
 # ==============================================================================
@@ -381,47 +354,53 @@ def analyze_route_complexity(route: dict, profile: str):
 @app.route('/api/route', methods=['POST'])
 def api_get_route():
     data = request.json
-    src = data.get("src") # {lat: ..., lon: ...}
-    dst = data.get("dst") # {lat: ..., lon: ...}
+    src = data.get("src")
+    dst = data.get("dst")
     profile = data.get("profile", "driving")
+    lang = data.get("lang", "vi") # Nhận ngôn ngữ từ Frontend
 
     if not src or not dst:
-        return jsonify({"status": "error", "message": "Thiếu tọa độ src hoặc dst"}), 400
+        return jsonify({"status": "error"}), 400
 
-    # 1. Gọi OSRM để lấy đường đi và thông tin cơ bản
-    route_data = osrm_route(src, dst, profile)
+    # 1. Gọi OSRM
+    osrm_mode = 'foot' if profile in ['foot', 'walking'] else 'driving'
+    url = f"https://router.project-osrm.org/route/v1/{osrm_mode}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}?overview=full&geometries=geojson&steps=true"
     
-    if not route_data:
-        return jsonify({"status": "error", "message": "Không tìm thấy đường đi"}), 404
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code != 200: return jsonify({"status": "error", "message": "OSRM Error"})
+        res = r.json()
+        if not res.get("routes"): return jsonify({"status": "error", "message": "No route found"})
+        
+        route = res["routes"][0]
+        dist_km = route["distance"] / 1000.0
+        dur_min = route["duration"] / 60.0
+        
+        # 2. Xử lý đa ngôn ngữ
+        steps_raw = route["legs"][0]["steps"]
+        instructions = [describe_osrm_step(s, lang) for s in steps_raw]
+        
+        rec_mode, rec_msg = recommend_transport_mode(dist_km, lang)
+        lvl, lbl, summ, reasons = analyze_route_complexity({"distance_km": dist_km, "steps_raw": steps_raw}, profile, lang)
 
-    # 2. Gọi hàm nhận xét/đánh giá của BẠN
-    # Gợi ý phương tiện
-    rec_mode, rec_msg = recommend_transport_mode(
-        route_data["distance_km"], 
-        route_data["duration_min"]
-    )
-    
-    # Phân tích độ khó
-    level, label_vi, summary, reasons = analyze_route_complexity(route_data, profile)
+        return jsonify({
+            "status": "success",
+            "path": [[lat, lon] for lon, lat in route["geometry"]["coordinates"]],
+            "info": {
+                "distance_text": f"{dist_km:.2f} km",
+                "duration_text": f"{int(dur_min)} min" if lang == 'en' else f"{int(dur_min)} phút",
+                "complexity_level": lvl,
+                "complexity_label": lbl,
+                "complexity_summary": summ,
+                "recommendation_msg": rec_msg,
+                "analysis_details": reasons
+            },
+            "instructions": instructions
+        })
 
-    # 3. Trả về JSON cho Frontend hiển thị
-    return jsonify({
-        "status": "success",
-        "path": route_data["geometry"],  # Để Leaflet vẽ đường xanh
-        "info": {
-            "distance_text": route_data["distance_text"],
-            "duration_text": route_data["duration_text"],
-            
-            # Dữ liệu phân tích của bạn
-            "complexity_level": level,         # low/medium/high
-            "complexity_label": label_vi,      # "Dễ đi", "Phức tạp"...
-            "complexity_summary": summary,     # "Lộ trình đơn giản..."
-            "recommendation_mode": rec_mode,
-            "recommendation_msg": rec_msg,
-            "analysis_details": reasons        # List lý do
-        },
-        "instructions": route_data["steps"]    # List hướng dẫn từng bước
-    })
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

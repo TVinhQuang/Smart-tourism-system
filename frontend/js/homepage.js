@@ -5,6 +5,7 @@ const dummyList = [
         name: "La Siesta Hoi An Resort & Spa",
         price: 2500000,
         rating: 9.3,
+        // Dữ liệu mô tả đa ngôn ngữ
         desc: {
             vi: "Khu nghỉ dưỡng với 4 hồ bơi, kiến trúc xanh mát và spa đẳng cấp thế giới.",
             en: "Resort with 4 swimming pools, green architecture and world-class spa."
@@ -12,6 +13,7 @@ const dummyList = [
         address: "134 Hùng Vương, Cẩm Phô, Hội An",
         lat: 15.8795, lon: 108.3181,
         img: "https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg",
+        // Dữ liệu tiện ích dạng KEY
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
     {
@@ -31,42 +33,35 @@ const dummyList = [
 
 window.homeResults = dummyList;
 
-// ============================ RENDER CARD ============================
 function renderAccommodationList() {
     const container = document.getElementById("accommodation-list");
-    
-    if (!container) {
-        console.error("Lỗi: Không tìm thấy ID 'accommodation-list'");
-        return;
-    }
+    if (!container) return;
+    container.innerHTML = "";
 
-    container.innerHTML = ""; // Xóa cũ trước khi vẽ mới
-
-    // Lấy ngôn ngữ hiện tại (mặc định là vi)
+    // 1. Lấy ngôn ngữ hiện tại từ bộ nhớ (mặc định là 'vi')
     const currentLang = localStorage.getItem('userLang') || 'vi'; 
 
     dummyList.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "accommodation-card"; 
         
-        // Lấy mô tả đúng theo ngôn ngữ
+        // 2. CHỌN MÔ TẢ ĐÚNG NGÔN NGỮ
+        // Nếu không tìm thấy ngôn ngữ hiện tại thì lấy tiếng Việt làm mặc định
         const description = item.desc[currentLang] || item.desc['vi'];
 
         card.innerHTML = `
             <div style="height:200px; overflow:hidden;">
-                 <img src="${item.img || 'https://via.placeholder.com/300'}" style="width:100%; height:100%; object-fit:cover;" alt="${item.name}">
+                 <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" alt="${item.name}">
             </div>
             <div class="accommodation-content" style="padding:15px; display: flex; flex-direction: column; flex-grow: 1;">
-                <h3 class="accommodation-title" style="margin-bottom:10px;">${item.name}</h3>
+                <h3 class="accommodation-title">${item.name}</h3>
                 
-                <p class="accommodation-description" style="font-size:0.9rem; color:#666;">${description}</p>
+                <p class="accommodation-description" style="color:#666;">${description}</p>
                 
                 <div style="margin-top: auto;">
-                    <div class="price-rating-row" style="display:flex; justify-content:space-between; margin-top:15px; align-items:center;">
+                    <div class="price-rating-row" style="display:flex; justify-content:space-between; margin-top:15px;">
                         <div class="accommodation-price" style="font-weight:bold; color:#4a6cf7;">${item.price.toLocaleString()} VND</div>
-                        <div class="accommodation-rating">
-                            <span class="star">★</span> ${item.rating}
-                        </div>
+                        <div class="accommodation-rating">★ ${item.rating}</div>
                     </div>
 
                     <button class="map-button" 
@@ -81,14 +76,10 @@ function renderAccommodationList() {
         container.appendChild(card);
     });
 
-    // Gọi hàm dịch cho các nút bấm tĩnh (Xem bản đồ)
     if (typeof applyTranslations === "function") {
         applyTranslations();
     }
 }
 
-// Gán hàm này vào window để file static_trans.js có thể gọi lại khi đổi ngôn ngữ
 window.renderAccommodationList = renderAccommodationList;
-
-// Chạy lần đầu
 renderAccommodationList();

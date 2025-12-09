@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/navbar.css">
     <link rel="stylesheet" href="../css/accomodation_card.css">
     <link rel="stylesheet" href="../css/routing.css">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -62,44 +63,42 @@
     </div>
 
     <div id="routing-overlay" class="routing-overlay hidden">
-    <div class="routing-modal">
-        
-        <div id="view-step-1" class="view-container">
-            <div class="col-left-info">
-                <div class="hotel-cover">
-                    <img id="info-img" src="" alt="Hotel Image">
-                    <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
+        <div class="routing-modal">     
+            <div id="view-step-1" class="view-container">
+                <div class="col-left-info">
+                    <div class="hotel-cover">
+                        <img id="info-img" src="" alt="Hotel Image">
+                        <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
+                    </div>
+
+                    <div class="hotel-info-body">
+                        <h2 id="info-name" class="hotel-title">Tên khách sạn</h2>
+                        
+                        <div class="hotel-address-row">
+                            <span class="icon">📍</span> 
+                            <span id="info-address">Địa chỉ...</span>
+                        </div>
+
+                        <div class="hotel-price-row">
+                            <span class="label" data-i18n="label_price">Giá mỗi đêm:</span>
+                            <span id="info-price" class="price">...</span>
+                        </div>
+
+                        <hr class="divider">
+                        <div class="hotel-amenities-section">
+                            <h4 data-i18n="label_amenities">💎 Tiện ích nổi bật</h4>
+                            <div id="info-amenities" class="amenities">
+                                </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="hotel-desc-section">
+                            <h4 data-i18n="label_desc">📝 Giới thiệu</h4>
+                            <p id="info-desc">...</p>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="hotel-info-body">
-                    <h2 id="info-name" class="hotel-title">Tên khách sạn</h2>
-                    
-                    <div class="hotel-address-row">
-                        <span class="icon">📍</span> 
-                        <span id="info-address">Địa chỉ...</span>
-                    </div>
-
-                    <div class="hotel-price-row">
-                        <span class="label" data-i18n="label_price">Giá mỗi đêm:</span>
-                        <span id="info-price" class="price">...</span>
-                    </div>
-
-                    <hr class="divider">
-
-                    <div class="hotel-amenities-section">
-                        <h4 data-i18n="label_amenities">💎 Tiện ích nổi bật</h4>
-                        <div id="info-amenities" class="amenities-grid">
-                            </div>
-                    </div>
-
-                    <hr class="divider">
-
-                    <div class="hotel-desc-section">
-                        <h4 data-i18n="label_desc">📝 Giới thiệu</h4>
-                        <p id="info-desc">...</p>
-                    </div>
-                </div>
-            </div>
 
             <div class="col-right-selection">
                 <h3 data-i18n="modal_step1_title">🚙 Thiết lập lộ trình</h3>

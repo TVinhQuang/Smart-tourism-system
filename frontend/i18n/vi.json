@@ -49,10 +49,7 @@
     "amenity_wifi": "📶 Wifi miễn phí",
     "amenity_breakfast": "🍳 Bữa sáng",
     "amenity_parking": "🅿️ Đỗ xe",
-    "amenity_gym": "🏋️ Phòng Gym",
-    "amenity_bar": "🍸 Rooftop Bar",
-    "amenity_bathtub": "🛁 Bồn tắm",
-    "amenity_riverview": "🌊 View sông",
-    "amenity_shuttle": "🚌 Xe đưa đón",
-    "amenity_ac": "❄️ Điều hòa"
+    "amenity_gym": "🏋️ Gym",
+    "amenity_bar": "🍸 Bar",
+    "amenity_spa": "💆 Spa"
 }

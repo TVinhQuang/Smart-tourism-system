@@ -44,9 +44,6 @@
     "amenity_breakfast": "🍳 Breakfast",
     "amenity_parking": "🅿️ Parking",
     "amenity_gym": "🏋️ Gym",
-    "amenity_bar": "🍸 Rooftop Bar",
-    "amenity_bathtub": "🛁 Bathtub",
-    "amenity_riverview": "🌊 River View",
-    "amenity_shuttle": "🚌 Shuttle Bus",
-    "amenity_ac": "❄️ Air Conditioner"
+    "amenity_bar": "🍸 Bar",
+    "amenity_spa": "💆 Spa"
 }
