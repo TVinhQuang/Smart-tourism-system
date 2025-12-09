@@ -12,7 +12,7 @@ const dummyList = [
         },
         address: "134 Hùng Vương, Cẩm Phô, Hội An",
         lat: 15.8795, lon: 108.3181,
-        img: "https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg",
+        img: "https://www.vietnambooking.com/wp-content/uploads/2021/08/La-Siesta-Hoi-An-Resort-Spa-3082021.jpg",
         // Dữ liệu tiện ích dạng KEY
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
@@ -26,7 +26,7 @@ const dummyList = [
         },
         address: "39 Đào Duy Từ, Hội An",
         lat: 15.8770, lon: 108.3260,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/49826269.jpg?k=7a0126780287a91163402651478546554655",
+        img: "https://hotelroyalhoian.vn/wp-content/uploads/2024/10/DJI_0140-3-1.webp",
         amenities: ["amenity_breakfast", "amenity_wifi", "amenity_pool", "amenity_parking"]
     },
     {
@@ -39,7 +39,7 @@ const dummyList = [
         },
         address: "Au Co, Cửa Đại, Hội An",
         lat: 15.8940, lon: 108.3535,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/244780076.jpg",
+        img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhWxTimfsPS6bJKFCn1dYmku5uxHlGYVggrQ&s",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
     {
@@ -52,7 +52,7 @@ const dummyList = [
         },
         address: "86 Trần Hưng Đạo, Hội An",
         lat: 15.8801, lon: 108.3227,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/139176342.jpg",
+        img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/11/fc/0d/0f/outdoor-pool.jpg?w=900&h=500&s=1",
         amenities: ["amenity_wifi", "amenity_breakfast", "amenity_pool"]
     },
     {
@@ -65,7 +65,7 @@ const dummyList = [
         },
         address: "Lạc Long Quân, Cửa Đại, Hội An",
         lat: 15.8935, lon: 108.3462,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/178398899.jpg",
+        img: "https://pix10.agoda.net/hotelImages/65107/-1/bbcc058b8e17b3ef51a37f315685ec80.jpg?ce=0&s=414x232",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast"]
     },
     {
@@ -78,7 +78,7 @@ const dummyList = [
         },
         address: "1 Đào Duy Từ, Hội An",
         lat: 15.8812, lon: 108.3289,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/228879391.jpg",
+        img: "https://pix10.agoda.net/hotelImages/2225333/-1/6ae1ea5094fb92f2ae4d367aa1313303.jpg?ce=0&s=414x232",
         amenities: ["amenity_wifi", "amenity_pool", "amenity_parking"]
     },
     {
@@ -91,7 +91,7 @@ const dummyList = [
         },
         address: "09 Phan Bội Châu, Hội An",
         lat: 15.8756, lon: 108.3301,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/170551283.jpg",
+        img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2d/b9/19/da/little-riverside-a-luxury.jpg?w=900&h=500&s=1",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast"]
     },
     {
@@ -104,7 +104,7 @@ const dummyList = [
         },
         address: "47 Lê Thánh Tông, Cẩm Phô, Hội An",
         lat: 15.8799, lon: 108.3147,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/365910366.jpg",
+        img: "https://www.vietnambooking.com/wp-content/uploads/2020/09/combo-ann-retreat-resort-and-spa-10.jpg",
         amenities: ["amenity_wifi", "amenity_pool", "amenity_parking"]
     },
     {
@@ -117,7 +117,7 @@ const dummyList = [
         },
         address: "Cửa Đại, Hội An",
         lat: 15.8932, lon: 108.3479,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/35088740.jpg",
+        img: "https://pix10.agoda.net/hotelImages/1805134/-1/0fa21967541e6c1827b1629598ba70ec.jpg?ce=0&s=414x232",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
     {
@@ -130,7 +130,7 @@ const dummyList = [
         },
         address: "34 Lạc Long Quân, Hội An",
         lat: 15.8915, lon: 108.3455,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/17298039.jpg",
+        img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSUtN_JFEMd0NiPDxcgyRC6VNtdKXHU7-JxQ&s",
         amenities: ["amenity_pool", "amenity_wifi"]
     },
     {
@@ -143,9 +143,23 @@ const dummyList = [
         },
         address: "Cửa Đại, Hội An",
         lat: 15.8927, lon: 108.3493,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/20193833.jpg",
+        img: "https://q-xx.bstatic.com/xdata/images/hotel/max500/463268389.jpg?k=28a934d62d358d83baf9f8c3ad9908989365a83ab3a690bb32238a3e05be8da4&o=",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast"]
-    }
+    },
+    {
+        name: "Anantara Hoi An Resort",
+        price: 3500000,
+        rating: 9.5,
+        desc: {
+            vi: "Resort ven sông Hoài với kiến trúc Pháp cổ tinh tế, không gian yên bình và dịch vụ 5 sao.",
+            en: "Riverside resort along the Hoai River, featuring elegant French-colonial architecture and 5-star services."
+        },
+        address: "1 Phạm Hồng Thái, Cẩm Châu, Hội An",
+        lat: 15.8747, lon: 108.3304,
+        img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/0d/7d/07/anantara-hoi-an-resort.jpg?w=500&h=-1&s=1",
+        amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
+    },
+
 
 ];
 
