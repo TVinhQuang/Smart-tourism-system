@@ -3,30 +3,40 @@
    ================================ */
 
 .accommodation-card {
-    width: 100%;
-    max-width: 380px;
-    background: #fff;
-    border-radius: 14px;
+    background: white;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Transition mượt mà cho tất cả thuộc tính trong 0.3s */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    top: 0;
 }
 
 .accommodation-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    /* Nổi lên trên */
+    transform: translateY(-10px);
+    /* Bóng đổ đậm hơn và lan rộng hơn */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
-
 /* ================================
    IMAGE
    ================================ */
 .accommodation-card img {
+    transition: transform 0.5s ease;
     width: 100%;
-    height: 210px;
+    height: 100%;
     object-fit: cover;
 }
 
+.accommodation-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Container chứa ảnh cần có overflow: hidden để ảnh không bị tràn ra ngoài khi zoom */
+.accommodation-card > div:first-child {
+    overflow: hidden;
+}
 /* ================================
    CONTENT
    ================================ */
@@ -83,28 +93,21 @@
    MAP BUTTON
    ================================ */
 
-.map-button {
-    margin-top: 15px;
-    width: 100%;
-    padding: 12px 0;
-    background: linear-gradient(135deg, #4a6cf7 0%, #6a8bff 100%);
-    color: white;
-    text-align: center;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.25s ease;
-    border: none;
+button, .btn-primary, .btn-secondary, .map-button {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.map-button:hover {
-    background: linear-gradient(135deg, #3d5de5 0%, #5e7cf7 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(74, 108, 247, 0.4);
+/* Hiệu ứng khi hover */
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px); /* Nhấc nhẹ lên */
+    box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3); /* Bóng đổ màu xanh */
 }
 
-.map-button:active {
-    transform: translateY(0);
+/* Hiệu ứng khi click (Active) */
+button:active {
+    transform: translateY(1px); /* Lún xuống */
     box-shadow: none;
 }

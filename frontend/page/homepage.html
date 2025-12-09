@@ -56,7 +56,7 @@
     </div>
     
     <div class="features" id="suggestions">
-        <h2>Top homestay, khách sạn được gợi ý</h2>
+        <h2 data-i18n="section_top_title">Top homestay, khách sạn được gợi ý</h2>
         
         <div id="accommodation-list" class="feature-grid"></div>
     </div>
@@ -80,14 +80,14 @@
                     </div>
 
                     <div class="hotel-price-row">
-                        <span class="label">Giá mỗi đêm:</span>
+                        <span class="label" data-i18n="label_price">Giá mỗi đêm:</span>
                         <span id="info-price" class="price">...</span>
                     </div>
 
                     <hr class="divider">
 
                     <div class="hotel-amenities-section">
-                        <h4>💎 Tiện ích nổi bật</h4>
+                        <h4 data-i18n="label_amenities">💎 Tiện ích nổi bật</h4>
                         <div id="info-amenities" class="amenities-grid">
                             </div>
                     </div>
@@ -95,59 +95,59 @@
                     <hr class="divider">
 
                     <div class="hotel-desc-section">
-                        <h4>📝 Giới thiệu</h4>
+                        <h4 data-i18n="label_desc">📝 Giới thiệu</h4>
                         <p id="info-desc">...</p>
                     </div>
                 </div>
             </div>
 
             <div class="col-right-selection">
-                <h3>🚙 Thiết lập lộ trình</h3>
+                <h3 data-i18n="modal_step1_title">🚙 Thiết lập lộ trình</h3>
                 
                 <div class="form-group">
-                    <label>Điểm xuất phát:</label>
-                    <input type="text" value="Vị trí của bạn (TP.HCM)" disabled class="input-readonly">
+                    <label data-i18n="input_start_label">Điểm xuất phát:</label>
+                    <input type="text" data-i18n="val_my_location" value="Vị trí của bạn..." disabled class="input-readonly">
                 </div>
 
                 <div class="form-group">
-                    <label>Điểm đến:</label>
+                    <label data-i18n="input_dest_label">Điểm đến:</label>
                     <input type="text" id="target-dest" value="..." disabled class="input-readonly">
                 </div>
 
                 <div class="form-group">
-                    <label>Phương tiện di chuyển:</label>
+                    <label data-i18n="input_transport_label">Phương tiện di chuyển:</label>
                     <div class="transport-options">
                         <label class="radio-card">
                             <input type="radio" name="transport" value="driving" checked>
                             <span class="icon">🚗</span>
-                            <span>Ô tô / Xe máy</span>
+                            <span data-i18n="trans_driving">Ô tô / Xe máy</span>
                         </label>
                         <label class="radio-card">
                             <input type="radio" name="transport" value="cycling">
                             <span class="icon">🚲</span>
-                            <span>Xe đạp</span>
+                            <span data-i18n="trans_cycling">Xe đạp</span>
                         </label>
                         <label class="radio-card">
                             <input type="radio" name="transport" value="foot">
                             <span class="icon">🚶</span>
-                            <span>Đi bộ</span>
+                            <span data-i18n="trans_walking">Đi bộ</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="action-buttons">
-                    <button id="btn-close-step1" class="btn-secondary">Đóng</button>
-                    <button id="btn-find-route" class="btn-primary">🗺️ Tìm đường đi</button>
+                    <button id="btn-close-step1" class="btn-secondary" data-i18n="btn_close">Đóng</button>
+                    <button id="btn-find-route" class="btn-primary" data-i18n="btn_find_route">🗺️ Tìm đường đi</button>
                 </div>
             </div>
         </div>
 
         <div id="view-step-2" class="view-container hidden">
             <div class="col-left-analysis">
-                <button id="btn-back-step1" class="btn-back">⬅ Quay lại</button>
+                <button id="btn-back-step1" class="btn-back">⬅ <span data-i18n="btn_back">Quay lại</span></button>
                 
                 <div class="analysis-box">
-                    <h4>📊 Kết quả phân tích</h4>
+                    <h4 data-i18n="analysis_title">📊 Kết quả phân tích</h4>
                     <div class="stats-grid">
                         <div class="stat">📏 <span id="res-distance">...</span></div>
                         <div class="stat">⏱ <span id="res-duration">...</span></div>
@@ -163,7 +163,7 @@
                 </div>
 
                 <div class="steps-box">
-                    <h4>📝 Hướng dẫn chi tiết</h4>
+                    <h4 data-i18n="steps_title">📝 Hướng dẫn chi tiết</h4>
                     <div id="steps-list" class="steps-scroll">
                         </div>
                 </div>
@@ -173,9 +173,9 @@
                 <div id="rt-map-frame"></div>
                 <div class="map-controls-overlay">
                     <select id="quick-transport-change">
-                        <option value="driving">🚗 Ô tô</option>
-                        <option value="cycling">🚲 Xe đạp</option>
-                        <option value="foot">🚶 Đi bộ</option>
+                        <option value="driving" data-i18n="trans_driving">🚗 Ô tô</option>
+                        <option value="cycling" data-i18n="trans_cycling">🚲 Xe đạp</option>
+                        <option value="foot" data-i18n="trans_walking">🚶 Đi bộ</option>
                     </select>
                 </div>
             </div>

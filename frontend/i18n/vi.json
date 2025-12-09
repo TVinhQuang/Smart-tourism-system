@@ -1,4 +1,58 @@
 {
     "hero_title": "Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.",
-    "hero_desc": "Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất."
+    "hero_desc": "Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất.",
+    "top_suggestion_title": "Top homestay, khách sạn được gợi ý",
+    
+    "btn_view_map": "Xem bản đồ",
+    "label_price_from": "Từ",
+    
+    "modal_setup_title": "Thiết lập lộ trình",
+    "label_address": "Địa chỉ",
+    "label_price_night": "Giá mỗi đêm",
+    "label_rating": "Đánh giá",
+    "section_amenities": "Tiện ích nổi bật",
+    "section_desc": "Giới thiệu",
+    
+    "label_start_point": "Điểm xuất phát:",
+    "placeholder_my_loc": "Vị trí của bạn (TP.HCM)",
+    "label_destination": "Điểm đến:",
+    "label_transport_mode": "Phương tiện di chuyển:",
+    
+    "trans_car": "Ô tô / Xe máy",
+    "trans_bike": "Xe đạp",
+    "trans_walk": "Đi bộ",
+    
+    "btn_close": "Đóng",
+    "btn_find_route": "Tìm đường đi",
+    "btn_calculating": "⏳ Đang tính toán...",
+
+    "btn_back": "Quay lại",
+    "analysis_title": "Kết quả phân tích",
+    "instruction_title": "Hướng dẫn chi tiết",
+    
+    "stat_distance": "Khoảng cách",
+    "stat_duration": "Thời gian",
+    
+    "label_complexity": "Đánh giá độ khó",
+    "label_advice": "Lời khuyên",
+    
+    "alert_analysis_header": "KẾT QUẢ PHÂN TÍCH:",
+    "error_server": "Lỗi kết nối Server!",
+    "error_no_route": "Không tìm thấy đường đi!",
+    "msg_complexity_high": "Phức tạp",
+    "msg_complexity_medium": "Trung bình",
+    "msg_complexity_low": "Dễ đi",
+
+    "val_my_location": "Vị trí của bạn (TP.HCM)",
+    
+    "amenity_pool": "🏊 Hồ bơi",
+    "amenity_wifi": "📶 Wifi miễn phí",
+    "amenity_breakfast": "🍳 Bữa sáng",
+    "amenity_parking": "🅿️ Đỗ xe",
+    "amenity_gym": "🏋️ Phòng Gym",
+    "amenity_bar": "🍸 Rooftop Bar",
+    "amenity_bathtub": "🛁 Bồn tắm",
+    "amenity_riverview": "🌊 View sông",
+    "amenity_shuttle": "🚌 Xe đưa đón",
+    "amenity_ac": "❄️ Điều hòa"
 }

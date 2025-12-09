@@ -45,6 +45,12 @@ function openRoutingModal(index) {
     } else {
         amenityContainer.innerHTML = "<span style='color:#999; font-style:italic'>Đang cập nhật...</span>";
     }
+    // 3. Xử lý Input "Vị trí của bạn"
+    const startInput = document.querySelector('.input-readonly');
+    // Gán giá trị từ file ngôn ngữ
+    if(startInput) {
+        startInput.value = window.langData["val_my_location"];
+    }
 
     // Hiển thị modal
     document.getElementById("routing-overlay").classList.remove("hidden");
@@ -140,6 +146,11 @@ function renderSteps(instructions) {
     instructions.forEach((stepText, i) => {
         const div = document.createElement("div");
         div.className = "step-item";
+        
+        // Thêm delay cho từng phần tử để chúng hiện ra lần lượt
+        // Phần tử 1 trễ 0s, phần tử 2 trễ 0.05s, phần tử 3 trễ 0.1s...
+        div.style.animationDelay = `${i * 0.05}s`; 
+        
         div.innerHTML = `
             <div class="step-icon">${i + 1}.</div>
             <div class="step-text">${stepText}</div>

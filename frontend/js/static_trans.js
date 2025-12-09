@@ -11,4 +11,7 @@ async function translatePage(lang) {
     } catch (err) {
         console.error("Translation error:", err);
     }
+    if (typeof window.renderAccommodationList === 'function') {
+        window.renderAccommodationList();
+    }
 }

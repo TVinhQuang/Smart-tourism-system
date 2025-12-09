@@ -1,4 +1,52 @@
 {
     "hero_title": "A smart accommodation recommendation platform for every trip.",
-    "hero_desc": "The website uses data and analytics to help you quickly find the best hotels or homestays."
+    "hero_desc": "The website uses data and analytics to help you quickly find the best hotels or homestays.",
+    
+    "section_top_title": "Top recommended homestays & hotels",
+    
+    "btn_view_map": "View Map",
+    "btn_close": "Close",
+    "btn_find_route": "Find Route",
+    "btn_back": "Back",
+    "btn_ok": "OK",
+    
+    "modal_step1_title": "Route Settings",
+    "label_address": "Address",
+    "label_price": "Price",
+    "label_rating": "Rating",
+    "label_amenities": "Featured Amenities",
+    "label_desc": "Description",
+    
+    "input_start_label": "Start Point:",
+    "input_dest_label": "Destination:",
+    "input_transport_label": "Transport Mode:",
+    "placeholder_my_loc": "Your location (HCMC)",
+
+    "trans_driving": "Car / Motorbike",
+    "trans_cycling": "Bicycle",
+    "trans_walking": "Walking",
+    
+    "analysis_title": "Analysis Result",
+    "stat_distance": "Distance",
+    "stat_duration": "Duration",
+    "label_complexity": "Difficulty Level",
+    "label_advice": "Advice",
+    "steps_title": "Detailed Instructions",
+    
+    "status_calculating": "⏳ Calculating...",
+    "error_server": "Server Connection Error!",
+    "error_not_found": "Route not found!",
+
+    "val_my_location": "Your Location (HCMC)",
+
+    "amenity_pool": "🏊 Swimming Pool",
+    "amenity_wifi": "📶 Free Wifi",
+    "amenity_breakfast": "🍳 Breakfast",
+    "amenity_parking": "🅿️ Parking",
+    "amenity_gym": "🏋️ Gym",
+    "amenity_bar": "🍸 Rooftop Bar",
+    "amenity_bathtub": "🛁 Bathtub",
+    "amenity_riverview": "🌊 River View",
+    "amenity_shuttle": "🚌 Shuttle Bus",
+    "amenity_ac": "❄️ Air Conditioner"
 }
