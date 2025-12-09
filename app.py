@@ -392,7 +392,7 @@ def haversine_km(lon1, lat1, lon2, lat2):
 def serpapi_geocode(q: str):
     # 1. GÁN CỨNG KEY (Để đảm bảo hàm này luôn có key đúng)
     # Bạn thay key của bạn vào đây:
-    HARDCODED_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
+    HARDCODED_KEY = API_KEY
     
     print(f"DEBUG: Đang Geocode '{q}' với SerpApi...")
 
@@ -863,7 +863,7 @@ def fetch_google_hotels(city_name: str, radius_km: float = 5.0, wanted_types: Li
 
 
     # 2. Gọi API SerpAPI – Google Maps search
-    REAL_API_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"  # giữ nguyên key của cậu
+    REAL_API_KEY = API_KEY  # giữ nguyên key của cậu
 
     search_query = build_search_query(city_name, wanted_types)
 

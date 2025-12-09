@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Du lịch Việt Nam</title>
+    <title>Du lịch Việt Nam</title>
+    
     <link rel="stylesheet" href="../css/navbar.css">
     <link rel="stylesheet" href="../css/accomodation_card.css">
+    <link rel="stylesheet" href="../css/routing.css">
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; }
 
         /* Hero Section */
         .hero {
@@ -25,71 +28,68 @@
         .hero h1 { font-size: 3.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .hero p { font-size: 1.5rem; margin-bottom: 30px; }
 
-        .search-box {
-            background: white; padding: 20px; border-radius: 10px; display: flex; gap: 10px;
-            max-width: 800px; margin: 0 auto;
-        }
-        .search-box input, .search-box select { padding: 12px; border: 1px solid #ddd; border-radius: 5px; flex: 1; font-size: 1rem; }
-        .search-box button { padding: 12px 30px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: background 0.3s; }
-        .search-box button:hover { background: #5568d3; }
-
         /* Features Section */
         .features { padding: 60px 20px; max-width: 1200px; margin: 0 auto; }
         .features h2 { text-align: center; font-size: 2.5rem; margin-bottom: 50px; color: #333; }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2rem; }
-            .search-box { flex-direction: column; }
+        
+        /* Grid container */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar (loaded from component) -->
     <div id="navbar-root"></div>
 
-    <!-- Hero Section -->
     <div class="hero" id="home">
         <div>
             <h1 data-i18n="hero_title">
-                Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.
+                Nền tảng gợi ý nơi lưu trú thông minh.
             </h1>
             <p data-i18n="hero_desc">
-                Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất với nhu cầu về giá, vị trí, tiện nghi và thời gian di chuyển.
+                Tìm khách sạn hoặc homestay phù hợp nhất với nhu cầu của bạn.
             </p>
         </div>
     </div>
     
-    <!-- Features Section -->
     <div class="features" id="suggestions">
-        <h2>Top 10 homestay, khách sạn được gợi ý nhiều nhất</h2>
-        <div class="feature-grid">
-            <div class="accommodation-card">
-                <img src="https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg" alt="Hội An">
-                <div class="accommodation-content">
-                    <div class="accommodation-title">
-                        La Siesta Hoi An Resort & Spa - Hội An
-                    </div>
-                    <div class="accommodation-description">
-                        Khách sạn số 1 Việt Nam 2024 theo Tripadvisor
-                    </div>
-                    <div class="price-rating-row">
-                        <div class="accommodation-price">
-                            Từ 1.600.000 - 5.000.000VND
-                        </div>
-                        <div class="accommodation-rating">
-                            <span class="star">★</span> 8.9
-                        </div>
-                    </div>
-                    
-                    <button class="map-button" onclick="openMap()">
-                        📍 Xem bản đồ
-                    </button>
-                    <div class = "accomodation-title">
-                    </div>
+        <h2>Top homestay, khách sạn được gợi ý</h2>
+        
+        <div id="accommodation-list" class="feature-grid"></div>
+    </div>
+
+    <div id="routing-overlay" class="routing-overlay hidden">
+        <div class="routing-modal">
+            <div class="routing-info">
+                <h2 id="rt-name" style="color: #4a6cf7;">Tên địa điểm</h2>
+                <p id="rt-address" style="margin: 10px 0; color: #555;">📍 Địa chỉ...</p>
+                <p id="rt-price" style="font-weight: bold; color: green;">💵 Giá: ...</p>
+                <p id="rt-rating" style="margin-bottom: 20px;">⭐ Rating: ...</p>
+                <hr style="border-top: 1px solid #eee; margin: 15px 0;">
+                <p style="margin-bottom:10px; font-weight:bold;">Chọn phương tiện di chuyển:</p>
+                
+                <select id="rt-transport" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="driving">🚗 Ô tô</option>
+                    <option value="bike">🏍️ Xe máy</option>
+                    <option value="foot">🚶 Đi bộ</option>
+                </select>
             </div>
-            
+
+            <div class="routing-map">
+                <iframe id="rt-map-frame" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+
+            <div class="routing-controls">
+                <button id="rt-close" class="btn-secondary">Đóng</button>
+                <button id="rt-show-route" class="btn-primary">🗺️ Chỉ đường</button>
+            </div>
+        </div>
+    </div>        
+
     <script>
-        // Load navbar component into #navbar-root
+        // Load navbar component
         (function(){
             fetch('../components/navbar.html')
                 .then(function(r){ return r.text(); })
@@ -97,7 +97,12 @@
                 .catch(function(){ console.warn('Không thể load navbar component'); });
         })();
     </script>
-    <script src="../js/static_trans.js"></script>
 
+    <script src="../js/static_trans.js"></script>
+    <script src="../js/display_results.js"></script>
+    <script src="../js/rec_accomodation.js"></script>
+
+    <script src="../js/homepage.js"></script>
+    <script src="../js/routing.js"></script>
 </body>
 </html>

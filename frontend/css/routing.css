@@ -1,0 +1,101 @@
+.routing-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.routing-overlay.hidden {
+    display: none;
+}
+
+.routing-modal {
+    width: 90%;
+    height: 85vh;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 35% 65%;
+    grid-template-rows: auto 60px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+    .routing-modal {
+        grid-template-columns: 1fr;
+        grid-template-rows: 40% 1fr 60px;
+        height: 90vh;
+    }
+}
+
+/* Left Info */
+.routing-info {
+    padding: 25px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.routing-info h2 {
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* Right Map */
+.routing-map {
+    background: #eee;
+    position: relative;
+}
+
+/* Controls */
+.routing-controls {
+    grid-column: span 2;
+    padding: 10px 20px;
+    background: #fafafa;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .routing-controls {
+        grid-column: span 1;
+    }
+}
+
+#rt-transport {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+
+#rt-show-route,
+#rt-close {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+#rt-show-route {
+    background: #4a6cf7;
+    color: white;
+}
+
+#rt-close {
+    background: #e0e0e0;
+    color: #333;
+}

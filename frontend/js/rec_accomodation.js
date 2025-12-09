@@ -23,5 +23,16 @@ function submitSearch() {
     })
     .catch(err => {
         console.error("Error:", err);
+    })
+    .then(response => {
+    console.log("Backend:", response);
+
+    // LƯU CENTER CHO ROUTING
+    window.search_center = response.center;
+
+    renderResults(response.results, response.relaxation_note);
     });
+
+    
 }
+

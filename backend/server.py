@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from core_logic import Accommodation, SearchQuery, haversine_km, describe_osrm_step, rank_accommodations    
 import requests
 from typing import List
 from serpapi import GoogleSearch
@@ -45,7 +44,7 @@ class SearchQuery:
     radius_km: float
     priority: str = "balanced"
 
-SERPAPI_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
+SERPAPI_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
 
 @app.route('/api/recommend', methods=['POST'])
 def recommend_api():
@@ -193,7 +192,7 @@ def fetch_google_hotels(
         return f"khách sạn homestay hostel apartment ở {city}"
 
     # 2. Gọi API SerpAPI
-    REAL_API_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
+    REAL_API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
 
     search_query = build_search_query(city_name, wanted_types)
 
@@ -699,6 +698,32 @@ def analyze_route_complexity(route: dict, profile: str):
         summary = "Lộ trình khó, tốn nhiều thời gian hoặc đường đi phức tạp."
 
     return level, label_vi, summary, reasons
+
+def api_route():
+    data = request.json
+    src = data.get("src")
+    dst = data.get("dst")
+
+    if not src or not dst:
+        return jsonify({"error": "Missing src/dst"}), 400
+
+    # 1. Gọi OSRM
+    route = osrm_route(src, dst)
+    if not route:
+        return jsonify({"error": "OSRM failed"}), 500
+
+    # 2. Vẽ map Folium
+    m = draw_map(src, dst, route)
+
+    # 3. Xuất thành HTML file để frontend mở
+    map_path = "static_map/route_map.html"
+    m.save(map_path)
+
+    return jsonify({
+        "status": "ok",
+        "map_url": "/static_map/route_map.html",
+        "route": route
+    })
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
