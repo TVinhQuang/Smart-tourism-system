@@ -5,26 +5,27 @@ const dummyList = [
         name: "La Siesta Hoi An Resort & Spa",
         price: 2500000,
         rating: 9.3,
-        desc: "Khu nghỉ dưỡng cao cấp 4 sao, thiết kế sang trọng.",
+        desc: "Khu nghỉ dưỡng với 4 hồ bơi, kiến trúc xanh mát và spa đẳng cấp thế giới.",
         address: "134 Hùng Vương, Cẩm Phô, Hội An",
-        lat: 15.8795,
-        lon: 108.3181,
-        img: "https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg"
+        lat: 15.8795, lon: 108.3181,
+        img: "https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg",
+        // THÊM DÒNG NÀY:
+        amenities: ["🏊 Hồ bơi", "📶 Wifi miễn phí", "🍳 Bữa sáng", "💆 Spa & Massage", "🚌 Xe đưa đón", "❄️ Điều hòa"]
     },
     {
         name: "Hotel Royal Hoi An",
         price: 3200000,
         rating: 9.5,
-        desc: "Khách sạn MGallery đẳng cấp bên sông Thu Bồn.",
+        desc: "Khách sạn sang trọng bên sông Thu Bồn, mang phong cách Indochine lãng mạn.",
         address: "39 Đào Duy Từ, Hội An",
-        lat: 15.8770,
-        lon: 108.3260,
-        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/49826269.jpg?k=7a0126780287a91163402651478546554655"
+        lat: 15.8770, lon: 108.3260,
+        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/49826269.jpg?k=7a0126780287a91163402651478546554655",
+        // THÊM DÒNG NÀY:
+        amenities: ["🍸 Rooftop Bar", "🏋️ Phòng Gym", "🛁 Bồn tắm", "📶 Wifi miễn phí", "🌊 View sông"]
     }
 ];
 
-// === QUAN TRỌNG: Chia sẻ dữ liệu này cho routing.js ===
-window.homeResults = dummyList; 
+window.homeResults = dummyList;
 
 // ============================ RENDER CARD ============================
 const container = document.getElementById("accommodation-list");

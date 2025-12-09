@@ -12,6 +12,10 @@ import math
 import folium
 from deep_translator import GoogleTranslator
 
+app = Flask(__name__)
+CORS(app)
+API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
+
 def serpapi_geocode(q: str):
     # 1. GÁN CỨNG KEY (Để đảm bảo hàm này luôn có key đúng)
     # Bạn thay key của bạn vào đây:
@@ -369,3 +373,55 @@ def analyze_route_complexity(route: dict, profile: str):
         summary = "Lộ trình khó, tốn nhiều thời gian hoặc đường đi phức tạp."
 
     return level, label_vi, summary, reasons
+
+# ==============================================================================
+#3. API ENDPOINT (Kết nối với Frontend)
+# ==============================================================================
+
+@app.route('/api/route', methods=['POST'])
+def api_get_route():
+    data = request.json
+    src = data.get("src") # {lat: ..., lon: ...}
+    dst = data.get("dst") # {lat: ..., lon: ...}
+    profile = data.get("profile", "driving")
+
+    if not src or not dst:
+        return jsonify({"status": "error", "message": "Thiếu tọa độ src hoặc dst"}), 400
+
+    # 1. Gọi OSRM để lấy đường đi và thông tin cơ bản
+    route_data = osrm_route(src, dst, profile)
+    
+    if not route_data:
+        return jsonify({"status": "error", "message": "Không tìm thấy đường đi"}), 404
+
+    # 2. Gọi hàm nhận xét/đánh giá của BẠN
+    # Gợi ý phương tiện
+    rec_mode, rec_msg = recommend_transport_mode(
+        route_data["distance_km"], 
+        route_data["duration_min"]
+    )
+    
+    # Phân tích độ khó
+    level, label_vi, summary, reasons = analyze_route_complexity(route_data, profile)
+
+    # 3. Trả về JSON cho Frontend hiển thị
+    return jsonify({
+        "status": "success",
+        "path": route_data["geometry"],  # Để Leaflet vẽ đường xanh
+        "info": {
+            "distance_text": route_data["distance_text"],
+            "duration_text": route_data["duration_text"],
+            
+            # Dữ liệu phân tích của bạn
+            "complexity_level": level,         # low/medium/high
+            "complexity_label": label_vi,      # "Dễ đi", "Phức tạp"...
+            "complexity_summary": summary,     # "Lộ trình đơn giản..."
+            "recommendation_mode": rec_mode,
+            "recommendation_msg": rec_msg,
+            "analysis_details": reasons        # List lý do
+        },
+        "instructions": route_data["steps"]    # List hướng dẫn từng bước
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

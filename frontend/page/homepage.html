@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="../css/navbar.css">
     <link rel="stylesheet" href="../css/accomodation_card.css">
     <link rel="stylesheet" href="../css/routing.css">
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; }
@@ -61,38 +62,126 @@
     </div>
 
     <div id="routing-overlay" class="routing-overlay hidden">
-        <div class="routing-modal">
-            <div class="routing-info">
-                <h2 id="rt-name" style="color: #4a6cf7;">Tên địa điểm</h2>
-                <p id="rt-address" style="margin: 10px 0; color: #555;">📍 Địa chỉ...</p>
-                <p id="rt-price" style="font-weight: bold; color: green;">💵 Giá: ...</p>
-                <p id="rt-rating" style="margin-bottom: 20px;">⭐ Rating: ...</p>
-                <hr style="border-top: 1px solid #eee; margin: 15px 0;">
-                <p style="margin-bottom:10px; font-weight:bold;">Chọn phương tiện di chuyển:</p>
+    <div class="routing-modal">
+        
+        <div id="view-step-1" class="view-container">
+            <div class="col-left-info">
+                <div class="hotel-cover">
+                    <img id="info-img" src="" alt="Hotel Image">
+                    <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
+                </div>
+
+                <div class="hotel-info-body">
+                    <h2 id="info-name" class="hotel-title">Tên khách sạn</h2>
+                    
+                    <div class="hotel-address-row">
+                        <span class="icon">📍</span> 
+                        <span id="info-address">Địa chỉ...</span>
+                    </div>
+
+                    <div class="hotel-price-row">
+                        <span class="label">Giá mỗi đêm:</span>
+                        <span id="info-price" class="price">...</span>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="hotel-amenities-section">
+                        <h4>💎 Tiện ích nổi bật</h4>
+                        <div id="info-amenities" class="amenities-grid">
+                            </div>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="hotel-desc-section">
+                        <h4>📝 Giới thiệu</h4>
+                        <p id="info-desc">...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right-selection">
+                <h3>🚙 Thiết lập lộ trình</h3>
                 
-                <select id="rt-transport" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="driving">🚗 Ô tô</option>
-                    <option value="bike">🏍️ Xe máy</option>
-                    <option value="foot">🚶 Đi bộ</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label>Điểm xuất phát:</label>
+                    <input type="text" value="Vị trí của bạn (TP.HCM)" disabled class="input-readonly">
+                </div>
 
-            <div class="routing-map">
-                <iframe id="rt-map-frame" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-            </div>
+                <div class="form-group">
+                    <label>Điểm đến:</label>
+                    <input type="text" id="target-dest" value="..." disabled class="input-readonly">
+                </div>
 
-            <div class="routing-controls">
-                <button id="rt-close" class="btn-secondary">Đóng</button>
-                <button id="rt-show-route" class="btn-primary">🗺️ Chỉ đường</button>
+                <div class="form-group">
+                    <label>Phương tiện di chuyển:</label>
+                    <div class="transport-options">
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="driving" checked>
+                            <span class="icon">🚗</span>
+                            <span>Ô tô / Xe máy</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="cycling">
+                            <span class="icon">🚲</span>
+                            <span>Xe đạp</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="foot">
+                            <span class="icon">🚶</span>
+                            <span>Đi bộ</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="btn-close-step1" class="btn-secondary">Đóng</button>
+                    <button id="btn-find-route" class="btn-primary">🗺️ Tìm đường đi</button>
+                </div>
             </div>
         </div>
-    </div>        
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <div id="view-step-2" class="view-container hidden">
+            <div class="col-left-analysis">
+                <button id="btn-back-step1" class="btn-back">⬅ Quay lại</button>
+                
+                <div class="analysis-box">
+                    <h4>📊 Kết quả phân tích</h4>
+                    <div class="stats-grid">
+                        <div class="stat">📏 <span id="res-distance">...</span></div>
+                        <div class="stat">⏱ <span id="res-duration">...</span></div>
+                    </div>
+                    <div class="complexity-box">
+                        <strong id="res-label">...</strong>
+                        <p id="res-summary">...</p>
+                        <ul id="res-details"></ul>
+                    </div>
+                    <div class="advice-box">
+                        💡 <span id="res-advice">...</span>
+                    </div>
+                </div>
 
-    <div class="routing-map">
-        <div id="rt-map-frame" style="width: 100%; height: 100%;"></div>
+                <div class="steps-box">
+                    <h4>📝 Hướng dẫn chi tiết</h4>
+                    <div id="steps-list" class="steps-scroll">
+                        </div>
+                </div>
+            </div>
+
+            <div class="col-right-map">
+                <div id="rt-map-frame"></div>
+                <div class="map-controls-overlay">
+                    <select id="quick-transport-change">
+                        <option value="driving">🚗 Ô tô</option>
+                        <option value="cycling">🚲 Xe đạp</option>
+                        <option value="foot">🚶 Đi bộ</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
     <script>
         // Load navbar component
@@ -102,6 +191,7 @@
                 .then(function(html){ document.getElementById('navbar-root').innerHTML = html; })
                 .catch(function(){ console.warn('Không thể load navbar component'); });
         })();
+    
     </script>
 
     <script src="../js/static_trans.js"></script>

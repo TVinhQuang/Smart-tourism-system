@@ -1,59 +1,68 @@
 let routingItem = null;
-let map = null;      // Biến giữ đối tượng bản đồ
-let marker = null;   // Biến giữ cái ghim đỏ
-let routeLine = null; // Biến giữ đường vẽ màu xanh
+let map = null;
+let routeLine = null;
+let markerStart = null;
+let markerEnd = null;
 
-// Tọa độ giả lập của người dùng (Ví dụ: Hà Nội)
-// Trong thực tế bạn dùng navigator.geolocation để lấy
-const YOUR_LAT = 21.0285;
-const YOUR_LON = 105.8542;
+// Tọa độ giả lập (Nhà bạn)
+const YOUR_LAT = 21.0075535;
+const YOUR_LON = 105.8427515;
+
+// === 1. MỞ MODAL (VÀO BƯỚC 1) ===
+// File: routing.js
+
+// ... (Giữ nguyên các biến global ở trên)
 
 function openRoutingModal(index) {
     if (!window.homeResults || !window.homeResults[index]) return;
     const item = window.homeResults[index];
     routingItem = item;
 
-    // 1. Điền text thông tin (như cũ)
-    document.getElementById("rt-name").innerText = item.name;
-    document.getElementById("rt-address").innerText = "📍 " + item.address;
-    document.getElementById("rt-price").innerText = "💵 " + Number(item.price).toLocaleString() + " VNĐ";
-    document.getElementById("rt-rating").innerText = "⭐ " + item.rating;
+    // Reset giao diện về Bước 1
+    switchView(1);
 
-    // 2. Hiển thị Modal trước để bản đồ tính toán được kích thước
-    document.getElementById("routing-overlay").classList.remove("hidden");
+    // 1. Điền thông tin cơ bản
+    document.getElementById("info-img").src = item.img || 'https://via.placeholder.com/300';
+    document.getElementById("info-name").innerText = item.name;
+    document.getElementById("info-address").innerText = item.address;
+    document.getElementById("info-price").innerText = Number(item.price).toLocaleString() + " VNĐ";
+    document.getElementById("info-rating").innerText = item.rating;
+    document.getElementById("info-desc").innerText = item.desc;
+    document.getElementById("target-dest").value = item.name;
 
-    // 3. Khởi tạo bản đồ Leaflet (Nếu chưa có)
-    if (!map) {
-        // Tạo map tại div id="rt-map-frame"
-        map = L.map('rt-map-frame').setView([item.lat, item.lon], 15);
-        
-        // Thêm lớp nền OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    // 2. XỬ LÝ TIỆN ÍCH (MỚI)
+    const amenityContainer = document.getElementById("info-amenities");
+    amenityContainer.innerHTML = ""; // Xóa các tiện ích cũ
+
+    if (item.amenities && item.amenities.length > 0) {
+        item.amenities.forEach(am => {
+            // Tạo thẻ span cho mỗi tiện ích
+            const span = document.createElement("span");
+            span.className = "amenity-tag";
+            span.innerText = am;
+            amenityContainer.appendChild(span);
+        });
     } else {
-        // Nếu map đã có rồi thì chỉ cần bay đến vị trí mới
-        map.setView([item.lat, item.lon], 15);
-        
-        // Fix lỗi hiển thị map bị xám khi ẩn/hiện modal
-        setTimeout(() => { map.invalidateSize(); }, 200);
+        amenityContainer.innerHTML = "<span style='color:#999; font-style:italic'>Đang cập nhật...</span>";
     }
 
-    // 4. Thêm Marker (Ghim đỏ) tại vị trí khách sạn
-    if (marker) map.removeLayer(marker); // Xóa marker cũ
-    if (routeLine) map.removeLayer(routeLine); // Xóa đường vẽ cũ
-
-    marker = L.marker([item.lat, item.lon]).addTo(map)
-        .bindPopup(`<b>${item.name}</b>`).openPopup();
+    // Hiển thị modal
+    document.getElementById("routing-overlay").classList.remove("hidden");
 }
 
-// === PHẦN TÍCH HỢP API CHỈ ĐƯỜNG CỦA BẠN ===
-document.getElementById("rt-show-route").addEventListener("click", () => {
-    const mode = document.getElementById("rt-transport").value;
-    const btn = document.getElementById("rt-show-route");
-    btn.innerText = "⏳ Đang tính toán...";
+// ... (Các phần còn lại giữ nguyên)
+
+// === 2. XỬ LÝ TÌM ĐƯỜNG (CHUYỂN SANG BƯỚC 2) ===
+document.getElementById("btn-find-route").addEventListener("click", () => {
+    // Lấy phương tiện đang chọn
+    const mode = document.querySelector('input[name="transport"]:checked').value;
+    
+    // Hiển thị loading
+    const btn = document.getElementById("btn-find-route");
+    btn.innerText = "⏳ Đang xử lý...";
     btn.disabled = true;
 
+    // Gọi API
     fetch("http://localhost:5000/api/route", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -66,29 +75,21 @@ document.getElementById("rt-show-route").addEventListener("click", () => {
     .then(r => r.json())
     .then(data => {
         if (data.status === "success") {
-            // 1. Vẽ đường đi lên Map
-            if (routeLine) map.removeLayer(routeLine);
-            routeLine = L.polyline(data.path, {color: 'blue', weight: 6, opacity: 0.7}).addTo(map);
-            map.fitBounds(routeLine.getBounds(), {padding: [50, 50]});
-
-            // 2. Hiển thị thông tin phân tích (Alert hoặc chèn vào HTML)
-            const info = data.info;
-            let msg = `✅ Đã tìm thấy đường!\n\n`;
-            msg += `📏 Khoảng cách: ${info.distance_text}\n`;
-            msg += `⏱ Thời gian: ${info.duration_text}\n`;
-            msg += `📊 Độ khó: ${info.complexity}\n`;
-            msg += `💡 Gợi ý: ${info.recommendation}\n`;
+            // Chuyển sang Bước 2
+            switchView(2);
             
-            // Nếu bạn muốn hiện hướng dẫn chi tiết bước đầu tiên
-            if (data.instructions.length > 0) {
-                msg += `\n🚀 Bước đầu: ${data.instructions[0]}`;
-            }
+            // Đồng bộ select box ở bước 2 với lựa chọn ở bước 1
+            document.getElementById("quick-transport-change").value = mode;
 
-            alert(msg);
+            // Render dữ liệu phân tích
+            renderAnalysis(data.info);
+            renderSteps(data.instructions);
             
-            // (Nâng cao) Bạn có thể render danh sách instructions vào một div trong modal thay vì alert
+            // Render Bản đồ
+            initMap(data.path, mode);
+
         } else {
-            alert("Không tìm thấy đường đi!");
+            alert("❌ Không tìm thấy đường đi! (" + data.message + ")");
         }
     })
     .catch(err => {
@@ -96,7 +97,107 @@ document.getElementById("rt-show-route").addEventListener("click", () => {
         alert("Lỗi kết nối Server!");
     })
     .finally(() => {
-        btn.innerText = "🗺️ Chỉ đường";
+        btn.innerText = "🗺️ Tìm đường đi";
         btn.disabled = false;
     });
+});
+
+// === CÁC HÀM HỖ TRỢ ===
+
+function switchView(step) {
+    if (step === 1) {
+        document.getElementById("view-step-1").classList.remove("hidden");
+        document.getElementById("view-step-2").classList.add("hidden");
+    } else {
+        document.getElementById("view-step-1").classList.add("hidden");
+        document.getElementById("view-step-2").classList.remove("hidden");
+    }
+}
+
+function renderAnalysis(info) {
+    document.getElementById("res-distance").innerText = info.distance_text;
+    document.getElementById("res-duration").innerText = info.duration_text;
+    
+    const labelEl = document.getElementById("res-label");
+    labelEl.innerText = info.complexity_label;
+    labelEl.style.color = (info.complexity_level === 'low') ? 'green' : (info.complexity_level === 'medium' ? 'orange' : 'red');
+
+    document.getElementById("res-summary").innerText = info.complexity_summary;
+    document.getElementById("res-advice").innerText = info.recommendation_msg;
+
+    const ul = document.getElementById("res-details");
+    ul.innerHTML = "";
+    info.analysis_details.forEach(detail => {
+        const li = document.createElement("li");
+        li.innerText = detail;
+        ul.appendChild(li);
+    });
+}
+
+function renderSteps(instructions) {
+    const list = document.getElementById("steps-list");
+    list.innerHTML = "";
+    instructions.forEach((stepText, i) => {
+        const div = document.createElement("div");
+        div.className = "step-item";
+        div.innerHTML = `
+            <div class="step-icon">${i + 1}.</div>
+            <div class="step-text">${stepText}</div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function initMap(pathCoords, mode) {
+    // 1. Khởi tạo map nếu chưa có
+    if (!map) {
+        map = L.map('rt-map-frame');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    }
+    
+    // Quan trọng: Phải gọi invalidateSize khi hiện map trong div ẩn trước đó
+    setTimeout(() => { map.invalidateSize(); }, 100);
+
+    // 2. Vẽ Marker
+    if (markerStart) map.removeLayer(markerStart);
+    if (markerEnd) map.removeLayer(markerEnd);
+    
+    markerStart = L.marker([YOUR_LAT, YOUR_LON]).addTo(map).bindPopup("Xuất phát").openPopup();
+    markerEnd = L.marker([routingItem.lat, routingItem.lon]).addTo(map).bindPopup(routingItem.name);
+
+    // 3. Vẽ đường đi
+    if (routeLine) map.removeLayer(routeLine);
+    routeLine = L.polyline(pathCoords, {color: 'blue', weight: 6, opacity: 0.8}).addTo(map);
+    
+    // Zoom vừa khít
+    map.fitBounds(routeLine.getBounds(), {padding: [50, 50]});
+}
+
+// === CÁC NÚT ĐIỀU KHIỂN KHÁC ===
+
+// Nút Quay lại (Từ B2 -> B1)
+document.getElementById("btn-back-step1").addEventListener("click", () => {
+    switchView(1);
+});
+
+// Nút Đóng Modal
+document.getElementById("btn-close-step1").addEventListener("click", () => {
+    document.getElementById("routing-overlay").classList.add("hidden");
+});
+
+// Đóng khi click ra ngoài
+document.getElementById("routing-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "routing-overlay") {
+        document.getElementById("routing-overlay").classList.add("hidden");
+    }
+});
+
+// (Option) Xử lý đổi phương tiện nhanh ở Bước 2
+document.getElementById("quick-transport-change").addEventListener("change", (e) => {
+    // Kích hoạt lại nút Tìm đường ở B1 với giá trị mới rồi giả lập click
+    const mode = e.target.value;
+    document.querySelector(`input[name="transport"][value="${mode}"]`).checked = true;
+    document.getElementById("btn-find-route").click(); // Gọi lại API
 });

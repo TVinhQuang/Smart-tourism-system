@@ -1,101 +1,207 @@
+/* Container Modal */
 .routing-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(3px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+    z-index: 9999; display: flex; justify-content: center; align-items: center;
 }
-
-.routing-overlay.hidden {
-    display: none;
-}
+.routing-overlay.hidden { display: none; }
 
 .routing-modal {
-    width: 90%;
-    height: 85vh;
+    width: 95%; max-width: 1200px; height: 90vh;
+    background: white; border-radius: 12px; overflow: hidden;
+    position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* Sửa lại class .col-left-info cũ */
+.col-left-info {
+    padding: 0; /* Bỏ padding bao quanh để ảnh tràn viền */
     background: #fff;
-    border-radius: 14px;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 35% 65%;
-    grid-template-rows: auto 60px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-/* Responsive cho mobile */
-@media (max-width: 768px) {
-    .routing-modal {
-        grid-template-columns: 1fr;
-        grid-template-rows: 40% 1fr 60px;
-        height: 90vh;
-    }
-}
-
-/* Left Info */
-.routing-info {
-    padding: 25px;
     border-right: 1px solid #ddd;
-    overflow-y: auto;
-    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Chiều cao full */
+    overflow: hidden; /* Ẩn thanh cuộn ngoài */
 }
 
-.routing-info h2 {
-    margin-bottom: 10px;
+/* Ảnh bìa */
+.hotel-cover {
+    position: relative;
+    width: 100%;
+    height: 220px; /* Chiều cao cố định cho ảnh */
+    flex-shrink: 0;
+}
+
+.hotel-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.rating-badge {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #f39c12;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Phần thân nội dung (Cuộn dọc) */
+.hotel-info-body {
+    padding: 20px 25px;
+    overflow-y: auto; /* Cho phép cuộn nếu nội dung dài */
+    flex-grow: 1;
+}
+
+.hotel-title {
     font-size: 1.5rem;
     color: #333;
+    margin-bottom: 10px;
 }
 
-/* Right Map */
-.routing-map {
-    background: #eee;
-    position: relative;
-}
-
-/* Controls */
-.routing-controls {
-    grid-column: span 2;
-    padding: 10px 20px;
-    background: #fafafa;
-    border-top: 1px solid #ddd;
+.hotel-address-row {
     display: flex;
-    justify-content: space-between;
+    gap: 8px;
+    color: #555;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.hotel-price-row {
+    display: flex;
     align-items: center;
-}
-
-@media (max-width: 768px) {
-    .routing-controls {
-        grid-column: span 1;
-    }
-}
-
-#rt-transport {
-    padding: 10px 12px;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 10px 15px;
     border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
+    margin-bottom: 20px;
 }
 
-#rt-show-route,
-#rt-close {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
+.hotel-price-row .price {
+    font-size: 1.3rem;
     font-weight: bold;
-    margin-left: 10px;
+    color: #28a745;
 }
 
-#rt-show-route {
-    background: #4a6cf7;
-    color: white;
+.divider {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
 }
 
-#rt-close {
-    background: #e0e0e0;
-    color: #333;
+h4 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #4a6cf7;
+}
+
+/* Grid tiện ích dạng thẻ (Tags) */
+.amenities-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.amenity-tag {
+    background: #eef2ff;
+    color: #4a6cf7;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.hotel-desc-section p {
+    line-height: 1.6;
+    color: #666;
+    font-size: 0.95rem;
+    text-align: justify;
+}
+/* === VIEW CHUNG === */
+.view-container {
+    width: 100%; height: 100%;
+    display: grid;
+    /* Mặc định chia đôi */
+    grid-template-columns: 1fr 1fr; 
+}
+.view-container.hidden { display: none; }
+
+/* === BƯỚC 1 CSS === */
+.col-left-info {
+    padding: 30px; background: #f8f9fa; border-right: 1px solid #ddd;
+    display: flex; flex-direction: column; gap: 15px;
+}
+#info-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; }
+.info-meta { display: flex; gap: 15px; margin: 10px 0; }
+.price-tag { color: #28a745; font-weight: bold; font-size: 1.2rem; }
+.rating-tag { background: #fff3cd; padding: 2px 8px; border-radius: 4px; color: #856404; font-weight: bold; }
+
+.col-right-selection {
+    padding: 40px; display: flex; flex-direction: column; justify-content: center;
+}
+.col-right-selection h3 { margin-bottom: 25px; color: #333; font-size: 1.8rem; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+.input-readonly {
+    width: 100%; padding: 12px; border: 1px solid #ddd; background: #eee;
+    border-radius: 8px; font-size: 1rem; color: #555;
+}
+
+/* Radio button giả thẻ Card */
+.transport-options { display: flex; gap: 10px; }
+.radio-card {
+    flex: 1; border: 2px solid #ddd; border-radius: 8px; padding: 15px;
+    cursor: pointer; text-align: center; transition: 0.2s; position: relative;
+}
+.radio-card input { display: none; } /* Ẩn nút radio thật */
+.radio-card .icon { display: block; font-size: 1.5rem; margin-bottom: 5px; }
+.radio-card:hover { border-color: #4a6cf7; background: #f0f4ff; }
+.radio-card:has(input:checked) { border-color: #4a6cf7; background: #eef2ff; color: #4a6cf7; font-weight: bold; }
+
+.action-buttons { margin-top: 20px; display: flex; gap: 15px; }
+.btn-primary { flex: 2; padding: 15px; background: #4a6cf7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+.btn-secondary { flex: 1; padding: 15px; background: #ccc; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+/* === BƯỚC 2 CSS === */
+/* Cột trái nhỏ hơn (35%), Map to hơn (65%) */
+#view-step-2 { grid-template-columns: 35% 65%; }
+
+.col-left-analysis {
+    padding: 20px; overflow-y: auto; background: #fff; border-right: 1px solid #ddd;
+    display: flex; flex-direction: column;
+}
+.btn-back { align-self: flex-start; background: none; border: none; color: #4a6cf7; cursor: pointer; font-size: 1rem; margin-bottom: 15px; }
+
+.analysis-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+.stats-grid { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+.stat { font-weight: bold; font-size: 1.1rem; }
+.complexity-box { margin-bottom: 10px; }
+#res-label { display: block; margin-bottom: 5px; font-size: 1.1rem; }
+#res-details { padding-left: 20px; font-size: 0.9rem; color: #666; margin: 5px 0; }
+.advice-box { background: #eef2ff; padding: 10px; border-radius: 6px; font-size: 0.9rem; color: #333; border-left: 3px solid #4a6cf7; }
+
+.steps-box { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.steps-scroll { overflow-y: auto; flex: 1; padding-right: 5px; }
+.step-item {
+    display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 0.95rem;
+}
+.step-icon { color: #4a6cf7; font-weight: bold; }
+
+.col-right-map { position: relative; }
+#rt-map-frame { width: 100%; height: 100%; }
+.map-controls-overlay {
+    position: absolute; top: 10px; right: 10px; z-index: 1000;
+    background: white; padding: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .view-container, #view-step-2 { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    #view-step-2 { grid-template-rows: 50% 50%; } /* Map 1 nửa, text 1 nửa */
+    .col-right-selection { padding: 20px; }
+    #info-img { height: 150px; }
 }
