@@ -10,7 +10,7 @@ const dummyList = [
         lat: 15.8795, lon: 108.3181,
         img: "https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg",
         // THÊM DÒNG NÀY:
-        amenities: ["🏊 Hồ bơi", "📶 Wifi miễn phí", "🍳 Bữa sáng", "💆 Spa & Massage", "🚌 Xe đưa đón", "❄️ Điều hòa"]
+        amenities: ["🏊 Hồ bơi", "📶 Wifi miễn phí", "🍳 Bữa sáng", "Đỗ xe"]
     },
     {
         name: "Hotel Royal Hoi An",
@@ -21,7 +21,7 @@ const dummyList = [
         lat: 15.8770, lon: 108.3260,
         img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/49826269.jpg?k=7a0126780287a91163402651478546554655",
         // THÊM DÒNG NÀY:
-        amenities: ["🍸 Rooftop Bar", "🏋️ Phòng Gym", "🛁 Bồn tắm", "📶 Wifi miễn phí", "🌊 View sông"]
+        amenities: ["🍳 Bữa sáng", "📶 Wifi miễn phí", "🏊 Hồ bơi", "Đỗ xe"]
     }
 ];
 
