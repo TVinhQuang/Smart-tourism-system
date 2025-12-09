@@ -28,6 +28,11 @@ function renderResults(results, note) {
             <p>Khoảng cách: ${distance} km</p>
             <p>Tiện ích: ${Array.isArray(item.amenities) ? item.amenities.join(", ") : (item.amenities || '')}</p>
             <p>Địa chỉ: ${item.address || ''}</p>
+            <button class="view-map-btn"
+                data-lat="${item.latitude}"
+                data-lng="${item.longitude}">
+                🗺 Xem bản đồ
+            </button>
         `;
         container.appendChild(div);
     });
@@ -67,4 +72,40 @@ function viewMap(dstLat, dstLon, dstName) {
         console.error("Route error:", err);
         alert("Không lấy được dữ liệu tuyến đường!");
     });
+
+function showMapAndRoute(data) {
+    const popup = document.getElementById("map-popup");
+    popup.style.display = "block";
+
+    document.getElementById("main-route").innerText = data.main_route;
+
+    const detailBox = document.getElementById("detail-steps");
+    detailBox.innerHTML = data.steps.map(s => `<li>${s}</li>`).join("");
+
+    document.getElementById("toggle-details").onclick = () => {
+        if (detailBox.style.display === "none") {
+            detailBox.style.display = "block";
+        } else {
+            detailBox.style.display = "none";
+        }
+    };
+
+    let map = L.map("map").setView([data.start_lat, data.start_lng], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+        .addTo(map);
+
+    L.polyline(data.polyline, {color: "blue"}).addTo(map);
+}
+
+
+document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("view-map-btn")) {
+        const lat = event.target.getAttribute("data-lat");
+        const lng = event.target.getAttribute("data-lng");
+
+        openMapPopup(lat, lng);
+    }
+});
+
 }
