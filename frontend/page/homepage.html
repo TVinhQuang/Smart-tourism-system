@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Du lịch Việt Nam</title>
+    <title> Du lịch Việt Nam</title>
     <link rel="stylesheet" href="../css/navbar.css">
     <link rel="stylesheet" href="../css/accomodation_card.css">
     <style>
@@ -50,70 +50,44 @@
     <!-- Hero Section -->
     <div class="hero" id="home">
         <div>
-            <h1>Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.</h1>
-            <p>Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất với nhu cầu về giá, vị trí, tiện nghi và thời gian di chuyển.</p>
+            <h1 data-i18n="hero_title">
+                Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.
+            </h1>
+            <p data-i18n="hero_desc">
+                Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất với nhu cầu về giá, vị trí, tiện nghi và thời gian di chuyển.
+            </p>
         </div>
     </div>
     
     <!-- Features Section -->
     <div class="features" id="suggestions">
-        <h2>🔥 Địa điểm hot nhất</h2>
+        <h2>Top 10 homestay, khách sạn được gợi ý nhiều nhất</h2>
         <div class="feature-grid">
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=400" alt="Hạ Long">
-                <div class="feature-card-content">
-                    <h3>🏝️ Vịnh Hạ Long</h3>
-                    <p>Di sản thiên nhiên thế giới với hàng nghìn đảo đá vôi tuyệt đẹp</p>
-                    <div class="price">Từ 2.500.000đ</div>
-                </div>
+            <div class="accommodation-card">
+                <img src="https://bevivu.com/wp-content/uploads/image8/2024/02/la-siesta-resort--spa070220241707301318.jpeg" alt="Hội An">
+                <div class="accommodation-content">
+                    <div class="accommodation-title">
+                        La Siesta Hoi An Resort & Spa - Hội An
+                    </div>
+                    <div class="accommodation-description">
+                        Khách sạn số 1 Việt Nam 2024 theo Tripadvisor
+                    </div>
+                    <div class="price-rating-row">
+                        <div class="accommodation-price">
+                            Từ 1.600.000 - 5.000.000VND
+                        </div>
+                        <div class="accommodation-rating">
+                            <span class="star">★</span> 8.9
+                        </div>
+                    </div>
+                    
+                    <button class="map-button" onclick="openMap()">
+                        📍 Xem bản đồ
+                    </button>
+                    <div class = "accomodation-title">
+                    </div>
             </div>
             
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1585870607907-c7535203ed5d?w=400" alt="Phú Quốc">
-                <div class="feature-card-content">
-                    <h3>🌴 Phú Quốc</h3>
-                    <p>Đảo ngọc với bãi biển xanh trong và hải sản tươi ngon</p>
-                    <div class="price">Từ 3.200.000đ</div>
-                </div>
-            </div>
-            
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1557750255-c76072a7aad1?w=400" alt="Sapa">
-                <div class="feature-card-content">
-                    <h3>⛰️ Sapa</h3>
-                    <p>Thị trấn sương mù với ruộng bậc thang đẹp như tranh vẽ</p>
-                    <div class="price">Từ 1.800.000đ</div>
-                </div>
-            </div>
-            
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=400" alt="Hội An">
-                <div class="feature-card-content">
-                    <h3>🏮 Hội An</h3>
-                    <p>Phố cổ lung linh với hàng nghìn chiếc đèn lồng sắc màu</p>
-                    <div class="price">Từ 2.000.000đ</div>
-                </div>
-            </div>
-            
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=400" alt="Đà Lạt">
-                <div class="feature-card-content">
-                    <h3>🌸 Đà Lạt</h3>
-                    <p>Thành phố ngàn hoa với khí hậu mát mẻ quanh năm</p>
-                    <div class="price">Từ 1.500.000đ</div>
-                </div>
-            </div>
-            
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=400" alt="Nha Trang">
-                <div class="feature-card-content">
-                    <h3>🏖️ Nha Trang</h3>
-                    <p>Thiên đường biển với nhiều hoạt động thể thao dưới nước</p>
-                    <div class="price">Từ 2.200.000đ</div>
-                </div>
-            </div>
-        </div>
-    </div>
     <script>
         // Load navbar component into #navbar-root
         (function(){
@@ -123,5 +97,7 @@
                 .catch(function(){ console.warn('Không thể load navbar component'); });
         })();
     </script>
+    <script src="../js/static_trans.js"></script>
+
 </body>
 </html>

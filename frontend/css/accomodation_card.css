@@ -1,34 +1,110 @@
-.feature-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-	gap: 30px;
+/* ================================
+   ACCOMMODATION CARD
+   ================================ */
+
+.accommodation-card {
+    width: 100%;
+    max-width: 380px;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
 }
 
-.feature-card {
-	background: white;
-	border-radius: 10px;
-	overflow: hidden;
-	box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-	transition: transform 0.3s;
-	cursor: pointer;
+.accommodation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
 }
 
-.feature-card:hover {
-	transform: translateY(-10px);
-	box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+/* ================================
+   IMAGE
+   ================================ */
+.accommodation-card img {
+    width: 100%;
+    height: 210px;
+    object-fit: cover;
 }
 
-.feature-card img {
-	width: 100%;
-	height: 200px;
-	object-fit: cover;
+/* ================================
+   CONTENT
+   ================================ */
+.accommodation-content {
+    padding: 16px 18px;
 }
 
-.feature-card-content { padding: 20px; }
-.feature-card h3 { color: #333; margin-bottom: 10px; font-size: 1.3rem; }
-.feature-card p { color: #666; line-height: 1.6; }
-.price { color: #667eea; font-size: 1.3rem; font-weight: bold; margin-top: 15px; }
+/* Title */
+.accommodation-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
 
-@media (max-width: 768px) {
-	.feature-card img { height: 160px; }
+/* Description */
+.accommodation-description {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 14px;
+    line-height: 1.4;
+}
+
+/* Price + Rating (flex) */
+.price-rating-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Price */
+.accommodation-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #3b5bfd; /* Xanh giống hình bạn gửi */
+}
+
+/* Rating */
+.accommodation-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.accommodation-rating .star {
+    color: #ffb300; /* Vàng */
+    font-size: 1.1rem;
+}
+/* ================================
+   MAP BUTTON
+   ================================ */
+
+.map-button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px 0;
+    background: linear-gradient(135deg, #4a6cf7 0%, #6a8bff 100%);
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s ease;
+    border: none;
+}
+
+.map-button:hover {
+    background: linear-gradient(135deg, #3d5de5 0%, #5e7cf7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(74, 108, 247, 0.4);
+}
+
+.map-button:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
