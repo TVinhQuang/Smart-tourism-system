@@ -2,7 +2,7 @@ console.log("homepage.js loaded");
 
 const dummyList = [
     {
-        name: "Intercontinental Saigon Hotel & Residences (JW Marriott Hotel & Suites Saigon",
+        name: "Intercontinental Saigon Hotel & Residences (JW Marriott Hotel & Suites Saigon)",
         price: 3900000,
         rating: 4.6,
         desc: {
@@ -61,8 +61,8 @@ const dummyList = [
         price: 9000000,
         rating: 4.6,
         desc: {
-            vi: "Với thiết kế độc đáo, khách sạn là một tuyệt sắc kiến trúc, kết hợp hài hòa giữa phong cách cổ điển châu Âu và sự hiện đại tinh tế.",
-            en: "With its unique design, the hotel is a masterpiece of architecture, harmoniously blending classic European style with sophisticated modernity."
+            vi: "Là khách sạn 5 sao nổi tiếng với thiết kế nội thất độc đáo tinh xảo của Ý và dịch vụ đẳng cấp nhất thế giới, khách sạn là một nơi tuyệt sắc kiến trúc, kết hợp hài hòa giữa phong cách cổ điển châu Âu và sự hiện đại tinh tế, mang đến những trải nghiệm độc đáo và khó quên. ",
+            en: "A renowned 5-star hotel boasting exquisite Italian interior design and world-class service, this hotel is a masterpiece of architecture, harmoniously blending classic European style with sophisticated modernity, offering unique and unforgettable experiences."
         },
         address: "Tòa nhà Times Square, 22-36 Đại lộ Nguyễn Huệ & 57-69F Đường Đồng Khởi, phường Bến Nghé, Quận 1, TP Hồ Chí Minh",
         lat: 10.7766, lon: 106.7046,
@@ -126,8 +126,8 @@ const dummyList = [
         price: 2200000,
         rating: 4.5,
         desc: {
-            vi: "Khách sạn mở từ năm 1959 gắn liền với nhiều sự kiện lịch sử của Sài Gòn, nổi tiếng với buffet hải sản tại nhà hàng Nineteen.",
-            en: "Hotel opened in 1959, the hotel is associated with many historical events in Saigon and is famous for its seafood buffet at the Nineteen restaurant."
+            vi: "Khách sạn 5 sao mang tính biểu tượng tại Thành phố, nổi tiếng với lịch sử lâu đời, kiến trúc Pháp cổ điển và vị trí đắc địa nhìn ra Nhà hát Thành phố .Khách sạn này là một trong những địa điểm lưu trú hàng đầu cho cả du khách doanh nhân và khách du lịch , khách sạn được mở từ năm 1959 gắn liền với nhiều sự kiện lịch sử của Sài Gòn, nổi tiếng với buffet hải sản tại nhà hàng Nineteen.",
+            en: "This iconic 5-star hotel in the city is renowned for its long history, classic French architecture, and prime location overlooking the City Theatre. A top choice for both business and leisure travelers, the hotel, opened in 1959, is steeped in Saigon's historical events and is famous for its seafood buffet at the Nineteen restaurant."
         },
         address: "19 - 23 Công trường Lam Sơn, phường Bến NGhé, quận 1, TP Hồ Chí Minh.",
         lat: 10.7760, lon: 106.7036,
@@ -139,8 +139,8 @@ const dummyList = [
         price: 1350000,
         rating: 4.4,
         desc: {
-            vi: "Khách sạn 5 sao nổi tiếng nhất Cần Thơ, tọa lạc ở vị trí đắc địa ngay trung tâm Bến Ninh Kiều, mang đến tầm nhìn toàn cảnh sông Hậu và thành phố. Khách sạn có 308 phòng được trang bị tiện nghi hiện đại, cung cấp nhiều tiện ích bao gồm hơ bơi ngoài trời, massage, spa.",
-            en: "Can Tho's most renowned 5-star hotel boasts a prime location in the heart of Ninh Kieu Wharf, offering panoramic views of the Hau River and the city. The hotel features 308 rooms equipped with modern amenities and offers a range of facilities including an outdoor swimming pool, massage services, and a spa."
+            vi: "Khách sạn 5 sao nổi tiếng nhất Cần Thơ, tọa lạc ở vị trí đắc địa ngay trung tâm Bến Ninh Kiều, mang đến tầm nhìn toàn cảnh sông Hậu và thành phố. Khách sạn có 308 phòng nghỉ và suit được trang bị điều hòa, minibar và két an toàn, với thiết kế nội thất tinh tế, hệ thống nhà hàng phục vụ ẩm thực Á - Âu đa dạng, bao gồm buffet sáng phong phú, cung cấp nhiều tiện ích bao gồm hơ bơi ngoài trời, wifi miễn phí, massage, spa.",
+            en: "Can Tho's most renowned 5-star hotel boasts a prime location in the heart of Ninh Kieu Wharf, offering panoramic views of the Hau River and the city. The hotel features 308 air-conditioned rooms and suites equipped with minibars and safety deposit boxes, all with sophisticated interior design. The diverse Asian and European cuisine is served in the hotel's restaurants, including a lavish breakfast buffet. Amenities include an outdoor swimming pool, free Wi-Fi, massage services, and a spa."
         },
         address: "Khu E1, Cồn Cái Khế, phường Cái Khế, quận Ninh Kiều, TP Cần Thơ",
         lat: 10.0424, lon: 105.7903,
@@ -152,8 +152,8 @@ const dummyList = [
         price: 3000000,
         rating: 4.5,
         desc: {
-            vi: "Khách sạn mang đậm phong cách kiến trúc Edwardian và Art Deco, tái hiện lại vẻ đẹp quý phái thời thuộc địa Pháp, nằm ngay trung tâm thành phố, đối diện hồ Xuân Hương.",
-            en: "The hotel, with its distinctive Edwardian and Art Deco architectural style, recreates the elegant beauty of the French colonial era and is located right in the city center, opposite Xuan Huong Lake."
+            vi: "Khách sạn mang đậm phong cách kiến trúc Edwardian và Art Deco, tái hiện lại vẻ đẹp quý phái thời thuộc địa Pháp, nằm ngay trung tâm thành phố, đối diện hồ Xuân Hương. Được xây dựng từ năm 1922, là một trong những khách sạn lâu đời nhất Việt Nam, từng đón tiếp nhiều nhân vật quan trọng và giới thượng lưu, khách sạn có 70 phòng nghĩ và suite rộng rãi, các quán bar & cà phê, và các trung tâm thể dục, spa.",
+            en: "The hotel, with its distinctive Edwardian and Art Deco architectural style, recreates the elegant beauty of the French colonial era. Located in the heart of the city, opposite Xuan Huong Lake, it was built in 1922 and is one of the oldest hotels in Vietnam. Having hosted many important figures and members of the elite, the hotel boasts 70 spacious rooms and suites, bars and cafes, and fitness centers and a spa."
         },
         address: "Số 02 Đường Trần Phú, phường Xuân Hương, thành phố Đà Lạt, tỉnh Lâm Đồng.",
         lat: 11.9416, lon: 108.4348,
