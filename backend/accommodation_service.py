@@ -3,7 +3,7 @@ import math
 import re
 from dataclasses import dataclass
 from typing import List
-from serpapi import GoogleSearch
+from serpapi.google_search import GoogleSearch
 from deep_translator import GoogleTranslator
 API_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
 
