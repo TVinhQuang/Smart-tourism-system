@@ -4,7 +4,6 @@ import requests
 from typing import List
 from serpapi.google_search import GoogleSearch
 import re
-from flask import Flask, request, jsonify
 from translator import translate_text
 from dataclasses import dataclass
 from typing import List
