@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 const app = express();
 app.use(cors());
@@ -37,4 +38,5 @@ app.post("/api/route", async (req, res) => {
     }
 });
 
-app.listen(5000, () => console.log("🚀 Backend chạy tại http://localhost:5000"));
+app.listen(5000, () => console.log("Backend chạy tại http://localhost:5000"));
+

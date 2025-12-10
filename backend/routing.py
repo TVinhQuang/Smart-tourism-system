@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from typing import List
-from serpapi import GoogleSearch
+from serpapi.google_search import GoogleSearch
 import re
 from flask import Flask, request, jsonify
 from translator import translate_text
@@ -401,6 +401,10 @@ def api_get_route():
     except Exception as e:
         print("Error:", e)
         return jsonify({"status": "error", "message": str(e)})
+
+@app.route("/")
+def home():
+    return "Backend is running!"
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

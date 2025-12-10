@@ -5,9 +5,7 @@ function renderResults(results, note) {
     if (!container) return;
     container.innerHTML = "";
 
-    if (note) {
-        console.log("Note:", note);
-    }
+    if (note) console.log("Note:", note);
 
     if (!results || results.length === 0) {
         container.innerHTML = "<p>Không tìm thấy kết quả phù hợp.</p>";
@@ -40,11 +38,12 @@ function renderResults(results, note) {
     document.getElementById("results-container").style.display = "block";
 }
 
+// ========================
+// VIEW MAP FUNCTION
+// ========================
 function viewMap(dstLat, dstLon, dstName) {
 
-    // Giả sử user đứng tại city center, backend đã trả về center
-    const src = window.search_center; 
-
+    const src = window.search_center;
     if (!src) {
         alert("Chưa có vị trí xuất phát!");
         return;
@@ -55,7 +54,7 @@ function viewMap(dstLat, dstLon, dstName) {
         dst: { lat: dstLat, lon: dstLon, name: dstName }
     };
 
-    fetch("http://127.0.0.1:5000/api/route", {
+    fetch("http://localhost:5000/api/route", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -63,7 +62,7 @@ function viewMap(dstLat, dstLon, dstName) {
     .then(res => res.json())
     .then(data => {
         if (data.map_url) {
-            window.open("http://127.0.0.1:5000" + data.map_url, "_blank");
+            window.open("http://localhost:5000" + data.map_url, "_blank");
         } else {
             alert("Không vẽ được bản đồ!");
         }
@@ -72,7 +71,11 @@ function viewMap(dstLat, dstLon, dstName) {
         console.error("Route error:", err);
         alert("Không lấy được dữ liệu tuyến đường!");
     });
+}
 
+// ========================
+// SHOW MAP POPUP + STEPS
+// ========================
 function showMapAndRoute(data) {
     const popup = document.getElementById("map-popup");
     popup.style.display = "block";
@@ -83,29 +86,22 @@ function showMapAndRoute(data) {
     detailBox.innerHTML = data.steps.map(s => `<li>${s}</li>`).join("");
 
     document.getElementById("toggle-details").onclick = () => {
-        if (detailBox.style.display === "none") {
-            detailBox.style.display = "block";
-        } else {
-            detailBox.style.display = "none";
-        }
+        detailBox.style.display = (detailBox.style.display === "none") ? "block" : "none";
     };
 
     let map = L.map("map").setView([data.start_lat, data.start_lng], 13);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
-        .addTo(map);
-
-    L.polyline(data.polyline, {color: "blue"}).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    L.polyline(data.polyline, { color: "blue" }).addTo(map);
 }
 
-
+// ========================
+// CLICK LISTENER
+// ========================
 document.addEventListener("click", function(event) {
     if (event.target.classList.contains("view-map-btn")) {
         const lat = event.target.getAttribute("data-lat");
         const lng = event.target.getAttribute("data-lng");
-
-        openMapPopup(lat, lng);
+        viewMap(lat, lng, "Điểm đến");
     }
 });
-
-}
