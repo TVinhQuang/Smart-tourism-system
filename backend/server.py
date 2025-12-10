@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from typing import List
-from serpapi import GoogleSearch
+from serpapi.google_search import GoogleSearch
 import re
 from flask import Flask, request, jsonify
 from translator import translate_text
