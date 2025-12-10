@@ -2,31 +2,31 @@ console.log("homepage.js loaded");
 
 const dummyList = [
     {
-        name: "La Siesta Hoi An Resort & Spa",
+        name: "Resort Regent Phu Quoc island",
         price: 2500000,
         rating: 9.3,
         // Dữ liệu mô tả đa ngôn ngữ
         desc: {
-            vi: "Khu nghỉ dưỡng với 4 hồ bơi, kiến trúc xanh mát và spa đẳng cấp thế giới.",
-            en: "Resort with 4 swimming pools, green architecture and world-class spa."
+            vi: "Nhiều hồ bơi tuyệt đẹp, kiến trúc xanh mát và trung tamam thể dục & spa hiện đại.",
+            en: "Numerous stunning swimming pools, lush green architecture, and a modern fitness center and spa."
         },
-        address: "134 Hùng Vương, Cẩm Phô, Hội An",
+        address: "Bãi Trường, xã Dương Tơ, Phú Quốc",
         lat: 15.8795, lon: 108.3181,
-        img: "https://www.vietnambooking.com/wp-content/uploads/2021/08/La-Siesta-Hoi-An-Resort-Spa-3082021.jpg",
+        img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQIvb6qGpU92yyq-ABd7mheHC5ixfo68Wyeg&s",
         // Dữ liệu tiện ích dạng KEY
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
     {
-        name: "Hotel Royal Hoi An",
+        name: "Vinpearl Resort & Spa Ha Long Bay",
         price: 3200000,
         rating: 9.5,
         desc: {
-            vi: "Khách sạn sang trọng bên sông Thu Bồn, mang phong cách Indochine lãng mạn.",
-            en: "Luxury hotel by the Thu Bon River, featuring romantic Indochine style."
+            vi: "Khách sạn sang trọng, mang phong cách Indochine lãng mạn. Khu nghĩ dưỡng sở hữu 3 bãi biển riêng với bờ cát trắng",
+            en: "This luxurious hotel boasts a romantic Indochine style. The resort features three private beaches with white sand."
         },
-        address: "39 Đào Duy Từ, Hội An",
+        address: "Đảo Rều, Đường Đỗ Sĩ Họa, Bãi Cháy, Hạ Long, Quảng Ninh",
         lat: 15.8770, lon: 108.3260,
-        img: "https://hotelroyalhoian.vn/wp-content/uploads/2024/10/DJI_0140-3-1.webp",
+        img: "https://statics.vinpearl.com/styles/1920x1004/public/2025_01/Thi%E1%BA%BFt%20k%E1%BA%BF%20ch%C6%B0a%20c%C3%B3%20t%C3%AAn%20(3)_1737706065.png.webp?itok=TEuCLNtO?v=20251210",
         amenities: ["amenity_breakfast", "amenity_wifi", "amenity_pool", "amenity_parking"]
     },
     {
@@ -43,42 +43,42 @@ const dummyList = [
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
     {
-        name: "Allegro Hoi An – Little Luxury Hotel",
+        name: "Anantara Mui Ne Resort",
         price: 2400000,
         rating: 9.4,
         desc: {
-            vi: "Khách sạn boutique với thiết kế cổ điển và dịch vụ chăm sóc tận tâm.",
-            en: "Boutique hotel featuring classic design and dedicated hospitality."
+            vi: "Khách sạn 5 sao sang trọng, hồ bơi vô cực, phục vụ ẩm thực Á-Âu phong phú suốt cả ngày",
+            en: "A luxurious 5-star hotel with an infinity pool and a rich Asian-European culinary experience served throughout the day."
         },
-        address: "86 Trần Hưng Đạo, Hội An",
+        address: "12A đường Nguyễn Đình Chiểu, phường Hàm Tiến, Phan Thiết, Bình Thuận",
         lat: 15.8801, lon: 108.3227,
-        img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/11/fc/0d/0f/outdoor-pool.jpg?w=900&h=500&s=1",
+        img: "https://q-xx.bstatic.com/xdata/images/hotel/max500/601523257.jpg?k=eaf22d0445a4872cb4e47fc821cb3252509884d3376423b17e924aefb0fc96d5&o=",
         amenities: ["amenity_wifi", "amenity_breakfast", "amenity_pool"]
     },
     {
-        name: "Palm Garden Beach Resort & Spa",
+        name: "Vinpearl Resort Nha Trang",
         price: 2700000,
         rating: 9.0,
         desc: {
             vi: "Resort 5 sao giữa vườn dừa với bãi biển dài đẹp và spa thư giãn.",
             en: "Five-star resort among coconut gardens with long beautiful beach and relaxing spa."
         },
-        address: "Lạc Long Quân, Cửa Đại, Hội An",
+        address: "Đảo Hòn Tre, phường Vĩnh Nguyên, Thành phố Nha Trang, tỉnh Khánh Hòa",
         lat: 15.8935, lon: 108.3462,
-        img: "https://pix10.agoda.net/hotelImages/65107/-1/bbcc058b8e17b3ef51a37f315685ec80.jpg?ce=0&s=414x232",
+        img: "https://statics.vinpearl.com/styles/1920x1004/public/2024_08/vinpearl-resort-nha-trang_1722527321.jpg.webp?itok=sqiH1Gvc?v=20251210",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast"]
     },
     {
-        name: "Silk Sense Hoi An River Resort",
+        name: "Maia Resort Qui Nhon",
         price: 2600000,
         rating: 9.2,
         desc: {
-            vi: "Khu nghỉ ven sông yên bình với hồ bơi ion siêu sạch và nhiều dịch vụ trải nghiệm.",
-            en: "Peaceful riverside resort featuring ultra-clean ion pool and experience services."
+            vi: "Khu nghỉ sở hữu 88 căn biệt thự với thiết kế không gian mở, kết hợp hài hòa giữa bên trong và ngoài trởi.",
+            en: "The resort boasts 88 villas with an open-plan design, harmoniously blending indoor and outdoor spaces."
         },
-        address: "1 Đào Duy Từ, Hội An",
+        address: "Khu Kinh tế Nhơn Hội, Xã Cát Tiến, huyện Phù Cát, tỉnh Bình Định",
         lat: 15.8812, lon: 108.3289,
-        img: "https://pix10.agoda.net/hotelImages/2225333/-1/6ae1ea5094fb92f2ae4d367aa1313303.jpg?ce=0&s=414x232",
+        img: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/271813286.jpg?k=8c1fdcf3b4d751fffd2482706ec9f23b3cb5d13318ac8df94b41d3bf5cd4a0ed&o=",
         amenities: ["amenity_wifi", "amenity_pool", "amenity_parking"]
     },
     {
