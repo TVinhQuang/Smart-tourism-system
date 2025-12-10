@@ -135,4 +135,26 @@
     <script src="../js/rec_accomodation.js"></script>
 
 </body>
+
+<div id="routeBox" style="display:none; margin-top:20px;">
+    <h3>📍 Lộ trình di chuyển</h3>
+
+    <!-- Bản đồ -->
+    <img id="routeMap" src="" style="width:100%; border-radius:10px; margin-bottom:15px;">
+
+    <!-- Số km -->
+    <p><b>Quãng đường:</b> <span id="kmText"></span></p>
+    <p><b>Thời gian dự kiến:</b> <span id="timeText"></span></p>
+
+    <!-- Đường đi chính -->
+    <h4>🚗 Đường đi chính</h4>
+    <ul id="mainStepsList"></ul>
+
+    <!-- Nút mở chi tiết -->
+    <button id="toggleDetailBtn" onclick="toggleDetailSteps()">+ Đường đi cụ thể</button>
+
+    <!-- Chi tiết -->
+    <ul id="detailStepsList" style="display:none; margin-top:10px;"></ul>
+</div>
+
 </html>
