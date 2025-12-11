@@ -33,7 +33,6 @@ function submitSearch() {
     renderResults(response.results, response.relaxation_note);
     });
  
-<<<<<<< HEAD
 }
 
 async function findRoute() {
@@ -91,8 +90,6 @@ function toggleDetailSteps() {
         box.style.display = "none";
         btn.textContent = "+ Đường đi cụ thể";
     }
-=======
->>>>>>> f0c156c360d21604ab314e098d0e4754e6450580
 }
 
 async function findRoute() {

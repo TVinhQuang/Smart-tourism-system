@@ -58,6 +58,14 @@ function openRoutingModal(index) {
     document.getElementById("info-img").src = item.img || 'https://via.placeholder.com/300';
     document.getElementById("info-name").innerText = item.name;
     // ====================== FAVORITE CHECK ======================
+    function loadFavorites() {
+    const data = localStorage.getItem('favorites');
+    return data ? JSON.parse(data) : [];
+}
+
+function saveFavorites(list) {
+    localStorage.setItem('favorites', JSON.stringify(list));
+}
     const favBtn = document.getElementById("fav-toggle");
     const favList = loadFavorites();
 
