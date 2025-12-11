@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from app import app
 import requests
+import json
 from typing import List
 from serpapi.google_search import GoogleSearch
 import re
@@ -10,9 +12,6 @@ from typing import List
 import math
 import folium
 from deep_translator import GoogleTranslator
-
-app = Flask(__name__)
-CORS(app)
 API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
 
 # ==================== TỪ ĐIỂN DỊCH THUẬT (Backend) ====================
@@ -401,9 +400,3 @@ def api_get_route():
         print("Error:", e)
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route("/")
-def home():
-    return "Backend is running!"
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)

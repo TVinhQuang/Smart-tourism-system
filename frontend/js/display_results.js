@@ -1,3 +1,4 @@
+
 // display_results.js
 
 function renderResults(results, note) {
