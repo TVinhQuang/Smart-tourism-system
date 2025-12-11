@@ -57,6 +57,38 @@ function openRoutingModal(index) {
     // --- ĐIỀN THÔNG TIN CƠ BẢN ---
     document.getElementById("info-img").src = item.img || 'https://via.placeholder.com/300';
     document.getElementById("info-name").innerText = item.name;
+    // ====================== FAVORITE CHECK ======================
+    const favBtn = document.getElementById("fav-toggle");
+    const favList = loadFavorites();
+
+    if (favList.some(f => f.id === item.id)) {
+        favBtn.classList.add("active");
+        favBtn.innerText = "❤️";
+    } else {
+        favBtn.classList.remove("active");
+        favBtn.innerText = "♡";
+    }
+
+// Sự kiện click
+    favBtn.onclick = () => {
+        const list = loadFavorites();
+        const exists = list.some(f => f.id === item.id);
+
+        if (exists) {
+            // Bỏ thích
+            const newList = list.filter(f => f.id !== item.id);
+            saveFavorites(newList);
+            favBtn.classList.remove("active");
+            favBtn.innerText = "♡";
+        } else {
+            // Thêm thích
+         list.push(item);
+            saveFavorites(list);
+            favBtn.classList.add("active");
+            favBtn.innerText = "❤️";
+        }
+    };
+
     document.getElementById("info-address").innerText = item.address;
     document.getElementById("info-price").innerText = Number(item.price).toLocaleString() + " VND";
     document.getElementById("info-rating").innerText = item.rating;
@@ -197,39 +229,91 @@ function renderSteps(instructions) {
 }
 
 function initMap(pathCoords) {
-    // 1. Khởi tạo map nếu chưa có
-    if (!map) {
-        map = L.map('rt-map-frame');
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+    console.log("--- BẮT ĐẦU VẼ MAP ---");
+
+    // 1. KIỂM TRA & XỬ LÝ TOẠ ĐỘ
+    let finalPath = pathCoords || [];
+    if (finalPath.length > 0) {
+        // Kiểm tra phần tử đầu tiên để xem có bị ngược không
+        // [106.xxx, 10.xxx] -> Số đầu > 90 là Kinh độ (Lng) -> Ngược -> Cần đảo
+        if (finalPath[0][0] > 90) {
+            console.log("⚠️ Toạ độ bị ngược [Lng, Lat], đang đảo chiều...");
+            finalPath = finalPath.map(p => [p[1], p[0]]);
+        }
+    } else {
+        console.error("❌ Không có toạ độ đường đi!");
+        return;
+    }
+
+    // 2. XOÁ MAP CŨ (Destroy)
+    // Bắt buộc xoá để tránh lỗi "Ghost Map"
+    if (map) {
+        map.remove();
+        map = null;
+    }
+
+    // 3. TẠO MAP MỚI
+    try {
+        // Đảm bảo thẻ div 'rt-map' đã tồn tại
+        const mapContainer = document.getElementById("rt-map");
+        if (!mapContainer) {
+            console.error("❌ Không tìm thấy thẻ <div id='rt-map'> trong HTML!");
+            return;
+        }
+
+        map = L.map("rt-map", {
+            zoomControl: false, 
+            attributionControl: false
+        });
+    } catch (e) {
+        console.error("❌ Lỗi khởi tạo Leaflet:", e);
+        return;
+    }
+
+    // Thêm TileLayer (Nền bản đồ)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    // 4. VẼ ĐỐI TƯỢNG (MARKER & LINE)
+    const startGroup = L.marker([YOUR_LAT, YOUR_LON]).addTo(map).bindPopup("Bạn ở đây");
+    const endGroup = L.marker([routingItem.lat, routingItem.lon]).addTo(map).bindPopup("Đích đến");
+    
+    let routeLayer = null;
+    if (finalPath.length > 0) {
+        routeLayer = L.polyline(finalPath, {
+            color: 'blue',
+            weight: 5,
+            opacity: 0.8
         }).addTo(map);
     }
+
+    // 5. CHIẾN THUẬT "CƯỠNG ÉP" CẬP NHẬT GIAO DIỆN
+    // Vì Modal có hiệu ứng trượt (transition), ta phải bắt map cập nhật nhiều lần
     
-    // 2. Fix lỗi map không hiện khi nằm trong thẻ ẩn
-    setTimeout(() => { 
+    const forceUpdateMap = () => {
+        if (!map) return;
+        
+        // Bắt Leaflet tính lại kích thước thẻ div
         map.invalidateSize(); 
-    }, 200);
 
-    // 3. Vẽ Marker
-    if (markerStart) map.removeLayer(markerStart);
-    if (markerEnd) map.removeLayer(markerEnd);
-    
-    // Marker điểm xuất phát (Nhà mình)
-    markerStart = L.marker([YOUR_LAT, YOUR_LON]).addTo(map)
-        .bindPopup(window.langData["val_my_location"] || "Start").openPopup();
-    
-    // Marker điểm đến (Khách sạn)
-    markerEnd = L.marker([routingItem.lat, routingItem.lon]).addTo(map)
-        .bindPopup(routingItem.name);
+        // Zoom vào toàn bộ đường đi
+        if (routeLayer) {
+            map.fitBounds(routeLayer.getBounds(), { padding: [50, 50], animate: false });
+        } else {
+            // Nếu không có đường thì zoom vào 2 điểm marker
+            const group = L.featureGroup([startGroup, endGroup]);
+            map.fitBounds(group.getBounds(), { padding: [50, 50], animate: false });
+        }
+    };
 
-    // 4. Vẽ đường đi
-    if (routeLine) map.removeLayer(routeLine);
-    if (pathCoords && pathCoords.length > 0) {
-        routeLine = L.polyline(pathCoords, {color: 'blue', weight: 6, opacity: 0.8}).addTo(map);
-        map.fitBounds(routeLine.getBounds(), {padding: [50, 50]});
-    }
+    // --- CHẠY LIÊN TỤC 4 LẦN ĐỂ SỬA LỖI ---
+    forceUpdateMap(); // Lần 1: Ngay lập tức
+    setTimeout(forceUpdateMap, 300);  // Lần 2: Sau 0.3s
+    setTimeout(forceUpdateMap, 600);  // Lần 3: Sau 0.6s (Lúc modal vừa mở xong)
+    setTimeout(forceUpdateMap, 1000); // Lần 4: Chốt hạ sau 1s cho chắc ăn
 }
-
 // =======================================================
 // 4. SỰ KIỆN NÚT BẤM
 // =======================================================

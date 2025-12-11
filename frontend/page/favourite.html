@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu thích</title>
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/accomodation_card.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .fav-container {
+            max-width: 1000px;
+            margin: 120px auto 40px;
+            padding: 20px;
+        }
+
+        .fav-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .empty-box {
+            text-align: center;
+            padding: 50px;
+            color: #777;
+            font-size: 18px;
+        }
+
+        .fav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .fav-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .fav-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .fav-card img {
+            width: 100%;
+            height: 160px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .fav-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .fav-address {
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="navbar-root"></div>
+
+    <div class="fav-container">
+        <div class="fav-title">❤️ Danh sách yêu thích</div>
+        <div id="fav-list"></div>
+    </div>
+
+    <script>
+        // Load navbar
+        fetch('../components/navbar.html')
+            .then(r => r.text())
+            .then(html => document.getElementById('navbar-root').innerHTML = html);
+
+        // Load favorites
+        const list = JSON.parse(localStorage.getItem("favorites") || "[]");
+        const container = document.getElementById("fav-list");
+
+        if (list.length === 0) {
+            container.innerHTML = `<div class="empty-box">Bạn chưa yêu thích địa điểm nào.</div>`;
+        } else {
+            let html = `<div class="fav-grid">`;
+
+            list.forEach(item => {
+                html += `
+                    <div class="fav-card" onclick="openDetail(${item.id})">
+                        <img src="${item.image}" alt="">
+                        <div class="fav-name">${item.name}</div>
+                        <div class="fav-address">${item.address}</div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        // Mở lại modal khách sạn từ Yêu thích
+        function openDetail(id) {
+            window.location.href = "homepage.html?id=" + id;
+        }
+    </script>
+
+</body>
+</html>
