@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trợ giúp & Hỗ trợ</title>
+    
+    <link rel="stylesheet" href="../css/navbar.css"> 
+    <link rel="stylesheet" href="../css/footer.css">
+    <link rel="stylesheet" href="../css/help.css"> <style>
+        /* CSS cho trang Help (Tạm thời, nên chuyển vào help.css) */
+        .help-container {
+            max-width: 900px;
+            margin: 80px auto 50px; /* Thêm margin top để tránh navbar */
+            padding: 20px;
+        }
+
+        .help-container h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
+
+        /* Phần FAQ (Accordion) */
+        .faq-item {
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            background-color: #f7f7f7;
+            padding: 15px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .faq-question:hover {
+            background-color: #eee;
+        }
+        
+        .faq-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            background-color: white;
+        }
+
+        .faq-answer.active {
+            max-height: 500px; /* Đặt giá trị đủ lớn để chứa nội dung */
+            padding: 15px 20px;
+        }
+        
+        .faq-question.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* Phần Contact */
+        .contact-info {
+            margin-top: 50px;
+            padding: 30px;
+            background-color: #e8f0fe;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .contact-info h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .contact-info p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-root"></div> <div class="help-container">
+        <h1>❓ Trung Tâm Hỗ Trợ & Câu Hỏi Thường Gặp (FAQ)</h1>
+
+        <section class="faq-section">
+            <h2>Các câu hỏi phổ biến</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>1. Làm sao để tìm kiếm chỗ ở phù hợp?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Bạn có thể sử dụng trang "Gợi ý" và nhập các tiêu chí như địa điểm, khoảng giá, và tiện ích mong muốn. Hệ thống của chúng tôi sẽ phân tích dữ liệu và đưa ra các đề xuất tốt nhất cho bạn.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>2. Thông tin về lộ trình được tính toán như thế nào?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Chức năng tính toán lộ trình sử dụng dữ liệu bản đồ từ OpenStreetMap để xác định quãng đường và thời gian di chuyển giữa vị trí của bạn và điểm lưu trú đã chọn, dựa trên phương tiện bạn chọn (ô tô, xe đạp, đi bộ).</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>3. Tôi có thể đặt phòng trực tiếp trên website không?</span>
+                    <span class="faq-icon">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Hiện tại, nền tảng của chúng tôi chỉ cung cấp tính năng gợi ý và phân tích. Chúng tôi không phải là trang đặt phòng. Bạn sẽ cần liên hệ với cơ sở lưu trú hoặc sử dụng các trang web đặt phòng đối tác để hoàn tất giao dịch.</p>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="contact-info">
+            <h2>✉ Cần hỗ trợ thêm?</h2>
+            <p>Nếu bạn không tìm thấy câu trả lời, vui lòng liên hệ với đội ngũ hỗ trợ của chúng tôi:</p>
+            <p>Email: support@dulichvietnam.vn</p>
+            <p>Hotline: 1900 3636 (Thời gian làm việc: 8h00 - 17h00)</p>
+        </section>
+
+    </div>
+
+    <script>
+        // 1. Load Navbar component (Tương tự như homepage.html)
+        (function(){
+            fetch('../components/navbar.html')
+                .then(r => r.text())
+                .then(html => { 
+                    document.getElementById('navbar-root').innerHTML = html; 
+                })
+                .catch(e => console.warn('Không thể load navbar component', e));
+        })();
+
+        // 2. Chức năng Accordion cho FAQ
+        document.addEventListener('DOMContentLoaded', () => {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    // Đóng tất cả các câu trả lời khác
+                    faqQuestions.forEach(otherQuestion => {
+                        if (otherQuestion !== question && otherQuestion.classList.contains('active')) {
+                            otherQuestion.classList.remove('active');
+                            otherQuestion.nextElementSibling.classList.remove('active');
+                        }
+                    });
+
+                    // Mở/đóng câu trả lời hiện tại
+                    question.classList.toggle('active');
+                    const answer = question.nextElementSibling;
+                    answer.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+    
+    </body>
+</html>

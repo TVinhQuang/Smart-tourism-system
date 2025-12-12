@@ -10,13 +10,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #6A5AE0, #00C6FF);
+    background: linear-gradient(135deg, #6f6b25, #3caece);
 }
 
 .container {
     width: 380px;
     padding: 30px;
-    background: #fff;
+    background: #60b795;
     border-radius: 18px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.2);
 }
@@ -50,7 +50,7 @@ h2 {
 }
 
 .input-group input:focus {
-    border-bottom: 2px solid #6A5AE0;
+    border-bottom: 2px solid #256c9a;
 }
 
 .input-group label {
@@ -67,14 +67,14 @@ h2 {
 .input-group input:valid + label {
     top: -5px;
     font-size: 12px;
-    color: #6A5AE0;
+    color: #43a697;
 }
 
 .btn {
     width: 100%;
     padding: 12px;
     font-size: 16px;
-    background: #6A5AE0;
+    background: #32a18d;
     border: none;
     color: white;
     border-radius: 8px;
@@ -84,7 +84,7 @@ h2 {
 }
 
 .btn:hover {
-    background: #5849c2;
+    background: #3ea79b;
 }
 
 .switch {
@@ -93,7 +93,7 @@ h2 {
 }
 
 .switch span {
-    color: #6A5AE0;
+    color: #d0e05a;
     cursor: pointer;
     font-weight: bold;
 }
