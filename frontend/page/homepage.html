@@ -198,5 +198,111 @@
     <script src="../js/homepage.js"></script>
     <script src="../js/routing.js"></script>
     <script src="../js/display_results.js"></script>
+    <!-- thêm -->
+     <script>
+    // Hàm lấy tham số từ URL
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Hàm rút gọn email để hiển thị (tùy chọn)
+    function formatEmail(email) {
+        if (!email) return "Người dùng";
+        // Lấy phần trước ký tự '@'
+        const parts = email.split('@');
+        if (parts.length > 0 && parts[0].length > 15) {
+            // Nếu phần tên quá dài, rút gọn
+            return parts[0].substring(0, 15) + '...';
+        }
+        return parts[0];
+    }
+
+    // Hàm cập nhật giao diện navbar
+    function updateNavbarForLoggedInUser() {
+        const userEmail = getQueryParam('email');
+        const loginButtonContainer = document.querySelector('#navbar-root .nav-auth-container'); // Thay thế selector này nếu cần
+
+        if (userEmail) {
+            const displayName = formatEmail(userEmail);
+
+            // Kiểm tra xem đã load navbar chưa
+            if (loginButtonContainer) {
+                // Tạo một nút mới hoặc thẻ span hiển thị tên người dùng
+                loginButtonContainer.innerHTML = `
+                    <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                `;
+                // Bạn có thể thêm một nút "Đăng xuất" ở đây nếu muốn
+            } else {
+                // Nếu navbar chưa load xong, chờ load xong rồi gọi lại
+                setTimeout(updateNavbarForLoggedInUser, 100); 
+            }
+        }
+    }
+
+    // Gọi hàm khi trang load (chờ navbar component load xong)
+    window.onload = function() {
+        updateNavbarForLoggedInUser();
+    };
+</script>
+
+<script>
+    // Hàm xử lý Đăng xuất: Đơn giản là chuyển về trang login
+    function logoutUser() {
+        window.location.href = 'login.html'; 
+    }
+
+    // Hàm lấy tham số từ URL (ví dụ: lấy giá trị của 'email' từ URL)
+    function getQueryParam(name) {
+        // Tên tham số URL
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Hàm rút gọn email (ví dụ: nguyen.van.a@gmail.com -> nguyen.van.a)
+    function formatEmail(email) {
+        if (!email) return "Người dùng";
+        const parts = email.split('@');
+        // Chỉ lấy phần tên (trước ký tự @)
+        return parts[0]; 
+    }
+
+    // Hàm cập nhật giao diện navbar
+    function updateNavbarForLoggedInUser() {
+        // 1. Lấy email từ URL
+        const userEmail = getQueryParam('email');
+        
+        // 2. Tìm container (Dùng class 'nav-right' từ navbar.html bạn cung cấp)
+        // Chúng ta cần query bên trong phần đã fetch ('navbar-root')
+        const loginButtonContainer = document.querySelector('#navbar-root .nav-right'); 
+
+        if (userEmail) {
+            const displayName = formatEmail(userEmail);
+
+            if (loginButtonContainer) {
+                // 3. Thay thế nút "Đăng nhập" bằng Tên người dùng và nút Đăng xuất
+                loginButtonContainer.innerHTML = `
+                    <div class="user-info-group">
+                        <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                        <button class="btn-logout" onclick="logoutUser()">
+                            <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                            Đăng xuất
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Nếu component navbar chưa được tải xong (do sử dụng fetch), 
+                // thử lại sau 100ms.
+                setTimeout(updateNavbarForLoggedInUser, 100); 
+            }
+        }
+    }
+
+    // Chạy hàm cập nhật khi trang đã sẵn sàng
+    // (Đảm bảo chạy sau khi navbar đã được fetch)
+    window.onload = function() {
+        updateNavbarForLoggedInUser();
+    };
+</script>
 </body>
 </html>
