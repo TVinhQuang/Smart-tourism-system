@@ -1,0 +1,109 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container */
+.login-container {
+    width: 100%;
+    max-width: 380px;
+}
+
+/* Login box */
+.login-box {
+    background: #fff;
+    padding: 35px 30px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.6s ease;
+}
+
+.login-box h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+/* Input group */
+.input-group {
+    margin-bottom: 18px;
+}
+
+.input-group label {
+    font-size: 14px;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #bbb;
+    border-radius: 10px;
+    margin-top: 5px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #2193b0;
+    box-shadow: 0 0 0 3px rgba(33, 147, 176, 0.2);
+}
+
+/* Button */
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #2193b0;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn-login:hover {
+    background: #176d80;
+}
+
+/* Signup text */
+.signup-text {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.signup-text a {
+    color: #2193b0;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
+
+/* Fade animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
