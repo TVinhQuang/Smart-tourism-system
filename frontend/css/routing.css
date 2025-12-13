@@ -205,8 +205,8 @@ h4 { font-size: 1.1rem; margin-bottom: 12px; color: #4a6cf7; text-transform: upp
 }
 #rt-map {
     width: 100%;
-    height: 100%;       /* Bắt buộc */
-    min-height: 400px;  /* Quan trọng: Để map không bị bẹp dúm nếu height 100% lỗi */
+    height: 400px !important; /* Bắt buộc có chiều cao cụ thể */
+    background: #eee; /* Màu nền tạm để biết khung map có hiện không */
     z-index: 1;
 }
 

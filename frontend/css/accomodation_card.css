@@ -111,3 +111,59 @@ button:active {
     transform: translateY(1px); /* Lún xuống */
     box-shadow: none;
 }
+
+/* =======================================================
+   1. GRID LAYOUT (XẾP NGANG TỰ ĐỘNG)
+   ======================================================= */
+#results-list {
+    display: grid;
+    /* Tự động chia cột: Tối thiểu 300px/thẻ, còn lại chia đều */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 25px; /* Khoảng cách giữa các thẻ */
+    padding-bottom: 50px;
+    margin-top: 20px;
+}
+
+/* =======================================================
+   2. XỬ LÝ CARD KHÔNG CÓ ẢNH (CHO TRANG TÌM KIẾM)
+   ======================================================= */
+/* =========================================
+   STYLE CHO THẺ CARD (GIỐNG HOMEPAGE)
+   ========================================= */
+.accommodation-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Đảm bảo các thẻ cao bằng nhau */
+}
+
+.accommodation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* --- QUAN TRỌNG: STYLE RIÊNG CHO CARD KHÔNG CÓ ẢNH (REC PAGE) --- */
+.accommodation-card.card-no-image {
+    border-top: 4px solid #4a6cf7; /* Thêm viền màu để tạo điểm nhấn thay ảnh */
+}
+
+.accommodation-card.card-no-image .accommodation-content {
+    padding-top: 25px; /* Tăng khoảng cách trên vì không có ảnh */
+}
+
+.accommodation-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.accommodation-price {
+    color: #4a6cf7;
+    font-weight: bold;
+    font-size: 1.1rem;
+}

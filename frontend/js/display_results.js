@@ -1,44 +1,105 @@
-
-// display_results.js
+// display_results.js - PHIÊN BẢN CHUẨN (ĐÃ XÓA CODE RÁC GÂY LỖI)
 
 function renderResults(results, note) {
-    const container = document.getElementById("results-list");
-    if (!container) return;
-    container.innerHTML = "";
+    // 1. Xác định container (Ưu tiên ID của trang tìm kiếm)
+    let list = document.getElementById("results-list");
+    let isHomepage = false;
 
-    if (note) console.log("Note:", note);
+    // Nếu không thấy, tìm ID của trang chủ
+    if (!list) {
+        list = document.getElementById("accommodation-list");
+        if (list) isHomepage = true;
+    }
 
+    if (!list) return;
+    list.innerHTML = "";
+
+    // 2. Hiển thị ghi chú (chỉ cho trang tìm kiếm)
+    if (note && !isHomepage) {
+        const noteDiv = document.createElement("div");
+        noteDiv.innerHTML = `<em>💡 Lưu ý: ${note}</em>`;
+        noteDiv.style.color = "#d9534f";
+        noteDiv.style.marginBottom = "15px";
+        noteDiv.style.padding = "0 10px";
+        list.appendChild(noteDiv);
+    }
+
+    // 3. Xử lý khi không có kết quả
     if (!results || results.length === 0) {
-        container.innerHTML = "<p>Không tìm thấy kết quả phù hợp.</p>";
-        document.getElementById("results-container").style.display = "block";
+        list.innerHTML = "<div style='text-align:center; padding:20px; color:#666;'>🚫 Không tìm thấy kết quả phù hợp.</div>";
         return;
     }
 
-    results.forEach(item => {
-        const distance = item.distance_km ?? item.distance ?? '—';
-        const rating = (typeof item.rating === 'number') ? item.rating.toFixed(1) : item.rating;
+    // --- QUAN TRỌNG: Lưu dữ liệu vào biến toàn cục để routing.js sử dụng ---
+    window.homeResults = results; 
 
+    // 4. Vẽ thẻ Card
+    results.forEach((item, index) => {
         const div = document.createElement("div");
-        div.className = "result-item";
+        
+        // Dùng class chuẩn để ăn CSS đẹp
+        div.className = "accommodation-card"; 
+        
+        // Logic: Homepage có ảnh, Search page (API) thường không có ảnh -> Thêm class no-image
+        const hasImage = isHomepage || (item.img && item.img.length > 10);
+        if (!hasImage) {
+            div.classList.add("card-no-image");
+        }
+
+        // Xử lý tiện ích
+        let amenitiesHtml = "";
+        if (Array.isArray(item.amenities) && item.amenities.length > 0) {
+            amenitiesHtml = item.amenities.map(a => 
+                `<span style="background:#f1f1f1; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-right:5px; color:#555;">${a}</span>`
+            ).join("");
+        }
+
+        // Phần Hình ảnh (Chỉ hiện nếu có)
+        let imagePart = "";
+        if (hasImage) {
+            imagePart = `
+                <div style="height: 200px; overflow: hidden;">
+                    <img src="${item.img}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+            `;
+        }
+
+        // Nội dung thẻ Card
         div.innerHTML = `
-            <h3>${item.name}</h3>
-            <p>Giá: ${Number(item.price).toLocaleString()} VNĐ</p>
-            <p>Rating: ${rating}</p>
-            <p>Khoảng cách: ${distance} km</p>
-            <p>Tiện ích: ${Array.isArray(item.amenities) ? item.amenities.join(", ") : (item.amenities || '')}</p>
-            <p>Địa chỉ: ${item.address || ''}</p>
-            <button class="view-map-btn"
-                data-lat="${item.latitude}"
-                data-lng="${item.longitude}">
-                🗺 Xem bản đồ
-            </button>
+            ${imagePart}
+            <div class="accommodation-content" style="padding: 15px;">
+                <div class="price-rating-row" style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                     <h3 class="accommodation-title" style="margin:0; font-size:1.2rem;">${item.name}</h3>
+                     <div class="accommodation-rating" style="color: #f39c12; font-weight: bold;">
+                        <span class="star">★</span> ${item.rating}
+                     </div>
+                </div>
+
+                <p class="accommodation-description" style="margin-bottom: 8px; color: #666; font-size: 0.9rem;">
+                    📍 ${item.address}
+                </p>
+
+                ${!hasImage && item.distance_km ? 
+                    `<p style="font-size:0.9rem; color:#666; margin-bottom:8px;">📏 Cách trung tâm: <b>${parseFloat(item.distance_km).toFixed(2)} km</b></p>` 
+                    : ''}
+                
+                <div style="margin-bottom: 12px;">
+                    ${amenitiesHtml}
+                </div>
+
+                <div class="price-rating-row" style="margin-top:auto; padding-top:10px; border-top:1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="accommodation-price" style="color: #3b5bfd; font-weight: bold; font-size: 1.1rem;">${Number(item.price).toLocaleString()} VNĐ</div>
+                    
+                    <button onclick="openRoutingModal(${index})" style="background:#3b5bfd; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">
+                        🗺️ Chỉ đường
+                    </button>
+                </div>
+            </div>
         `;
-        container.appendChild(div);
+        
+        list.appendChild(div);
     });
-
-    document.getElementById("results-container").style.display = "block";
 }
-
 // ========================
 // VIEW MAP FUNCTION
 // ========================

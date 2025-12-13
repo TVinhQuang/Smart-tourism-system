@@ -1,119 +1,112 @@
-// =======================================================
-// KHAI BÁO BIẾN TOÀN CỤC
-// =======================================================
-let routingItem = null;
-let map = null;
-let routeLine = null;
-let markerStart = null;
-let markerEnd = null;
-
-// Tọa độ giả lập (Sửa thành TP.HCM - Quận 1 để demo cho đẹp)
-// Bạn có thể dùng navigator.geolocation để lấy vị trí thật
-const YOUR_LAT = 10.7769;
-const YOUR_LON = 106.7009;
+// File: js/routing_rec_page.js
 
 // =======================================================
 // 1. MỞ MODAL (VÀO BƯỚC 1)
 // =======================================================
-function openRoutingModal(index) {
-    if (!window.homeResults || !window.homeResults[index]) {
-        console.error("Không tìm thấy dữ liệu tại index:", index);
+function openRoutingModal(input) {
+    let item = null;
+
+    // Logic nhận diện input là Object hay Index
+    if (typeof input === 'object' && input !== null) {
+        item = input;
+    } else if (window.homeResults && window.homeResults[input]) {
+        item = window.homeResults[input];
+    }
+
+    // Kiểm tra an toàn
+    if (!item) {
+        console.error("❌ Lỗi: Không tìm thấy dữ liệu item.");
         return;
     }
     
-    const item = window.homeResults[index];
+    // Gán biến toàn cục
     routingItem = item;
-
-    // Reset giao diện về Bước 1 (Nếu hàm này lỗi => Modal không hiện)
+    
+    // Reset về Bước 1
     switchView(1);
 
-    // --- XỬ LÝ NGÔN NGỮ ---
-    const currentLang = localStorage.getItem('userLang') || 'vi';
-    
-    // 1. Mô tả (Check nếu là object đa ngôn ngữ hay string thường)
-    let description = "";
-    if (item.desc && typeof item.desc === 'object') {
-        description = item.desc[currentLang] || item.desc['vi'];
-    } else {
-        description = item.desc || "";
-    }
-    document.getElementById("info-desc").innerText = description;
+    // --- (ĐÃ XÓA CODE XỬ LÝ ẢNH Ở ĐÂY) --- 
+    // Code sẽ chạy trơn tru qua đoạn này mà không tìm thẻ img nữa
 
-    // 2. Tiện ích (Dịch từ Key sang Chữ)
+    // --- XỬ LÝ TIỆN ÍCH (AMENITIES) ---
     const amenityContainer = document.getElementById("info-amenities");
-    amenityContainer.innerHTML = ""; 
-
-    if (item.amenities && item.amenities.length > 0) {
-        item.amenities.forEach(key => {
-            const span = document.createElement("span");
-            span.className = "amenity-tag";
-            // Lấy từ điển ra dịch. Nếu chưa tải xong hoặc không có key thì hiện tạm key gốc
-            const translatedText = (window.langData && window.langData[key]) ? window.langData[key] : key;
-            span.innerText = translatedText;
-            amenityContainer.appendChild(span);
-        });
+    if (amenityContainer) {
+        amenityContainer.innerHTML = ""; 
+        if (item.amenities && item.amenities.length > 0) {
+            item.amenities.forEach(key => {
+                const span = document.createElement("span");
+                span.className = "amenity-tag";
+                const translatedText = (window.langData && window.langData[key]) ? window.langData[key] : key;
+                span.innerText = translatedText;
+                amenityContainer.appendChild(span);
+            });
+        }
     }
 
     // --- ĐIỀN THÔNG TIN CƠ BẢN ---
-    document.getElementById("info-img").src = item.img || 'https://via.placeholder.com/300';
-    document.getElementById("info-name").innerText = item.name;
-    // ====================== FAVORITE CHECK ======================
+    // Dùng if để kiểm tra, tránh lỗi nếu file HTML lỡ thiếu ID nào đó
+    const elName = document.getElementById("info-name");
+    if(elName) elName.innerText = item.name;
+
+    const elAddress = document.getElementById("info-address");
+    if(elAddress) elAddress.innerText = item.address;
+
+    const elPrice = document.getElementById("info-price");
+    if(elPrice) elPrice.innerText = Number(item.price).toLocaleString() + " VND";
+
+    const elRating = document.getElementById("info-rating");
+    if(elRating) elRating.innerText = item.rating;
+
+    // --- XỬ LÝ FAVORITE (Giữ nguyên) ---
     function loadFavorites() {
-    const data = localStorage.getItem('favorites');
-    return data ? JSON.parse(data) : [];
-}
-
-function saveFavorites(list) {
-    localStorage.setItem('favorites', JSON.stringify(list));
-}
-    const favBtn = document.getElementById("fav-toggle");
-    const favList = loadFavorites();
-
-    if (favList.some(f => f.id === item.id)) {
-        favBtn.classList.add("active");
-        favBtn.innerText = "❤️";
-    } else {
-        favBtn.classList.remove("active");
-        favBtn.innerText = "♡";
+        const data = localStorage.getItem('favorites');
+        return data ? JSON.parse(data) : [];
     }
-
-// Sự kiện click
-    favBtn.onclick = () => {
-        const list = loadFavorites();
-        const exists = list.some(f => f.id === item.id);
-
-        if (exists) {
-            // Bỏ thích
-            const newList = list.filter(f => f.id !== item.id);
-            saveFavorites(newList);
-            favBtn.classList.remove("active");
-            favBtn.innerText = "♡";
-        } else {
-            // Thêm thích
-         list.push(item);
-            saveFavorites(list);
+    function saveFavorites(list) {
+        localStorage.setItem('favorites', JSON.stringify(list));
+    }
+    
+    const favBtn = document.getElementById("fav-toggle");
+    if (favBtn) {
+        const favList = loadFavorites();
+        if (favList.some(f => f.id === item.id)) {
             favBtn.classList.add("active");
             favBtn.innerText = "❤️";
+        } else {
+            favBtn.classList.remove("active");
+            favBtn.innerText = "♡";
         }
-    };
-
-    document.getElementById("info-address").innerText = item.address;
-    document.getElementById("info-price").innerText = Number(item.price).toLocaleString() + " VND";
-    document.getElementById("info-rating").innerText = item.rating;
-    
-    // Gán giá trị cho ô input "Vị trí của bạn" (nếu có data-i18n)
-    const myLocInput = document.querySelector('input[data-i18n="val_my_location"]');
-    if(myLocInput && window.langData) {
-        myLocInput.value = window.langData["val_my_location"];
+        
+        // Gán sự kiện click (ghi đè sự kiện cũ để tránh duplicate event)
+        favBtn.onclick = () => {
+            const list = loadFavorites();
+            const exists = list.some(f => f.id === item.id);
+            if (exists) {
+                const newList = list.filter(f => f.id !== item.id); // Bỏ thích
+                saveFavorites(newList);
+                favBtn.classList.remove("active");
+                favBtn.innerText = "♡";
+            } else {
+                list.push(item); // Thêm thích
+                saveFavorites(list);
+                favBtn.classList.add("active");
+                favBtn.innerText = "❤️";
+            }
+        };
     }
-    
-    // Gán đích đến
-    document.getElementById("target-dest").value = item.name;
 
-    // Hiển thị modal (Xóa class hidden)
-    document.getElementById("routing-overlay").classList.remove("hidden");
+    // Gán đích đến cho ô input tìm đường
+    const targetInput = document.getElementById("target-dest");
+    if(targetInput) targetInput.value = item.name;
+
+    // --- QUAN TRỌNG NHẤT: HIỂN THỊ MODAL ---
+    const modal = document.getElementById("routing-overlay");
+    if (modal) {
+        modal.classList.remove("hidden");
+    } else {
+        console.error("Không tìm thấy div id='routing-overlay' trong HTML");
+    }
 }
-
 // =======================================================
 // 2. XỬ LÝ TÌM ĐƯỜNG (CHUYỂN SANG BƯỚC 2)
 // =======================================================
@@ -174,7 +167,6 @@ document.getElementById("btn-find-route").addEventListener("click", () => {
         btn.classList.remove("btn-loading");
     });
 });
-
 // =======================================================
 // 3. CÁC HÀM HỖ TRỢ (UI & MAP)
 // =======================================================
@@ -235,7 +227,6 @@ function renderSteps(instructions) {
         });
     }
 }
-
 function initMap(pathCoords) {
     console.log("--- BẮT ĐẦU VẼ MAP ---");
 
@@ -322,9 +313,6 @@ function initMap(pathCoords) {
     setTimeout(forceUpdateMap, 600);  // Lần 3: Sau 0.6s (Lúc modal vừa mở xong)
     setTimeout(forceUpdateMap, 1000); // Lần 4: Chốt hạ sau 1s cho chắc ăn
 }
-// =======================================================
-// 4. SỰ KIỆN NÚT BẤM
-// =======================================================
 
 // Nút Quay lại (B2 -> B1)
 document.getElementById("btn-back-step1").addEventListener("click", () => {
