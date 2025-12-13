@@ -1,11 +1,10 @@
 // ================================================================
-// DISPLAY REC RESULTS - For Recommendation Page (No Images)
+// DISPLAY REC RESULTS - Modified Layout (Score + Better Rating Position)
 // ================================================================
 
 function renderResults(results, note) {
     console.log("🎨 renderResults được gọi với", results.length, "kết quả");
 
-    // 1. Tìm container
     const list = document.getElementById("results-list");
     if (!list) {
         console.error("❌ Không tìm thấy #results-list");
@@ -14,7 +13,7 @@ function renderResults(results, note) {
 
     list.innerHTML = "";
 
-    // 3. Xử lý khi không có kết quả
+    // Xử lý khi không có kết quả
     if (!results || results.length === 0) {
         list.innerHTML = `
             <div style='text-align:center; padding:40px; color:#666; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1);'>
@@ -28,11 +27,10 @@ function renderResults(results, note) {
         return;
     }
 
-    // --- LƯU DỮ LIỆU VÀO BIẾN TOÀN CỤC ---
+    // Lưu dữ liệu vào biến toàn cục
     window.homeResults = results;
-    console.log("✅ Đã lưu", results.length, "kết quả vào window.homeResults");
-
-    // 4. Vẽ thẻ Card (KHÔNG CÓ HÌNH ẢNH)
+    
+    // Vẽ thẻ Card
     results.forEach((item, index) => {
         const card = createAccommodationCard(item, index);
         list.appendChild(card);
@@ -40,7 +38,7 @@ function renderResults(results, note) {
 }
 
 // ================================================================
-// CREATE ACCOMMODATION CARD (No Image Version)
+// CREATE ACCOMMODATION CARD (New Layout)
 // ================================================================
 function createAccommodationCard(item, index) {
     const div = document.createElement("div");
@@ -53,80 +51,126 @@ function createAccommodationCard(item, index) {
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
         margin-bottom: 15px;
+        border: 1px solid #eee;
     `;
 
     // Hover effect
     div.onmouseenter = () => {
-        div.style.transform = "translateY(-2px)";
-        div.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+        div.style.transform = "translateY(-3px)";
+        div.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
+        div.style.borderColor = "#3b5bfd";
     };
     div.onmouseleave = () => {
         div.style.transform = "translateY(0)";
         div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+        div.style.borderColor = "#eee";
     };
 
-    // Xử lý tiện ích
-    let amenitiesHtml = "";
-    if (Array.isArray(item.amenities) && item.amenities.length > 0) {
-        amenitiesHtml = item.amenities.map(a => 
-            `<span style="background:#f1f1f1; padding:4px 10px; border-radius:15px; font-size:0.85rem; margin-right:5px; color:#555; display:inline-block; margin-bottom:5px;">${a}</span>`
-        ).join("");
-    } else {
-        amenitiesHtml = '<span style="color:#999; font-size:0.9rem;">Không có thông tin tiện ích</span>';
+    // --- 1. TÍNH TOÁN SCORE & MÀU SẮC ---
+    let scoreHtml = "";
+    if (item.score) {
+        const percent = Math.round(item.score * 100);
+        let color = "#28a745"; // Xanh (Cao)
+        let bg = "#e6f8eb";
+        
+        if(percent < 75) { color = "#ffc107"; bg = "#fff8e1"; } // Vàng (Khá)
+        if(percent < 50) { color = "#dc3545"; bg = "#f8d7da"; } // Đỏ (Thấp)
+
+        scoreHtml = `
+            <span style="
+                background: ${bg}; 
+                color: ${color}; 
+                padding: 4px 10px; 
+                border-radius: 6px; 
+                font-size: 0.85rem; 
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            ">
+                🎯 ${percent}% phù hợp
+            </span>
+        `;
     }
 
-    // Nội dung thẻ Card
+    // --- 2. XỬ LÝ TIỆN ÍCH ---
+    let amenitiesHtml = "";
+    if (Array.isArray(item.amenities) && item.amenities.length > 0) {
+        amenitiesHtml = item.amenities.slice(0, 5).map(a => // Chỉ lấy tối đa 5 tiện ích để gọn
+            `<span style="background:#f8f9fa; border: 1px solid #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #666;">
+                ${a.charAt(0).toUpperCase() + a.slice(1)}
+            </span>`
+        ).join(" ");
+        if(item.amenities.length > 5) amenitiesHtml += `<span style="font-size:0.8rem; color:#999;">+${item.amenities.length - 5}</span>`;
+    } else {
+        amenitiesHtml = '<span style="color:#999; font-size:0.85rem; font-style:italic;">Đang cập nhật tiện ích...</span>';
+    }
+
+    // --- 3. HTML CẤU TRÚC MỚI ---
     div.innerHTML = `
         <div class="accommodation-content">
-            <!-- Header: Tên & Rating -->
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                <h3 class="accommodation-title" style="margin:0; font-size:1.3rem; color:#333; flex:1;">
-                    ${item.name}
-                </h3>
-                <div class="accommodation-rating" style="color:#f39c12; font-weight:bold; font-size:1.1rem; margin-left:10px;">
-                    ⭐ ${item.rating || "N/A"}
+            
+            <h3 class="accommodation-title" style="margin: 0 0 8px 0; font-size: 1.25rem; color: #2c3e50; line-height: 1.4;">
+                ${item.name}
+            </h3>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                ${scoreHtml}
+                
+                <div style="display: flex; align-items: center; gap: 4px; font-weight: 600; color: #444; font-size: 0.9rem;">
+                    <span style="color: #f39c12;">⭐</span> ${item.rating || "N/A"}
+                    <span style="color: #999; font-weight: normal; font-size: 0.8rem;">(Rating)</span>
                 </div>
             </div>
 
-            <!-- Địa chỉ -->
-            <p class="accommodation-description" style="margin:8px 0; color:#666; font-size:0.95rem;">
-                📍 ${item.address || "Chưa có địa chỉ"}
-            </p>
-
-            <!-- Khoảng cách (nếu có) -->
-            ${item.distance_km ? 
-                `<p style="font-size:0.9rem; color:#666; margin:5px 0;">
-                    📏 Cách trung tâm: <b style="color:#3b5bfd;">${parseFloat(item.distance_km).toFixed(2)} km</b>
-                </p>` 
+            <div style="border-left: 3px solid #eee; padding-left: 10px; margin-bottom: 12px;">
+                <p style="margin: 0 0 4px 0; color: #555; font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
+                    📍 ${item.address || "Chưa có địa chỉ"}
+                </p>
+                ${item.distance_km ? 
+                    `<p style="margin: 0; font-size: 0.9rem; color: #666;">
+                        📏 Cách trung tâm: <strong style="color: #3b5bfd;">${parseFloat(item.distance_km).toFixed(2)} km</strong>
+                    </p>` 
                 : ''}
+            </div>
             
-            <!-- Tiện ích -->
-            <div style="margin:12px 0;">
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px;">
                 ${amenitiesHtml}
             </div>
 
-            <!-- Footer: Giá & Nút chỉ đường -->
-            <div class="price-rating-row" style="margin-top:15px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                <div class="accommodation-price" style="color:#3b5bfd; font-weight:bold; font-size:1.2rem;">
-                    ${item.price ? Number(item.price).toLocaleString() + " VNĐ" : "Liên hệ"}
+            <div style="
+                border-top: 1px solid #f0f0f0; 
+                padding-top: 15px; 
+                margin-top: auto; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;
+            ">
+                <div class="accommodation-price">
+                    <span style="font-size: 0.85rem; color: #888;">Giá mỗi đêm</span><br>
+                    <span style="color: #d63031; font-weight: 700; font-size: 1.2rem;">
+                        ${item.price ? Number(item.price).toLocaleString() + " ₫" : "Liên hệ"}
+                    </span>
                 </div>
                 
                 <button 
                     class="btn-routing"
                     data-index="${index}"
                     style="
-                        background:#3b5bfd;
-                        color:white;
-                        border:none;
-                        padding:10px 20px;
-                        border-radius:8px;
-                        cursor:pointer;
-                        font-weight:600;
-                        font-size:0.95rem;
-                        transition:background 0.2s;
+                        background: linear-gradient(135deg, #3b5bfd 0%, #2541d1 100%);
+                        color: white;
+                        border: none;
+                        padding: 10px 24px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 0.95rem;
+                        box-shadow: 0 4px 10px rgba(59, 91, 253, 0.3);
+                        transition: all 0.2s;
+                        display: flex; align-items: center; gap: 6px;
                     "
-                    onmouseover="this.style.background='#2a4ad4'"
-                    onmouseout="this.style.background='#3b5bfd'"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 12px rgba(59, 91, 253, 0.4)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(59, 91, 253, 0.3)';"
                 >
                     🗺️ Chỉ đường
                 </button>
@@ -134,30 +178,22 @@ function createAccommodationCard(item, index) {
         </div>
     `;
 
-    // Click event cho nút chỉ đường
+    // Click event
     const btn = div.querySelector(".btn-routing");
     btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        console.log("🔍 Click chỉ đường cho:", item.name, "index:", index);
-        
-        // Gọi hàm openRoutingModal từ display_result_rec.js
         if (typeof openRoutingModal === 'function') {
             openRoutingModal(index);
         } else {
             console.error("❌ Hàm openRoutingModal chưa được định nghĩa!");
-            alert("Lỗi: Không thể mở modal. Vui lòng kiểm tra console.");
+            alert("Lỗi: Không thể mở modal.");
         }
     });
 
     return div;
 }
 
-// ================================================================
-// INIT
-// ================================================================
-console.log("✅ Display rec results module loaded");
-
-// Export để test
+// Export module
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { renderResults };
 }
