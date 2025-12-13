@@ -635,28 +635,57 @@ def rank_accommodations(accommodations: List[Accommodation], q: SearchQuery, top
 
 @app.route('/api/route', methods=['POST'])
 def api_get_route():
+    # 1. Lấy dữ liệu và in RA NGAY LẬP TỨC để kiểm tra
     data = request.json
+    print(f"\n{'='*10} DEBUG REQUEST {'='*10}", flush=True)
+    print(f"📦 RAW DATA NHẬN ĐƯỢC: {data}", flush=True) # <--- Dòng này quan trọng nhất
+    
     src = data.get("src")
     dst = data.get("dst")
-    profile = data.get("profile", "driving")
+    profile = data.get("profile", "driving") # Mặc định là driving nếu không có key
     lang = data.get("lang", "vi")
 
     if not src or not dst:
-        return jsonify({"status": "error"}), 400
+        return jsonify({"status": "error", "message": "Missing src/dst"}), 400
 
-    osrm_mode = 'foot' if profile in ['foot', 'walking'] else 'driving'
+    # 2. Logic ánh xạ (Code của bạn đã đúng, tôi chỉ làm gọn lại)
+    if profile in ['foot', 'walking', 'di_bo']:
+        osrm_mode = 'walking'
+    elif profile in ['cycling', 'bike', 'bicycle', 'xe_dap']:
+        osrm_mode = 'cycling'
+    else:
+        osrm_mode = 'driving'
+
+    # 3. Tạo URL
     url = f"https://router.project-osrm.org/route/v1/{osrm_mode}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}?overview=full&geometries=geojson&steps=true"
+
+    # 4. In thông tin kiểm tra lần cuối
+    print(f"📡 PROFILE XỬ LÝ: '{profile}'", flush=True)
+    print(f"🛠️ MODE OSRM:     '{osrm_mode}'", flush=True)
+    print(f"🔗 URL GỌI ĐI:    {url}", flush=True)
+    print("="*35, flush=True)
     
     try:
         r = requests.get(url, timeout=10)
-        if r.status_code != 200: return jsonify({"status": "error", "message": "OSRM Error"})
+        if r.status_code != 200: 
+            return jsonify({"status": "error", "message": "OSRM Error"})
+            
         res = r.json()
-        if not res.get("routes"): return jsonify({"status": "error", "message": "No route found"})
+        if not res.get("routes"): 
+            return jsonify({"status": "error", "message": "No route found"})
         
         route = res["routes"][0]
         dist_km = route["distance"] / 1000.0
-        dur_min = route["duration"] / 60.0
         
+        # ⚠️ FIX LỖI OSRM: Tự tính lại thời gian nếu server trả về sai
+        # Tốc độ trung bình: Đi bộ 5km/h, Xe đạp 15km/h, Ô tô lấy theo API
+        if osrm_mode == 'walking':
+            dur_min = (dist_km / 5.0) * 60  # Tính phút
+        elif osrm_mode == 'cycling':
+            dur_min = (dist_km / 15.0) * 60 # Tính phút
+        else:
+            dur_min = route["duration"] / 60.0 # Ô tô thì tin tưởng API
+
         steps_raw = route["legs"][0]["steps"]
         instructions = [describe_osrm_step(s, lang) for s in steps_raw]
         
@@ -679,7 +708,7 @@ def api_get_route():
         })
 
     except Exception as e:
-        print("Error:", e)
+        print("Error:", e, flush=True)
         return jsonify({"status": "error", "message": str(e)})
 
 @app.route('/api/recommend', methods=['POST'])

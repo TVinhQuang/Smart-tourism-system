@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Register</title>
+
+    <!-- ĐƯỜNG DẪN CHÍNH XÁC ĐẾN CSS -->
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- Login Form -->
+    <div class="form-box" id="loginBox">
+        <h2>Đăng Nhập</h2>
+        <form onsubmit="return loginUser()">
+            <div class="input-group">
+                <input type="email" required>
+                <label>Email</label>
+            </div>
+
+            <div class="input-group">
+                <input type="password" required>
+                <label>Mật khẩu</label>
+            </div>
+
+            <button type="submit" class="btn">Đăng nhập</button>
+
+            <p class="switch">
+                Chưa có tài khoản? <span onclick="showRegister()">Đăng ký</span>
+            </p>
+        </form> </div>
+
+    <!-- Register Form -->
+    <div class="form-box hidden" id="registerBox">
+        <h2>Đăng Ký</h2>
+        <form>
+            <div class="input-group">
+                <input type="text" required>
+                <label>Tên tài khoản</label>
+            </div>
+
+            <div class="input-group">
+                <input type="email" required>
+                <label>Email</label>
+            </div>
+
+            <div class="input-group">
+                <input type="password" required>
+                <label>Mật khẩu</label>
+            </div>
+
+            <button type="submit" class="btn">Tạo tài khoản</button>
+
+            <p class="switch">
+                Đã có tài khoản? <span onclick="showLogin()">Đăng nhập</span>
+            </p>
+        </form onsubmit="return loginUser()">
+    </div>
+</div>
+
+<script>
+function showRegister() {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("registerBox").classList.remove("hidden");
+}
+
+function showLogin() {
+    document.getElementById("registerBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+}
+</script>
+
+<script>
+function loginUser() {
+    const email = document.querySelector("#loginBox input[type='email']").value;
+    const pass = document.querySelector("#loginBox input[type='password']").value;
+
+    if (email === "" || pass === "") {
+        alert("Vui lòng nhập đầy đủ email và mật khẩu");
+        return false;
+    }
+
+    // Chuyển hướng kèm email
+    window.location.href = `homepage.html?email=${encodeURIComponent(email)}`;
+    return false; // Ngăn reload trang
+}
+</script>
+
+
+</body>
+</html>

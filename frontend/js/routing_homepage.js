@@ -11,7 +11,6 @@ let markerEnd = null;
 // Bạn có thể dùng navigator.geolocation để lấy vị trí thật
 const YOUR_LAT = 10.7769;
 const YOUR_LON = 106.7009;
-
 // =======================================================
 // 1. MỞ MODAL (VÀO BƯỚC 1)
 // =======================================================

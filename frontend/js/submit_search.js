@@ -1,4 +1,7 @@
-// Global variable
+// ================================================================
+// SUBMIT SEARCH - Sử dụng renderResults từ display_results.js
+// ================================================================
+
 let selectedMode = "driving"; 
 
 function submitSearch() {
@@ -16,103 +19,185 @@ function submitSearch() {
         priority: document.getElementById("priority").value
     };
 
-    console.log("Sending Data:", data); // Debug
+    console.log("📤 Sending Data:", data);
 
-    // 2. Gọi API (Giả lập hoặc gọi thật)
+    // Hiển thị loading (nếu có element)
+    const loadingEl = document.getElementById("search-loading");
+    if (loadingEl) loadingEl.style.display = "block";
+
+    // 2. Gọi API
     fetch("http://localhost:5000/api/recommend", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
     .then(response => {
-        console.log("Backend Response:", response);
+        console.log("✅ Backend Response:", response);
+
+        // Ẩn loading
+        if (loadingEl) loadingEl.style.display = "none";
 
         // Lưu tâm bản đồ nếu có
         if (response.center) {
             window.search_center = response.center;
+            console.log("📍 Search center:", window.search_center);
         }
 
-        // Render kết quả
-        if (response.results) {
-            renderResults(response.results, response.relaxation_note);
+        // Render kết quả (Gọi hàm từ display_results.js)
+        if (response.results && response.results.length > 0) {
+            console.log("🎨 Rendering", response.results.length, "results");
+            
+            // ✅ Gọi hàm renderResults từ display_results.js
+            if (typeof renderResults === 'function') {
+                renderResults(response.results, response.relaxation_note);
+            } else {
+                console.error("❌ Hàm renderResults chưa được load! Kiểm tra file display_results.js");
+            }
         } else {
-            alert("Không có dữ liệu trả về!");
+            console.warn("⚠️ Không có kết quả");
+            showNoResults();
         }
     })
     .catch(err => {
-        console.error("API Error:", err);
-        // --- CHẾ ĐỘ GIẢ LẬP (FALLBACK) ---
-        // Nếu không có Backend, tự hiển thị dữ liệu mẫu để test giao diện
-        console.warn("Đang sử dụng dữ liệu mẫu do lỗi API...");
+        console.error("❌ API Error:", err);
+        
+        // Ẩn loading
+        if (loadingEl) loadingEl.style.display = "none";
+        
+        // --- FALLBACK: Dữ liệu mẫu ---
+        console.warn("⚠️ Đang sử dụng dữ liệu mẫu do lỗi API...");
+        
         const mockResults = [
-            { name: "Sena Homestay", type: "Homestay", address: "Sơn Trà, Đà Nẵng", rating: 9.6, price: 300000, amenities: ["Wifi", "Gần biển"] },
-            { name: "City Hostel", type: "Hostel", address: "Hải Châu, Đà Nẵng", rating: 9.0, price: 325000, amenities: ["Wifi", "Bữa sáng"] },
-            { name: "Luxury Hotel", type: "Hotel", address: "Ngũ Hành Sơn", rating: 8.5, price: 1200000, amenities: ["Pool", "Parking"] }
-        ];
-        renderResults(mockResults, "Gợi ý dựa trên dữ liệu mẫu.");
-    });
-}
-
-function renderResults(results, relaxationNote) {
-    // SỬA LỖI 1: Target vào đúng #results-list để giữ lại tiêu đề h2 bên ngoài
-    const listContainer = document.getElementById("results-list");
-    
-    if (!listContainer) {
-        console.error("Không tìm thấy div #results-list!");
-        return;
-    }
-
-    listContainer.innerHTML = ""; // Xóa kết quả cũ
-
-    // Hiển thị thông báo nới lỏng tiêu chí (nếu có) - Thêm vào đầu list hoặc alert
-    if (relaxationNote) {
-        alert("Lưu ý: " + relaxationNote);
-    }
-
-    if (results.length === 0) {
-        listContainer.innerHTML = "<p>Không tìm thấy kết quả phù hợp.</p>";
-        return;
-    }
-
-    results.forEach((place, index) => {
-        // SỬA LỖI 2: Tạo cấu trúc HTML khớp với CSS .accommodation-card
-        const card = document.createElement("div");
-        card.className = "accommodation-card card-no-image"; // Class khớp CSS
-        
-        // Xử lý amenities hiển thị đẹp hơn
-        const amenitiesHTML = place.amenities 
-            ? place.amenities.slice(0, 3).map(a => `<span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:12px; margin-right:4px;">${a}</span>`).join("") 
-            : "";
-
-        card.innerHTML = `
-            <div class="accommodation-content">
-                <h3>${index + 1}. ${place.name || "Chỗ ở không tên"}</h3>
-                <p style="font-size:0.9rem; color:#777;">📍 ${place.address || "Chưa cập nhật địa chỉ"}</p>
-                <div style="margin-top:8px;">${amenitiesHTML}</div>
-            </div>
-            
-            <div class="price-rating-row">
-                <span class="price">${place.price ? place.price.toLocaleString() + ' VNĐ' : "Liên hệ"}</span>
-                <span class="rating">★ ${place.rating || "N/A"}</span>
-            </div>
-
-            <button class="route-btn" style="margin-top:10px; width:100%; padding:8px; background:#eef2ff; color:#667eea; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                🚗 Chỉ đường
-            </button>
-        `;
-        
-        // SỬA LỖI 3: Gán sự kiện click cho nút "Chỉ đường" để mở Modal
-        const btn = card.querySelector(".route-btn");
-        // Hàm openRoutingModal này sẽ gọi từ file routing_rec_page.js
-        btn.addEventListener("click", () => {
-            if (typeof openRoutingModal === "function") {
-                openRoutingModal(place); 
-            } else {
-                console.error("Chưa load được hàm openRoutingModal từ file routing_rec_page.js");
+            { 
+                name: "KHANG HOMESTAY ĐÀ NẴNG", 
+                type: "Homestay", 
+                address: "152/4 Trưng Nữ Vương, Phước Ninh, Hải Châu, Đà Nẵng",
+                rating: 9,
+                price: 950000,
+                amenities: ["wifi"],
+                lat: 16.0579016,
+                lon: 108.2203421,
+                distance_km: 1.01,
+                id: "mock-1"
+            },
+            { 
+                name: "Sena Homestay", 
+                type: "Homestay", 
+                address: "Sơn Trà, Đà Nẵng",
+                rating: 9.6,
+                price: 300000,
+                amenities: ["wifi", "beach"],
+                lat: 16.0854,
+                lon: 108.2497,
+                distance_km: 3.2,
+                id: "mock-2"
+            },
+            { 
+                name: "City Hostel", 
+                type: "Hostel", 
+                address: "Hải Châu, Đà Nẵng",
+                rating: 9.0,
+                price: 325000,
+                amenities: ["wifi", "breakfast"],
+                lat: 16.0544,
+                lon: 108.2022,
+                distance_km: 0.5,
+                id: "mock-3"
+            },
+            { 
+                name: "Luxury Hotel", 
+                type: "Hotel", 
+                address: "Ngũ Hành Sơn, Đà Nẵng",
+                rating: 8.5,
+                price: 1200000,
+                amenities: ["pool", "parking", "spa"],
+                lat: 16.0010,
+                lon: 108.2620,
+                distance_km: 7.8,
+                id: "mock-4"
             }
-        });
+        ];
 
-        listContainer.appendChild(card);
+        // Lưu center giả lập
+        window.search_center = {
+            lat: 16.0544,
+            lon: 108.2022,
+            name: "Đà Nẵng"
+        };
+
+        // ✅ Gọi hàm renderResults từ display_results.js
+        if (typeof renderResults === 'function') {
+            renderResults(mockResults, "⚠️ Dữ liệu mẫu (Server không khả dụng)");
+        } else {
+            console.error("❌ Hàm renderResults chưa được load!");
+            alert("Lỗi: Không thể hiển thị kết quả. Vui lòng kiểm tra console.");
+        }
     });
 }
+
+// ================================================================
+// HELPER FUNCTION - Hiển thị khi không có kết quả
+// ================================================================
+function showNoResults() {
+    const container = document.getElementById("results-list") || 
+                     document.getElementById("accommodation-list");
+    
+    if (!container) {
+        console.error("❌ Không tìm thấy container để hiển thị thông báo");
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="
+            text-align:center;
+            padding:60px 20px;
+            background:white;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.1);
+            margin:20px 0;
+        ">
+            <div style="font-size:4rem; margin-bottom:20px;">🔍</div>
+            <h3 style="color:#333; margin-bottom:10px; font-size:1.5rem;">
+                Không tìm thấy kết quả phù hợp
+            </h3>
+            <p style="color:#666; margin-bottom:20px; font-size:1rem;">
+                Vui lòng thử lại với điều kiện tìm kiếm khác
+            </p>
+            <button 
+                onclick="window.location.reload()"
+                style="
+                    padding:12px 24px;
+                    background:#3b5bfd;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    font-size:1rem;
+                    cursor:pointer;
+                    transition:background 0.2s;
+                "
+                onmouseover="this.style.background='#2a4ad4'"
+                onmouseout="this.style.background='#3b5bfd'"
+            >
+                🔄 Tìm kiếm lại
+            </button>
+        </div>
+    `;
+}
+
+// ================================================================
+// INIT
+// ================================================================
+console.log("✅ Submit search module loaded");
+
+// Kiểm tra xem renderResults đã được load chưa
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderResults !== 'function') {
+        console.warn("⚠️ Hàm renderResults chưa được tìm thấy. Đảm bảo display_results.js được load trước submit_search.js");
+    }
+});
