@@ -198,111 +198,162 @@
     <script src="../js/homepage.js"></script>
     <script src="../js/routing.js"></script>
     <script src="../js/display_results.js"></script>
-    <!-- thêm -->
-     <script>
-    // Hàm lấy tham số từ URL
-    function getQueryParam(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-    }
 
-    // Hàm rút gọn email để hiển thị (tùy chọn)
-    function formatEmail(email) {
-        if (!email) return "Người dùng";
-        // Lấy phần trước ký tự '@'
-        const parts = email.split('@');
-        if (parts.length > 0 && parts[0].length > 15) {
-            // Nếu phần tên quá dài, rút gọn
-            return parts[0].substring(0, 15) + '...';
-        }
-        return parts[0];
-    }
+    <script>
+// --- 1. LOGIC DUY TRÌ TRẠNG THÁI ĐĂNG NHẬP (Dùng LOCALSTORAGE) ---
 
-    // Hàm cập nhật giao diện navbar
-    function updateNavbarForLoggedInUser() {
-        const userEmail = getQueryParam('email');
-        const loginButtonContainer = document.querySelector('#navbar-root .nav-auth-container'); // Thay thế selector này nếu cần
+function logoutUser() {
+    // Xóa email khỏi bộ nhớ cục bộ
+    localStorage.removeItem('loggedInUserEmail');
+    // Chuyển hướng về trang login
+    window.location.href = 'login.html'; 
+}
 
-        if (userEmail) {
-            const displayName = formatEmail(userEmail);
+function formatEmail(email) {
+    if (!email) return "Người dùng";
+    const parts = email.split('@');
+    return parts[0]; 
+}
 
-            // Kiểm tra xem đã load navbar chưa
-            if (loginButtonContainer) {
-                // Tạo một nút mới hoặc thẻ span hiển thị tên người dùng
-                loginButtonContainer.innerHTML = `
-                    <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
-                `;
-                // Bạn có thể thêm một nút "Đăng xuất" ở đây nếu muốn
-            } else {
-                // Nếu navbar chưa load xong, chờ load xong rồi gọi lại
-                setTimeout(updateNavbarForLoggedInUser, 100); 
-            }
-        }
-    }
-
-    // Gọi hàm khi trang load (chờ navbar component load xong)
-    window.onload = function() {
-        updateNavbarForLoggedInUser();
-    };
-</script>
-
-<script>
-    // Hàm xử lý Đăng xuất: Đơn giản là chuyển về trang login
-    function logoutUser() {
-        window.location.href = 'login.html'; 
-    }
-
-    // Hàm lấy tham số từ URL (ví dụ: lấy giá trị của 'email' từ URL)
-    function getQueryParam(name) {
-        // Tên tham số URL
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-    }
-
-    // Hàm rút gọn email (ví dụ: nguyen.van.a@gmail.com -> nguyen.van.a)
-    function formatEmail(email) {
-        if (!email) return "Người dùng";
-        const parts = email.split('@');
-        // Chỉ lấy phần tên (trước ký tự @)
-        return parts[0]; 
-    }
-
-    // Hàm cập nhật giao diện navbar
-    function updateNavbarForLoggedInUser() {
-        // 1. Lấy email từ URL
-        const userEmail = getQueryParam('email');
-        
-        // 2. Tìm container (Dùng class 'nav-right' từ navbar.html bạn cung cấp)
-        // Chúng ta cần query bên trong phần đã fetch ('navbar-root')
-        const loginButtonContainer = document.querySelector('#navbar-root .nav-right'); 
+function updateNavbarForLoggedInUser() {
+    // ĐỌC EMAIL TỪ LOCAL STORAGE
+    const userEmail = localStorage.getItem('loggedInUserEmail'); 
+    const navbarRoot = document.getElementById('navbar-root');
+    
+    // Đảm bảo navbar component đã tải xong
+    if (navbarRoot.innerHTML !== "") {
+        const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
 
         if (userEmail) {
             const displayName = formatEmail(userEmail);
-
             if (loginButtonContainer) {
-                // 3. Thay thế nút "Đăng nhập" bằng Tên người dùng và nút Đăng xuất
+                // Thay thế nút "Đăng nhập" bằng Tên người dùng và nút Đăng xuất
                 loginButtonContainer.innerHTML = `
                     <div class="user-info-group">
-                        <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                        <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
                         <button class="btn-logout" onclick="logoutUser()">
                             <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
-                            Đăng xuất
+                            <span data-i18n="nav_logout">Đăng xuất</span>
                         </button>
                     </div>
                 `;
-            } else {
-                // Nếu component navbar chưa được tải xong (do sử dụng fetch), 
-                // thử lại sau 100ms.
-                setTimeout(updateNavbarForLoggedInUser, 100); 
+            }
+        } else {
+            // Nếu chưa đăng nhập, hiển thị nút Đăng nhập
+            if (loginButtonContainer) {
+            loginButtonContainer.innerHTML = `
+             <a href="login.html" class="btn-login">
+                 <img src="../../images/login.png" class="login-icon">
+                 <span data-i18n="nav_login">Đăng nhập</span>
+             </a>
+                `;
             }
         }
+        // Áp dụng dịch thuật cho các phần tử vừa được chèn
+        applyTranslations();
+    } else {
+         // Nếu Navbar chưa load xong, thử lại sau 100ms
+         setTimeout(updateNavbarForLoggedInUser, 100);
     }
+}
 
-    // Chạy hàm cập nhật khi trang đã sẵn sàng
-    // (Đảm bảo chạy sau khi navbar đã được fetch)
-    window.onload = function() {
-        updateNavbarForLoggedInUser();
-    };
+// --- 2. LOGIC DỊCH THUẬT VÀ TOGGLE DROPWDOWN ---
+
+let currentTranslations = {};
+
+function getTranslation(key) {
+    return currentTranslations[key] || key;
+}
+
+function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        const translation = getTranslation(key);
+        
+        if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+            if (element.lastChild && element.lastChild.nodeType === 3) {
+                element.lastChild.textContent = translation;
+            } else {
+                element.textContent = translation;
+            }
+        } else {
+            element.textContent = translation;
+        }
+    });
+}
+
+async function loadAndApplyLanguage(lang) {
+    const filePath = `../i18n/${lang}.json`;
+    
+    try {
+        const response = await fetch(filePath);
+        if (!response.ok) { throw new Error(`Không thể tải file dịch thuật: ${filePath}`); }
+        currentTranslations = await response.json();
+        localStorage.setItem('lang', lang); 
+
+        applyTranslations();
+        
+        // ⭐ LƯU Ý: Không gọi updateNavbarForLoggedInUser ở đây, 
+        // vì nó sẽ được gọi sau khi Navbar component đã load.
+        // Logic đó nằm ở khối khởi tạo dưới đây.
+
+    } catch (error) {
+        console.error("Lỗi Dịch thuật:", error);
+    }
+}
+
+function changeLanguage(lang) {
+    loadAndApplyLanguage(lang);
+    const menu = document.getElementById('languageMenu');
+    if (menu) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeMenuOutside);
+    }
+    return false;
+}
+
+function toggleLanguageMenu() {
+    const menu = document.getElementById('languageMenu');
+    if (menu) {
+        menu.classList.toggle('hidden'); 
+        if (!menu.classList.contains('hidden')) {
+            document.addEventListener('click', closeMenuOutside);
+        } else {
+            document.removeEventListener('click', closeMenuOutside);
+        }
+    }
+}
+
+function closeMenuOutside(event) {
+    const dropdown = document.querySelector('.dropdown');
+    const menu = document.getElementById('languageMenu');
+
+    if (dropdown && menu && !dropdown.contains(event.target)) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeMenuOutside);
+    }
+}
+
+// --- 3. KHỞI TẠO CHUNG (TẢI NAVBAR VÀ CẬP NHẬT TRẠNG THÁI) ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Load Navbar
+    fetch('../components/navbar.html')
+        .then(r => r.text())
+        .then(html => { 
+            document.getElementById('navbar-root').innerHTML = html; 
+            
+            // 2. Tải ngôn ngữ
+            const defaultLang = localStorage.getItem('lang') || 'vi'; 
+            loadAndApplyLanguage(defaultLang)
+                .then(() => {
+                    // 3. Cập nhật trạng thái đăng nhập sau khi load ngôn ngữ và Navbar thành công
+                    updateNavbarForLoggedInUser();
+                });
+        })
+        .catch(e => console.warn('Không thể load navbar component', e));
+});
 </script>
 </body>
+
 </html>

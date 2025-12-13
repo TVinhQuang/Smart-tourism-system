@@ -2,13 +2,13 @@
     background: #5c7bae;
     padding: 15px 50px;
     display: flex;
-    justify-content: space-between;   /* đổi từ center → space-between */
+    justify-content: space-between;   
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
-}   
+}
 
 .nav-center {
     display: flex;
@@ -145,4 +145,90 @@
 /* Khi hover vào nút hay menu → hiện menu */
 .dropdown:hover .dropdown-menu {
     display: block;
+}
+
+/* --- BỔ SUNG: CSS CHO TRẠNG THÁI ĐÃ ĐĂNG NHẬP (USER LOGGED IN) --- */
+
+/* Khối bao bọc thông tin người dùng */
+.user-info-group {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Khoảng cách giữa lời chào và nút Đăng xuất */
+}
+
+/* Kiểu dáng cho lời chào */
+.user-greeting {
+    color: white; /* Màu chữ sáng cho Navbar nền xanh */
+    font-size: 1.1rem; /* Khớp với font size của các link nav-menu */
+    font-weight: 400;
+}
+
+.user-greeting strong {
+    font-weight: 700; /* Tên người dùng đậm hơn */
+}
+
+/* Kiểu dáng chính của nút Đăng xuất */
+.btn-logout {
+    /* Đặt làm nút */
+    background-color: #ffffff; 
+    color: #333;
+    border: none;
+    padding: 8px 16px; /* Khớp với padding của login-btn */
+    border-radius: 10px; /* Khớp với border-radius của login-btn */
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600; /* Khớp với font-weight của login-btn */
+    transition: all 0.3s;
+    display: flex; /* Bật Flexbox để căn chỉnh icon */
+    align-items: center;
+    gap: 8px; /* Khoảng cách giữa icon và chữ */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Hiệu ứng khi di chuột (Sử dụng màu đỏ cảnh báo hoặc màu xám nhạt) */
+.btn-logout:hover {
+    background-color: #dc3545; /* Đỏ nhạt */
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Kiểu dáng cho Icon Đăng xuất */
+.logout-icon {
+    width: 20px;
+    height: 20px;
+    /* Nếu icon logout của bạn có màu, bạn có thể dùng filter để đổi màu khi hover */
+    /* .btn-logout:hover .logout-icon { filter: invert(100%); } */
+}
+
+/* Kiểu dáng cơ bản cho nút Đăng nhập */
+.login-btn {
+    /* Đảm bảo quy tắc này là quy tắc bạn muốn áp dụng cho hình dáng chung */
+    background: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 8px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex; /* Quan trọng để căn icon và chữ */
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+    /* Thêm shadow để làm nổi bật (giống nút Đăng xuất) */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+}
+
+/* Quy tắc cụ thể hơn cho nút Đăng nhập nằm trong nav-right */
+.nav-right .btn-login {
+    /* Sử dụng lại các giá trị của .login-btn để đảm bảo ghi đè nếu cần */
+    background: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 8px 16px;
+    border-radius: 10px; /* Dùng 10px để khớp với .login-btn và .btn-logout */
+    font-weight: 600;
+}
+
+/* Hiệu ứng Hover cho nút Đăng nhập */
+.nav-right .btn-login:hover {
+    background: #D1D3D4;
+    transform: translateY(-2px);
 }

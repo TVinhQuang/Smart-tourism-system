@@ -3,58 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gợi ý Nơi Ở</title>
+    <title data-i18n="nav_suggest">Gợi ý Nơi Ở</title>
 
     <link rel="stylesheet" href="../css/rec_accomodation.css">
     <link rel="stylesheet" href="../css/navbar.css">
 </head>
 
 <body>
+    
     <div id="navbar-root"></div>
 
-    <h1 class="page-title">🏨 Gợi ý Nơi Ở Phù Hợp</h1>
-    <h2 class="page-subtitle">Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!</h2>
+    <h1 class="page-title" data-i18n="rec_title">🏨 Gợi ý Nơi Ở Phù Hợp</h1>
+    <h2 class="page-subtitle" data-i18n="rec_subtitle">Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!</h2>
     <div class="form-section">
 
         <div class="form-group">
-            <label>Thành phố</label>
+            <label data-i18n="input_city">Thành phố</label>
             <input type="string" id="city" value="Đà Nẵng">
         </div>
 
         <div class="form-group">
-            <label>Số người</label>
+            <label data-i18n="input_group_size">Số người</label>
             <input type="number" id="group-size" value="2">
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Giá từ</label>
+                <label data-i18n="input_price_min">Giá từ</label>
                 <input type="number" id="price-min" value="300000" step="50000">
             </div>
 
             <div class="form-group">
-                <label>Giá đến</label>
+                <label data-i18n="input_price_max">Giá đến</label>
                 <input type="number" id="price-max" value="1500000" step="50000">
             </div>
         </div>
 
         <div class="form-group">
-            <label>Loại hình</label>
+            <label data-i18n="input_type">Loại hình</label>
             <div class="checkbox-group">
-                <label><input type="checkbox" class="type-checkbox" value="hotel" checked> Hotel</label>
-                <label><input type="checkbox" class="type-checkbox" value="homestay" checked> Homestay</label>
-                <label><input type="checkbox" class="type-checkbox" value="hostel"> Hostel</label>
-                <label><input type="checkbox" class="type-checkbox" value="apartment"> Apartment</label>
+                <label><input type="checkbox" class="type-checkbox" value="hotel" checked> <span data-i18n="type_hotel">Hotel</span></label>
+                <label><input type="checkbox" class="type-checkbox" value="homestay" checked> <span data-i18n="type_homestay">Homestay</span></label>
+                <label><input type="checkbox" class="type-checkbox" value="hostel"> <span data-i18n="type_hostel">Hostel</span></label>
+                <label><input type="checkbox" class="type-checkbox" value="apartment"> <span data-i18n="type_apartment">Apartment</span></label>
             </div>
         </div>
 
         <div class="form-group">
-            <label>Thông số tìm kiếm</label>
+            <label data-i18n="input_params">Thông số tìm kiếm</label>
 
             <div class="filter-row">
-                <!-- Rating tối thiểu -->
                 <div class="filter-item">
-                    <label for="min-rating">Đánh giá tối thiểu</label>
+                    <label for="min-rating" data-i18n="input_min_rating">Đánh giá tối thiểu</label>
                     <div class="slider-wrap">
                         <input 
                             type="range" 
@@ -68,9 +68,8 @@
                     </div>
                 </div>
 
-                <!-- Bán kính tìm kiếm -->
                 <div class="filter-item">
-                    <label for="radius">Bán kính tìm kiếm (km)</label>
+                    <label for="radius" data-i18n="input_radius">Bán kính tìm kiếm (km)</label>
                     <div class="slider-wrap">
                         <input 
                             type="range" 
@@ -86,38 +85,37 @@
             </div>
         </div>
         <div class="form-group">
-                <label>Tiện ích BẮT BUỘC</label>
+                <label data-i18n="input_amenity_required">Tiện ích BẮT BUỘC</label>
                 <div class="checkbox-group">
-                    <label><input type="checkbox" class="amenity-required" value="wifi" checked> WiFi</label>
-                    <label><input type="checkbox" class="amenity-required" value="breakfast"> Breakfast</label>
-                    <label><input type="checkbox" class="amenity-required" value="pool"> Pool</label>
-                    <label><input type="checkbox" class="amenity-required" value="parking"> Parking</label>
+                    <label><input type="checkbox" class="amenity-required" value="wifi" checked> <span data-i18n="amenity_wifi">WiFi</span></label>
+                    <label><input type="checkbox" class="amenity-required" value="breakfast"> <span data-i18n="amenity_breakfast">Breakfast</span></label>
+                    <label><input type="checkbox" class="amenity-required" value="pool"> <span data-i18n="amenity_pool">Pool</span></label>
+                    <label><input type="checkbox" class="amenity-required" value="parking"> <span data-i18n="amenity_parking">Parking</span></label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Tiện ích ƯU TIÊN</label>
+                <label data-i18n="input_amenity_preferred">Tiện ích ƯU TIÊN</label>
                 <div class="checkbox-group">
-                    <label><input type="checkbox" class="amenity-preferred" value="wifi"> WiFi</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="breakfast" checked> Breakfast</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="pool"> Pool</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="parking"> Parking</label>
+                    <label><input type="checkbox" class="amenity-preferred" value="wifi"> <span data-i18n="amenity_wifi">WiFi</span></label>
+                    <label><input type="checkbox" class="amenity-preferred" value="breakfast" checked> <span data-i18n="amenity_breakfast">Breakfast</span></label>
+                    <label><input type="checkbox" class="amenity-preferred" value="pool"> <span data-i18n="amenity_pool">Pool</span></label>
+                    <label><input type="checkbox" class="amenity-preferred" value="parking"> <span data-i18n="amenity_parking">Parking</span></label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="priority">Ưu tiên xếp hạng</label>
+                <label for="priority" data-i18n="input_priority">Ưu tiên xếp hạng</label>
                 <select id="priority">
-                    <option value="balanced">Cân bằng (giá, rating, tiện ích, khoảng cách)</option>
-                    <option value="cheap">Ưu tiên giá rẻ</option>
-                    <option value="near_center">Ưu tiên gần trung tâm</option>
-                    <option value="amenities">Ưu tiên tiện ích</option>
+                    <option value="balanced" data-i18n="prio_balanced">Cân bằng (giá, rating, tiện ích, khoảng cách)</option>
+                    <option value="cheap" data-i18n="prio_cheap">Ưu tiên giá rẻ</option>
+                    <option value="near_center" data-i18n="prio_near_center">Ưu tiên gần trung tâm</option>
+                    <option value="amenities" data-i18n="prio_amenities">Ưu tiên tiện ích</option>
                 </select>
             </div>
-     <button class="submit-btn" onclick="submitSearch()">🔍 Gợi ý Top 5 nơi ở</button>
-    <!-- Kết quả -->
+     <button class="submit-btn" onclick="submitSearch()" data-i18n="btn_suggest_top5">🔍 Gợi ý Top 5 nơi ở</button>
     <div id="results-container">
-        <h2>Kết quả</h2>
+        <h2 data-i18n="rec_results">Kết quả</h2>
         <div id="results-list"></div>
     
     <div id="map-popup" style="display:none;">
@@ -129,31 +127,169 @@
 
     </div>
 
-    <!-- SCRIPT -->
     <script src="../js/navbar_loader.js"></script>
     <script src="../js/display_results.js"></script>
     <script src="../js/rec_accomodation.js"></script>
+    
+    <script>
+    // --- 1. LOGIC DUY TRÌ TRẠNG THÁI ĐĂNG NHẬP (Dùng LOCALSTORAGE) ---
+
+    function logoutUser() {
+        localStorage.removeItem('loggedInUserEmail');
+        window.location.href = 'login.html'; 
+    }
+
+    function formatEmail(email) {
+        if (!email) return "Người dùng";
+        const parts = email.split('@');
+        return parts[0]; 
+    }
+
+    function updateNavbarForLoggedInUser() {
+        const userEmail = localStorage.getItem('loggedInUserEmail'); 
+        const navbarRoot = document.getElementById('navbar-root');
+        
+        if (navbarRoot.innerHTML !== "") {
+            const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
+
+            if (userEmail) {
+                const displayName = formatEmail(userEmail);
+                if (loginButtonContainer) {
+                    loginButtonContainer.innerHTML = `
+                        <div class="user-info-group">
+                            <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
+                            <button class="btn-logout" onclick="logoutUser()">
+                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                                <span data-i18n="nav_logout">Đăng xuất</span>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                if (loginButtonContainer) {
+                loginButtonContainer.innerHTML = `
+                <a href="login.html" class="btn-login">
+                 <img src="../../images/login.png" class="login-icon">
+                 <span data-i18n="nav_login">Đăng nhập</span>
+                </a>
+                   `;
+                }
+            }
+            applyTranslations();
+        } else {
+             setTimeout(updateNavbarForLoggedInUser, 100);
+        }
+    }
+
+    // --- 2. LOGIC DỊCH THUẬT VÀ TOGGLE DROPWDOWN ---
+
+    let currentTranslations = {};
+
+    function getTranslation(key) {
+        return currentTranslations[key] || key;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = getTranslation(key);
+            
+            if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+                if (element.lastChild && element.lastChild.nodeType === 3) {
+                    element.lastChild.textContent = translation;
+                } else {
+                    element.textContent = translation;
+                }
+            } else {
+                element.textContent = translation;
+            }
+        });
+    }
+
+    async function loadAndApplyLanguage(lang) {
+        const filePath = `../i18n/${lang}.json`;
+        
+        try {
+            const response = await fetch(filePath);
+            if (!response.ok) { throw new Error(`Không thể tải file dịch thuật: ${filePath}`); }
+            currentTranslations = await response.json();
+            localStorage.setItem('lang', lang); 
+
+            applyTranslations();
+
+        } catch (error) {
+            console.error("Lỗi Dịch thuật:", error);
+        }
+    }
+
+    function changeLanguage(lang) {
+        loadAndApplyLanguage(lang);
+        const menu = document.getElementById('languageMenu');
+        if (menu) {
+            menu.classList.add('hidden');
+            document.removeEventListener('click', closeMenuOutside);
+        }
+        return false;
+    }
+
+    function toggleLanguageMenu() {
+        const menu = document.getElementById('languageMenu');
+        if (menu) {
+            menu.classList.toggle('hidden'); 
+            if (!menu.classList.contains('hidden')) {
+                document.addEventListener('click', closeMenuOutside);
+            } else {
+                document.removeEventListener('click', closeMenuOutside);
+            }
+        }
+    }
+
+    function closeMenuOutside(event) {
+        const dropdown = document.querySelector('.dropdown');
+        const menu = document.getElementById('languageMenu');
+
+        if (dropdown && menu && !dropdown.contains(event.target)) {
+            menu.classList.add('hidden');
+            document.removeEventListener('click', closeMenuOutside);
+        }
+    }
+
+    // --- 3. KHỞI TẠO CHUNG (TẢI NAVBAR VÀ CẬP NHẬT TRẠNG THÁI) ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Load Navbar
+        fetch('../components/navbar.html')
+            .then(r => r.text())
+            .then(html => { 
+                document.getElementById('navbar-root').innerHTML = html; 
+                
+                // 2. Tải ngôn ngữ
+                const defaultLang = localStorage.getItem('lang') || 'vi'; 
+                loadAndApplyLanguage(defaultLang)
+                    .then(() => {
+                        // 3. Cập nhật trạng thái đăng nhập sau khi load ngôn ngữ và Navbar thành công
+                        updateNavbarForLoggedInUser();
+                    });
+            })
+            .catch(e => console.warn('Không thể load navbar component', e));
+    });
+    </script>
 
 </body>
 
 <div id="routeBox" style="display:none; margin-top:20px;">
     <h3>📍 Lộ trình di chuyển</h3>
 
-    <!-- Bản đồ -->
     <img id="routeMap" src="" style="width:100%; border-radius:10px; margin-bottom:15px;">
 
-    <!-- Số km -->
     <p><b>Quãng đường:</b> <span id="kmText"></span></p>
     <p><b>Thời gian dự kiến:</b> <span id="timeText"></span></p>
 
-    <!-- Đường đi chính -->
     <h4>🚗 Đường đi chính</h4>
     <ul id="mainStepsList"></ul>
 
-    <!-- Nút mở chi tiết -->
     <button id="toggleDetailBtn" onclick="toggleDetailSteps()">+ Đường đi cụ thể</button>
 
-    <!-- Chi tiết -->
     <ul id="detailStepsList" style="display:none; margin-top:10px;"></ul>
 </div>
 
