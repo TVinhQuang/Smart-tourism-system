@@ -18,34 +18,35 @@
 <body>
     <div id="navbar-root"></div>
 
-    <h1 class="page-title">🏨 Gợi ý Nơi Ở Phù Hợp</h1>
-    <h2 class="page-subtitle">Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!</h2>
+    <h1 class="page-title" data-i18n="page_title_rec">🏨 Gợi Ý Nơi Ở Phù Hợp</h1>
+    <h2 class="page-subtitle" data-i18n="page_subtitle_rec">Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!</h2>
+    
     <div class="form-section">
 
         <div class="form-group">
-            <label>Thành phố</label>
-            <input type="string" id="city" value="Đà Nẵng">
+            <label data-i18n="label_city">Thành phố</label>
+            <input type="text" id="city" value="Đà Nẵng">
         </div>
 
         <div class="form-group">
-            <label>Số người</label>
+            <label data-i18n="label_group_size">Số người</label>
             <input type="number" id="group-size" value="2">
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label>Giá từ</label>
+                <label data-i18n="label_price_from1">Giá từ</label>
                 <input type="number" id="price-min" value="300000" step="50000">
             </div>
 
             <div class="form-group">
-                <label>Giá đến</label>
+                <label data-i18n="label_price_to1">Giá đến</label>
                 <input type="number" id="price-max" value="1500000" step="50000">
             </div>
         </div>
 
         <div class="form-group">
-            <label>Loại hình</label>
+            <label data-i18n="label_type">Loại hình</label>
             <div class="checkbox-group">
                 <label><input type="checkbox" class="type-checkbox" value="hotel" checked> Hotel</label>
                 <label><input type="checkbox" class="type-checkbox" value="homestay" checked> Homestay</label>
@@ -55,12 +56,11 @@
         </div>
 
         <div class="form-group">
-            <label>Thông số tìm kiếm</label>
+            <label data-i18n="label_search_params">Thông số tìm kiếm</label>
 
             <div class="filter-row">
-                <!-- Rating tối thiểu -->
                 <div class="filter-item">
-                    <label for="min-rating">Đánh giá tối thiểu</label>
+                    <label for="min-rating" data-i18n="label_min_rating">Đánh giá tối thiểu</label>
                     <div class="slider-wrap">
                         <input 
                             type="range" 
@@ -74,9 +74,8 @@
                     </div>
                 </div>
 
-                <!-- Bán kính tìm kiếm -->
                 <div class="filter-item">
-                    <label for="radius">Bán kính tìm kiếm (km)</label>
+                    <label for="radius" data-i18n="label_radius">Bán kính tìm kiếm (km)</label>
                     <div class="slider-wrap">
                         <input 
                             type="range" 
@@ -91,51 +90,55 @@
                 </div>
             </div>
         </div>
+
         <div class="form-group">
-                <label>Tiện ích BẮT BUỘC</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" class="amenity-required" value="wifi" checked> WiFi</label>
-                    <label><input type="checkbox" class="amenity-required" value="breakfast"> Breakfast</label>
-                    <label><input type="checkbox" class="amenity-required" value="pool"> Pool</label>
-                    <label><input type="checkbox" class="amenity-required" value="parking"> Parking</label>
-                </div>
+            <label data-i18n="label_amenity_req">Tiện ích BẮT BUỘC</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="amenity-required" value="wifi" checked> WiFi</label>
+                <label><input type="checkbox" class="amenity-required" value="breakfast"> Breakfast</label>
+                <label><input type="checkbox" class="amenity-required" value="pool"> Pool</label>
+                <label><input type="checkbox" class="amenity-required" value="parking"> Parking</label>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>Tiện ích ƯU TIÊN</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" class="amenity-preferred" value="wifi"> WiFi</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="breakfast" checked> Breakfast</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="pool"> Pool</label>
-                    <label><input type="checkbox" class="amenity-preferred" value="parking"> Parking</label>
-                </div>
+        <div class="form-group">
+            <label data-i18n="label_amenity_pref">Tiện ích ƯU TIÊN</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="amenity-preferred" value="wifi"> WiFi</label>
+                <label><input type="checkbox" class="amenity-preferred" value="breakfast" checked> Breakfast</label>
+                <label><input type="checkbox" class="amenity-preferred" value="pool"> Pool</label>
+                <label><input type="checkbox" class="amenity-preferred" value="parking"> Parking</label>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label for="priority">Ưu tiên xếp hạng</label>
-                <select id="priority">
-                    <option value="balanced">Cân bằng (giá, rating, tiện ích, khoảng cách)</option>
-                    <option value="cheap">Ưu tiên giá rẻ</option>
-                    <option value="near_center">Ưu tiên gần trung tâm</option>
-                    <option value="amenities">Ưu tiên tiện ích</option>
-                </select>
-            </div>
-     <button class="submit-btn" onclick="submitSearch()">🔍 Gợi ý Top 5 nơi ở</button>
-    <!-- Kết quả -->
-    <div id="results-container">
-        <h2>Kết quả</h2>
-        <div id="results-list"></div>
+        <div class="form-group">
+            <label for="priority" data-i18n="label_priority">Ưu tiên xếp hạng</label>
+            <select id="priority">
+                <option value="balanced" data-i18n="opt_balanced">Cân bằng (giá, rating, tiện ích, khoảng cách)</option>
+                <option value="cheap" data-i18n="opt_cheap">Ưu tiên giá rẻ</option>
+                <option value="near_center" data-i18n="opt_center">Ưu tiên gần trung tâm</option>
+                <option value="amenities" data-i18n="opt_amenities">Ưu tiên tiện ích</option>
+            </select>
+        </div>
+
+        <button class="submit-btn" onclick="submitSearch()" data-i18n="btn_search_rec">🔍 Gợi ý Top 5 nơi ở</button>
+
+        <div id="results-container">
+            <h2 data-i18n="header_results">Kết quả</h2>
+            <div id="results-list"></div>
+        </div>
     </div>
-    <!-- ====================== ROUTING MODAL (FIXED) ====================== -->
-<div id="routing-overlay" class="routing-overlay hidden">
+
+    <div id="routing-overlay" class="routing-overlay hidden">
         <div class="routing-modal">     
+            
             <div id="view-step-1" class="view-container">
                 <div class="col-left-info">
                     <div class="hotel-cover">
                         <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
                     </div>
 
-                <div class="hotel-info-body">
+                    <div class="hotel-info-body">
                         <h2 id="info-name" class="hotel-title">Tên khách sạn</h2>
                         <div class="favorite-row">
                             <span id="fav-toggle" class="fav-btn">♡</span>
@@ -147,100 +150,104 @@
                         </div>
 
                         <div class="hotel-price-row">
-                            <span class="label" data-i18n="label_price">Giá mỗi đêm:</span>
+                            <span class="label" data-i18n="label_price_night">Giá mỗi đêm:</span>
                             <span id="info-price" class="price">...</span>
                         </div>
 
-                    <hr class="divider">
+                        <hr class="divider">
                         <div class="hotel-amenities-section">
-                            <h4 data-i18n="label_amenities">💎 Tiện ích nổi bật</h4>
+                            <h4 data-i18n="section_amenities">💎 Tiện ích nổi bật</h4>
                             <div id="info-amenities" class="amenities">
-                                </div>
+                            </div>
                         </div>
-                </div>
-            </div>
-
-            <!-- RIGHT: ROUTE OPTIONS -->
-            <div class="col-right-selection">
-                <h3 data-i18n="modal_step1_title">🚙 Thiết lập lộ trình</h3>
-                
-                <div class="form-group">
-                    <label data-i18n="input_start_label">Điểm xuất phát:</label>
-                    <input type="text" data-i18n="val_my_location" value="Vị trí của bạn..." disabled class="input-readonly">
-                </div>
-
-                <div class="form-group">
-                    <label data-i18n="input_dest_label">Điểm đến:</label>
-                    <input type="text" id="target-dest" value="..." disabled class="input-readonly">
-                </div>
-
-               <div class="form-group">
-                    <label data-i18n="input_transport_label">Phương tiện di chuyển:</label>
-                    <div class="transport-options">
-                        <label class="radio-card">
-                            <input type="radio" name="transport" value="driving" checked>
-                            <span class="icon">🚗</span>
-                            <span data-i18n="trans_driving">Ô tô / Xe máy</span>
-                        </label>
-                        <label class="radio-card">
-                            <input type="radio" name="transport" value="cycling">
-                            <span class="icon">🚲</span>
-                            <span data-i18n="trans_cycling">Xe đạp</span>
-                        </label>
-                        <label class="radio-card">
-                            <input type="radio" name="transport" value="walking">
-                            <span class="icon">🚶</span>
-                            <span data-i18n="trans_walking">Đi bộ</span>
-                        </label>
                     </div>
                 </div>
 
-                <div class="action-buttons">
-                    <button id="btn-close-step1" class="btn-secondary" data-i18n="btn_close">Đóng</button>
-                    <button id="btn-find-route" class="btn-primary" data-i18n="btn_find_route">🗺️ Tìm đường đi</button>
+                <div class="col-right-selection">
+                    <h3 data-i18n="modal_setup_title">🚙 Thiết lập lộ trình</h3>
+                    
+                    <div class="form-group">
+                        <label data-i18n="label_start_point">Điểm xuất phát:</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="text" id="start-location" placeholder="Nhập địa điểm hoặc dùng GPS..." class="input-editable" style="flex:1;">
+                            <button id="btn-use-gps" title="Dùng vị trí hiện tại" style="padding: 0 10px; cursor: pointer;">📍</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="label_destination">Điểm đến:</label>
+                        <input type="text" id="target-dest" value="..." disabled class="input-readonly">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="label_transport_mode">Phương tiện di chuyển:</label>
+                        <div class="transport-options">
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="driving" checked>
+                                <span class="icon">🚗</span>
+                                <span data-i18n="trans_car">Ô tô / Xe máy</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="cycling">
+                                <span class="icon">🚲</span>
+                                <span data-i18n="trans_bike">Xe đạp</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="walking">
+                                <span class="icon">🚶</span>
+                                <span data-i18n="trans_walk">Đi bộ</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="btn-close-step1" class="btn-secondary" data-i18n="btn_close">Đóng</button>
+                        <button id="btn-find-route" class="btn-primary" data-i18n="btn_find_route">🗺️ Tìm đường đi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-step-2" class="view-container hidden" style="height: 80vh;">
+                <div class="col-left-analysis" style="overflow-y: auto; height: 100%;">
+                    <button id="btn-back-step1" class="btn-back">⬅ <span data-i18n="btn_back">Quay lại</span></button>
+                    
+                    <div class="analysis-box">
+                        <h4 data-i18n="analysis_title">📊 Kết quả phân tích</h4>
+                        <div class="stats-grid">
+                            <div class="stat"><span data-i18n="stat_distance">Khoảng cách</span>: <span id="res-distance">...</span></div>
+                            <div class="stat"><span data-i18n="stat_duration">Thời gian</span>: <span id="res-duration">...</span></div>
+                        </div>
+                        <div class="complexity-box">
+                            <strong id="res-label">...</strong>
+                            <p id="res-summary">...</p>
+                            <ul id="res-details"></ul>
+                        </div>
+                        <div class="advice-box">
+                            💡 <span id="res-advice">...</span>
+                        </div>
+                    </div>
+
+                    <div class="steps-box">
+                        <h4 data-i18n="instruction_title">📝 Hướng dẫn chi tiết</h4>
+                        <div id="steps-list" class="steps-scroll"></div>
+                    </div>
+                </div> 
+                
+                <div class="col-right-map" style="position: relative; height: 100%; display: flex; flex-direction: column;">
+                    <div id="rt-map" style="flex: 1; width: 100%; height: 100%; min-height: 0; background: #eee;"></div>
+                    
+                    <div class="map-controls-overlay">
+                        <select id="quick-transport-change">
+                            <option value="driving" data-i18n="trans_car">🚗 Ô tô</option>
+                            <option value="cycling" data-i18n="trans_bike">🚲 Xe đạp</option>
+                            <option value="foot" data-i18n="trans_walk">🚶 Đi bộ</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- ====================== STEP 2 ====================== -->
-        <div id="view-step-2" class="view-container hidden">
-    <div class="col-left-analysis">
-        <button id="btn-back-step1" class="btn-back">⬅ <span data-i18n="btn_back">Quay lại</span></button>
-        
-        <div class="analysis-box">
-            <h4 data-i18n="analysis_title">📊 Kết quả phân tích</h4>
-            <div class="stats-grid">
-                <div class="stat">📏 <span id="res-distance">...</span></div>
-                <div class="stat">⏱ <span id="res-duration">...</span></div>
-            </div>
-            <div class="complexity-box">
-                <strong id="res-label">...</strong>
-                <p id="res-summary">...</p>
-                <ul id="res-details"></ul>
-            </div>
-            <div class="advice-box">
-                💡 <span id="res-advice">...</span>
-            </div>
-        </div>
-
-        <div class="steps-box">
-            <h4 data-i18n="steps_title">📝 Hướng dẫn chi tiết</h4>
-            <div id="steps-list" class="steps-scroll"></div>
-        </div>
-    </div> 
-    <div class="col-right-map">
-        <div id="rt-map"></div>
-        
-        <div class="map-controls-overlay">
-            <select id="quick-transport-change">
-                <option value="driving" data-i18n="trans_driving">🚗 Ô tô</option>
-                <option value="cycling" data-i18n="trans_cycling">🚲 Xe đạp</option>
-                <option value="foot" data-i18n="trans_walking">🚶 Đi bộ</option>
-            </select>
-        </div>
     </div>
-    </div>
-</div>
+
     <script>
         // Load navbar component
         (function(){
@@ -250,7 +257,7 @@
                 .catch(function(){ console.warn('Không thể load navbar component'); });
         })();
     </script>
-    <!-- SCRIPT -->
+    
     <script src="../js/static_trans.js"></script>
     <script src="../js/display_result_rec.js"></script> 
     <script src="../js/routing_rec_page.js"></script>

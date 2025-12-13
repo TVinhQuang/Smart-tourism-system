@@ -45,5 +45,25 @@
     "amenity_parking": "🅿️ Parking",
     "amenity_gym": "🏋️ Gym",
     "amenity_bar": "🍸 Bar",
-    "amenity_spa": "💆 Spa"
+    "amenity_spa": "💆 Spa",
+
+    "page_title_rec": "🏨 Accommodation Recommendations",
+    "page_subtitle_rec": "Fill in the information below to get the best stay suggestions for your trip!",
+    "label_city": "City",
+    "label_group_size": "Group Size",
+    "label_price_from1": "Price From",
+    "label_price_to": "Price To",
+    "label_type": "Accommodation Type",
+    "label_search_params": "Search Parameters",
+    "label_min_rating": "Min Rating",
+    "label_radius": "Search Radius (km)",
+    "label_amenity_req": "Required Amenities",
+    "label_amenity_pref": "Preferred Amenities",
+    "label_priority": "Ranking Priority",
+    "opt_balanced": "Balanced (price, rating, amenities, distance)",
+    "opt_cheap": "Price Priority (Cheap)",
+    "opt_center": "Center Priority (Near center)",
+    "opt_amenities": "Amenities Priority",
+    "btn_search_rec": "🔍 Recommend Top 5",
+    "header_results": "Results"
 }

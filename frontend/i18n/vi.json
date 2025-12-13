@@ -1,4 +1,10 @@
 {
+    "nav_home": "Trang chủ",
+    "nav_suggestions": "Gợi ý nơi ở",
+    "nav_about": "Giới thiệu",
+    "nav_contact": "Liên hệ",
+    "nav_login": "Đăng nhập",
+    
     "hero_title": "Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.",
     "hero_desc": "Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất.",
     "top_suggestion_title": "Top homestay, khách sạn được gợi ý",
@@ -51,5 +57,26 @@
     "amenity_parking": "🅿️ Đỗ xe",
     "amenity_gym": "🏋️ Gym",
     "amenity_bar": "🍸 Bar",
-    "amenity_spa": "💆 Spa"
+    "amenity_spa": "💆 Spa",
+
+    "page_title_rec": "🏨 Gợi Ý Nơi Ở Phù Hợp",
+    "page_subtitle_rec": "Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!",
+    "label_city": "Thành phố",
+    "label_group_size": "Số người",
+    "label_price_from1": "Giá từ",
+    "label_price_to1": "Giá đến",
+    "label_type": "Loại hình",
+    "label_search_params": "Thông số tìm kiếm",
+    "label_min_rating": "Đánh giá tối thiểu",
+    "label_radius": "Bán kính tìm kiếm (km)",
+    "label_amenity_req": "Tiện ích BẮT BUỘC",
+    "label_amenity_pref": "Tiện ích ƯU TIÊN",
+    "label_priority": "Ưu tiên xếp hạng",
+    "opt_balanced": "Cân bằng (giá, rating, tiện ích, khoảng cách)",
+    "opt_cheap": "Ưu tiên giá rẻ",
+    "opt_center": "Ưu tiên gần trung tâm",
+    "opt_amenities": "Ưu tiên tiện ích",
+    "btn_search_rec": "🔍 Gợi ý Top 5 nơi ở",
+    "header_results": "Kết quả"
 }
+
