@@ -167,3 +167,43 @@ button:active {
     font-weight: bold;
     font-size: 1.1rem;
 }
+
+/* Nút trái tim yêu thích */
+.fav-btn-home {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8); /* Nền trắng mờ */
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    color: #ccc; /* Màu xám khi chưa active */
+    transition: all 0.3s ease;
+    z-index: 10; /* Đảm bảo nằm trên ảnh */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.fav-btn-home:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+/* Trạng thái đã yêu thích */
+.fav-btn-home.active {
+    color: #e74c3c; /* Màu đỏ khi active */
+    /* Nếu muốn dùng icon trái tim đặc (solid) thay vì rỗng thì đổi content ở đây, 
+       ví dụ dùng FontAwesome: font-family: "Font Awesome 6 Free"; font-weight: 900; */
+}
+
+/* Cần đảm bảo container chứa ảnh có position relative */
+.accommodation-card .img-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}

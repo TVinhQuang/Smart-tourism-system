@@ -1,18 +1,91 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import time
+import streamlit as st
+import pyrebase
+import pandas as pd
+import pydeck as pdk
+import firebase_admin
 import requests
+from dataclasses import dataclass, field
 from typing import List
-from serpapi.google_search import GoogleSearch
-import re
-from translator import translate_text
-from dataclasses import dataclass
 import math
+import random
+import polyline
 import folium
-from deep_translator import GoogleTranslator
+from streamlit_folium import st_folium
+from geopy.geocoders import Nominatim
+from firebase_admin import credentials, firestore
+from firebase_admin import auth as admin_auth
+from collections import deque
+from datetime import datetime, timezone
+from ollama import Client
+from streamlit_extras.stylable_container import stylable_container
+from serpapi import GoogleSearch
+import re
+import json, os
+from datetime import date, timedelta
+from datetime import datetime
+from dataclasses import dataclass
+from typing import List, Optional
 
 app = Flask(__name__)
 CORS(app)
 
+DB_PATH = "accommodation_cache.json"
+
+def load_accommodation_db() -> dict:
+    """
+    Đọc file JSON Lines → dict[id] = dict_thuộc_tính.
+    Mỗi dòng trong file là 1 object JSON.
+    """
+    if not os.path.exists(DB_PATH):
+        return {}
+
+    db: dict[str, dict] = {}
+    try:
+        with open(DB_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                acc_id = rec.get("id")
+                if not acc_id:
+                    continue
+
+                db[acc_id] = rec
+    except Exception:
+        return {}
+
+    return db
+
+def save_accommodation_db(db: dict) -> None:
+    """
+    Ghi dict[id] → file JSON Lines.
+    Mỗi nơi ở = 1 dòng JSON (form ngang, dễ đếm).
+    """
+    dir_name = os.path.dirname(DB_PATH)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
+
+    with open(DB_PATH, "w", encoding="utf-8") as f:
+        for rec in db.values():
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+def normalize_city(city: str) -> str:
+    """Chuẩn hoá tên thành phố cho nội bộ & DB."""
+    if not city:
+        return ""
+    return city.strip().lower()
+
+BOT_GREETING = "Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?"
+
+# ===================== MÔ-ĐUN THUẬT TOÁN GỢI Ý NƠI Ở =====================
 # ==================== CONSTANTS ====================
 API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
 SERPAPI_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
@@ -25,27 +98,88 @@ class Accommodation:
     city: str
     type: str
     price: float
-    stars: float
-    rating: float
-    capacity: int
-    amenities: List[str]
-    address: str
-    lon: float
-    lat: float
-    distance_km: float
+
+    # ⭐ Loại sao chính thức (hotel class 1–5, lấy từ Google Hotels)
+    stars: float = 0.0
+
+    # 📊 Điểm review người dùng (0–5, lấy từ Google Maps)
+    rating: float = 0.0
+
+    # 🧮 Số lượt đánh giá
+    reviews: int = 0
+
+    capacity: int = 0
+    amenities: List[str] = field(default_factory=list)
+    address: str = ""
+    lon: float = 0.0
+    lat: float = 0.0
+    distance_km: float = 0.0
+
+def acc_to_dict(a: Accommodation) -> dict:
+    return {
+        "id": a.id,
+        "name": a.name,
+        "city": normalize_city(a.city),
+        "type": a.type,
+        "price": a.price,
+        "stars": a.stars,
+        "rating": a.rating,
+        "reviews": getattr(a, "reviews", None),
+        "amenities": list(a.amenities or []),
+        "address": a.address,
+        "lon": a.lon,
+        "lat": a.lat,
+        "distance_km": a.distance_km,
+        "source": "serpapi_google_maps",
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+def dict_to_acc(d: dict) -> Accommodation:
+    return Accommodation(
+        id=d["id"],
+        name=d["name"],
+        city=normalize_city(d.get("city", "")),
+        type=d.get("type", "hotel"),
+        price=d.get("price", 0.0),
+        stars=d.get("stars", 0.0),
+        rating=d.get("rating", 0.0),
+
+        # ✅ FIX: thêm dòng này
+        reviews = int(d.get("reviews") or 0),
+
+        capacity=4,
+        amenities=d.get("amenities", []),
+        address=d.get("address", ""),
+        lon=d.get("lon", 0.0),
+        lat=d.get("lat", 0.0),
+        distance_km=d.get("distance_km", 0.0),
+    )
 
 @dataclass
 class SearchQuery:
-    city: str
-    group_size: int
-    price_min: float
-    price_max: float
-    types: List[str]
-    rating_min: float
-    amenities_required: List[str]
-    amenities_preferred: List[str]
-    radius_km: float
-    priority: str = "balanced"
+    """
+    Gói toàn bộ input người dùng cho thuật toán gợi ý.
+    Sau này ta sẽ build SearchQuery từ form trên web.
+    """
+    city: str                      # tên thành phố điểm đến
+    group_size: int                # số người
+    price_min: float               # ngân sách tối thiểu (cho 1 đêm)
+    price_max: float               # ngân sách tối đa
+    types: List[str]               # loại chỗ ở mong muốn: ["hotel","homestay",...]
+    rating_min: float              # điểm đánh giá tối thiểu (0–5)
+    amenities_preferred: List[str] # tiện ích ưu tiên (có thì cộng điểm)
+    radius_km: Optional[float]     # bán kính tìm kiếm quanh thành phố (km), có thể là số hoặc None 
+    priority: str = "balanced"     # 'balanced' / 'cheap' / 'near_center' / 'amenities'
+
+    # ✅ NEW: sao tối thiểu (chỉ áp dụng hotel/resort), 0 = không yêu cầu
+    stars_min: int = 0
+
+    # --- mới thêm ---
+    checkin: Optional[date] = None
+    checkout: Optional[date] = None
+    adults: int = 2
+    children: int = 0
+
 
 # ==================== TỪ ĐIỂN DỊCH THUẬT ====================
 TRANS = {

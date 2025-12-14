@@ -249,14 +249,66 @@
     </div>
 
     <script>
-        // Load navbar component
-        (function(){
-            fetch('../components/navbar.html')
-                .then(function(r){ return r.text(); })
-                .then(function(html){ document.getElementById('navbar-root').innerHTML = html; })
-                .catch(function(){ console.warn('Không thể load navbar component'); });
-        })();
-    </script>
+    function logoutUser() {
+        localStorage.removeItem('loggedInUserEmail');
+        window.location.href = 'homepage.html'; // Hoặc reload lại trang
+    }
+
+    function formatEmail(email) {
+        if (!email) return "Người dùng";
+        const parts = email.split('@');
+        return parts[0]; 
+    }
+
+    function updateNavbarForLoggedInUser() {
+        const userEmail = localStorage.getItem('loggedInUserEmail'); 
+        const navbarRoot = document.getElementById('navbar-root');
+        
+        // Đảm bảo navbar đã được load xong mới thao tác
+        if (navbarRoot.innerHTML.trim() !== "") {
+            const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
+
+            if (userEmail) {
+                const displayName = formatEmail(userEmail);
+                if (loginButtonContainer) {
+                    loginButtonContainer.innerHTML = `
+                        <div class="user-info-group">
+                            <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                            <button class="btn-logout" onclick="logoutUser()">
+                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                // Nếu chưa đăng nhập, đảm bảo hiện nút Login
+                if (loginButtonContainer) {
+                    loginButtonContainer.innerHTML = `
+                        <a href="login.html" class="btn-login">
+                            <img src="../images/login.png" class="login-icon">
+                            <span>Đăng nhập</span>
+                        </a>
+                    `;
+                }
+            }
+        }
+    }
+
+    // 2. Logic chạy khi tải trang
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load Navbar component
+        fetch('../components/navbar.html')
+            .then(r => r.text())
+            .then(html => { 
+                document.getElementById('navbar-root').innerHTML = html; 
+                
+                // QUAN TRỌNG: Sau khi HTML của navbar hiện lên, mới gọi hàm cập nhật user
+                updateNavbarForLoggedInUser();
+            })
+            .catch(e => console.warn('Không thể load navbar component', e));
+    });
+</script>
     
     <script src="../js/static_trans.js"></script>
     <script src="../js/display_result_rec.js"></script> 

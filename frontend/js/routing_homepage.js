@@ -63,39 +63,46 @@ function openRoutingModal(index) {
     return data ? JSON.parse(data) : [];
 }
 
-function saveFavorites(list) {
-    localStorage.setItem('favorites', JSON.stringify(list));
-}
+// Ví dụ: Hàm setup trong routing_homepage.js hoặc nơi hiển thị chi tiết hotel
+function setupFavoriteButton(currentHotelData) {
     const favBtn = document.getElementById("fav-toggle");
-    const favList = loadFavorites();
+    if (!favBtn) return;
 
-    if (favList.some(f => f.id === item.id)) {
-        favBtn.classList.add("active");
-        favBtn.innerText = "❤️";
-    } else {
-        favBtn.classList.remove("active");
-        favBtn.innerText = "♡";
-    }
-
-// Sự kiện click
-    favBtn.onclick = () => {
-        const list = loadFavorites();
-        const exists = list.some(f => f.id === item.id);
-
-        if (exists) {
-            // Bỏ thích
-            const newList = list.filter(f => f.id !== item.id);
-            saveFavorites(newList);
-            favBtn.classList.remove("active");
-            favBtn.innerText = "♡";
-        } else {
-            // Thêm thích
-         list.push(item);
-            saveFavorites(list);
-            favBtn.classList.add("active");
-            favBtn.innerText = "❤️";
-        }
+    // 1. Hàm kiểm tra trạng thái tim hiện tại
+    const checkFavoriteStatus = () => {
+        const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+        // Kiểm tra dựa trên ID hoặc Tên (nếu không có ID duy nhất)
+        const isFav = favorites.some(item => item.name === currentHotelData.name); 
+        
+        // Cập nhật giao diện nút tim
+        favBtn.textContent = isFav ? "❤️" : "♡";
+        favBtn.style.color = isFav ? "red" : "#333";
+        favBtn.style.cursor = "pointer";
     };
+
+    // Gọi 1 lần khi mở modal
+    checkFavoriteStatus();
+
+    // 2. Xử lý sự kiện Click
+    favBtn.onclick = function() {
+        let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+        const index = favorites.findIndex(item => item.name === currentHotelData.name);
+
+        if (index > -1) {
+            // Đã có -> Xóa đi (Un-like)
+            favorites.splice(index, 1);
+            alert("Đã xóa khỏi danh sách yêu thích!");
+        } else {
+            // Chưa có -> Thêm vào
+            favorites.push(currentHotelData);
+            alert("Đã thêm vào danh sách yêu thích!");
+        }
+
+        // Lưu lại và cập nhật giao diện
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        checkFavoriteStatus();
+    };
+}
 
     document.getElementById("info-address").innerText = item.address;
     document.getElementById("info-price").innerText = Number(item.price).toLocaleString() + " VND";

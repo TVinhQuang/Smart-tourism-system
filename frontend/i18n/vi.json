@@ -1,8 +1,8 @@
 {
     "nav_home": "Trang chủ",
-    "nav_suggestions": "Gợi ý nơi ở",
-    "nav_about": "Giới thiệu",
-    "nav_contact": "Liên hệ",
+    "nav_suggestions": "Gợi ý",
+    "nav_favorite": "Yêu thích",
+    "nav_help": "Giúp đỡ",
     "nav_login": "Đăng nhập",
     
     "hero_title": "Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.",
@@ -77,6 +77,46 @@
     "opt_center": "Ưu tiên gần trung tâm",
     "opt_amenities": "Ưu tiên tiện ích",
     "btn_search_rec": "🔍 Gợi ý Top 5 nơi ở",
-    "header_results": "Kết quả"
+    "header_results": "Kết quả",
+
+    "nav_logout": "Đăng xuất",
+    "nav_greeting": "Xin chào",
+    "nav_language": "Dịch",
+    "nav_lang_en": "English",      
+    "nav_lang_vi": "Tiếng Việt",
+    "login_title": "Đăng Nhập",
+    "login_email": "Email",
+    "login_password": "Mật khẩu",
+    "btn_login_submit": "Đăng nhập",
+    "login_no_account": "Chưa có tài khoản?",
+    "login_register_link": "Đăng ký",
+    "register_title": "Đăng Ký",
+    "register_username": "Tên tài khoản",
+    "btn_register_submit": "Tạo tài khoản",
+    "register_has_account": "Đã có tài khoản?",
+    "btn_back_home": "⬅ Quay lại Trang chủ",
+    "alert_empty_fields": "Vui lòng nhập đầy đủ email và mật khẩu",
+
+    "page_title_fav": "Yêu thích | Du lịch Việt Nam",
+    "fav_title": "❤️ Danh sách địa điểm yêu thích",
+    "fav_desc": "Quản lý các địa điểm bạn quan tâm và tìm đường đi ngay tại đây.",
+    "fav_empty_msg": "Bạn chưa yêu thích địa điểm nào.",
+    
+    "modal_step1_title": "🚙 Thiết lập lộ trình",
+    "input_start_label": "Điểm xuất phát:",
+
+    "btn_use_gps": "📍 Dùng vị trí hiện tại",
+    "input_dest_label": "Điểm đến:",
+    "input_transport_label": "Phương tiện di chuyển:",
+    
+    "trans_driving": "🚗 Ô tô / Xe máy",
+    "trans_cycling": "🚲 Xe đạp",
+    "trans_walking": "🚶 Đi bộ",
+    
+    "label_price": "Giá mỗi đêm:",
+    "label_amenities": "💎 Tiện ích nổi bật",
+
+    "steps_title": "📝 Hướng dẫn chi tiết"
+
 }
 

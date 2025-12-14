@@ -19,6 +19,7 @@ body {
     background: #60b795;
     border-radius: 18px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    
 }
 
 .form-box {
@@ -96,4 +97,99 @@ h2 {
     color: #d0e05a;
     cursor: pointer;
     font-weight: bold;
+}
+
+/* Thêm vào file ../css/login.css */
+
+.btn {
+    /* Giả sử bạn đã có style cho nút chính ở đây */
+    display: block;
+    width: 100%;
+    /* ... */
+}
+
+.btn-back {
+    /* Đảm bảo nút back là thẻ <a> và có màu khác biệt */
+    margin-top: 15px; 
+    background-color: #f5f4f4; /* Màu xám nhạt */
+    color: #333; /* Chữ màu tối */
+    text-align: center;
+    text-decoration: none; /* Bỏ gạch chân cho liên kết */
+    padding: 10px 0; /* Padding khớp với nút .btn */
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-back:hover {
+    background-color: #b0b0b0; /* Đậm hơn khi hover */
+}
+
+/* --- THÊM CÁC QUY TẮC ĐỊNH VỊ CHO KHỐI CHỌN NGÔN NGỮ --- */
+
+/* Khối bọc ngoài (Bạn cần thêm khối này trong HTML của login.html) */
+.language-selector {
+    position: absolute; /* Định vị tuyệt đối */
+    top: 20px; /* Cách mép trên 20px */
+    right: 20px; /* Cách mép phải 20px */
+    z-index: 10; /* Đảm bảo nó nằm trên các phần tử khác */
+}
+
+/* Các style cơ bản của Dropdown (Đã có sẵn, tôi chỉ liệt kê lại để đồng bộ) */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.dropdown-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.dropdown-btn .icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    padding: 5px 0;
+    margin-top: 5px;
+    border-radius: 5px;
+    min-width: 150px;
+}
+
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #f0f0f0;
+}
+
+.language-selector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
 }

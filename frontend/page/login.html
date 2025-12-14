@@ -3,91 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login/Register</title>
+    <title data-i18n="app_title">Login/Register</title>
 
-    <!-- ĐƯỜNG DẪN CHÍNH XÁC ĐẾN CSS -->
     <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
+    
+    <div class="language-selector">
+        <div class="dropdown">
+            <a href="#" class="dropdown-btn" onclick="toggleLanguageMenu(); return false;"> 
+                <img src="../../images/translation.png" class="icon" alt="Language Icon"> 
+                <span data-i18n="nav_language">Dịch</span>
+                <span> 🔽</span>
+            </a>
 
-<div class="container">
-    <!-- Login Form -->
-    <div class="form-box" id="loginBox">
-        <h2>Đăng Nhập</h2>
-        <form onsubmit="return loginUser()">
-            <div class="input-group">
-                <input type="email" required>
-                <label>Email</label>
-            </div>
-
-            <div class="input-group">
-                <input type="password" required>
-                <label>Mật khẩu</label>
-            </div>
-
-            <button type="submit" class="btn">Đăng nhập</button>
-
-            <p class="switch">
-                Chưa có tài khoản? <span onclick="showRegister()">Đăng ký</span>
-            </p>
-        </form> </div>
-
-    <!-- Register Form -->
-    <div class="form-box hidden" id="registerBox">
-        <h2>Đăng Ký</h2>
-        <form>
-            <div class="input-group">
-                <input type="text" required>
-                <label>Tên tài khoản</label>
-            </div>
-
-            <div class="input-group">
-                <input type="email" required>
-                <label>Email</label>
-            </div>
-
-            <div class="input-group">
-                <input type="password" required>
-                <label>Mật khẩu</label>
-            </div>
-
-            <button type="submit" class="btn">Tạo tài khoản</button>
-
-            <p class="switch">
-                Đã có tài khoản? <span onclick="showLogin()">Đăng nhập</span>
-            </p>
-        </form onsubmit="return loginUser()">
+            <ul class="dropdown-menu hidden" id="languageMenu"> 
+                <li><a href="#" onclick="changeLanguage('en')" data-i18n="nav_lang_en">English</a></li>
+                <li><a href="#" onclick="changeLanguage('vi')" data-i18n="nav_lang_vi">Tiếng Việt</a></li>
+            </ul>
+        </div>
     </div>
-</div>
 
-<script>
-function showRegister() {
-    document.getElementById("loginBox").classList.add("hidden");
-    document.getElementById("registerBox").classList.remove("hidden");
-}
+    <div class="container">
+        
+        <div class="form-box" id="loginBox">
+            <h2 data-i18n="login_title">Đăng Nhập</h2>
+            <form onsubmit="return loginUser()">
+                <div class="input-group">
+                    <input type="email" required>
+                    <label data-i18n="login_email">Email</label>
+                </div>
 
-function showLogin() {
-    document.getElementById("registerBox").classList.add("hidden");
-    document.getElementById("loginBox").classList.remove("hidden");
-}
-</script>
+                <div class="input-group">
+                    <input type="password" required>
+                    <label data-i18n="login_password">Mật khẩu</label>
+                </div>
 
-<script>
-function loginUser() {
-    const email = document.querySelector("#loginBox input[type='email']").value;
-    const pass = document.querySelector("#loginBox input[type='password']").value;
+                <button type="submit" class="btn" data-i18n="btn_login_submit">Đăng nhập</button>
+                
+                <a href="homepage.html" class="btn btn-back" data-i18n="btn_back_home">⬅ Quay lại Trang chủ</a> 
 
-    if (email === "" || pass === "") {
-        alert("Vui lòng nhập đầy đủ email và mật khẩu");
+                <p class="switch">
+                    <span data-i18n="login_no_account">Chưa có tài khoản?</span> 
+                    <span onclick="showRegister()" data-i18n="login_register_link">Đăng ký</span>
+                </p>
+            </form> 
+        </div>
+
+        <div class="form-box hidden" id="registerBox">
+            <h2 data-i18n="register_title">Đăng Ký</h2>
+            <form>
+                <div class="input-group">
+                    <input type="text" required>
+                    <label data-i18n="register_username">Tên tài khoản</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" required>
+                    <label data-i18n="login_email">Email</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" required>
+                    <label data-i18n="login_password">Mật khẩu</label>
+                </div>
+
+                <button type="submit" class="btn" data-i18n="btn_register_submit">Tạo tài khoản</button>
+
+                <p class="switch">
+                    <span data-i18n="register_has_account">Đã có tài khoản?</span> 
+                    <span onclick="showLogin()" data-i18n="btn_login_submit">Đăng nhập</span>
+                </p>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+    // --- KHỐI DÙNG CHUNG: DỊCH THUẬT VÀ TOGGLE DROPWDOWN ---
+
+    let currentTranslations = {};
+
+    function getTranslation(key) {
+        return currentTranslations[key] || key;
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = getTranslation(key);
+            
+            if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+                if (element.lastChild && element.lastChild.nodeType === 3) {
+                    element.lastChild.textContent = translation;
+                } else {
+                    element.textContent = translation;
+                }
+            } else {
+                element.textContent = translation;
+            }
+        });
+        document.querySelectorAll('label[data-i18n]').forEach(element => {
+             const key = element.getAttribute('data-i18n');
+             element.textContent = getTranslation(key);
+        });
+    }
+
+    async function loadAndApplyLanguage(lang) {
+        const filePath = `../i18n/${lang}.json`;
+        
+        try {
+            const response = await fetch(filePath);
+            if (!response.ok) { throw new Error(`Không thể tải file dịch thuật: ${filePath}`); }
+            currentTranslations = await response.json();
+            localStorage.setItem('lang', lang); 
+
+            applyTranslations();
+            
+        } catch (error) {
+            console.error(error);
+            alert(getTranslation('alert_language_load_error') || `Lỗi: Không thể tải ngôn ngữ (${lang}). Vui lòng kiểm tra đường dẫn JSON.`);
+        }
+    }
+
+    function changeLanguage(lang) {
+        loadAndApplyLanguage(lang);
+        
+        // Đóng menu sau khi chọn ngôn ngữ
+        document.getElementById('languageMenu').classList.add('hidden');
+        document.removeEventListener('click', closeMenuOutside);
+        
         return false;
     }
 
-    // Chuyển hướng kèm email
-    window.location.href = `homepage.html?email=${encodeURIComponent(email)}`;
-    return false; // Ngăn reload trang
-}
-</script>
+    function toggleLanguageMenu() {
+        const menu = document.getElementById('languageMenu');
+        menu.classList.toggle('hidden'); 
 
+        if (!menu.classList.contains('hidden')) {
+            document.addEventListener('click', closeMenuOutside);
+        } else {
+            document.removeEventListener('click', closeMenuOutside);
+        }
+    }
+
+    function closeMenuOutside(event) {
+        const dropdown = document.querySelector('.dropdown');
+        const menu = document.getElementById('languageMenu');
+
+        if (dropdown && !dropdown.contains(event.target)) {
+            menu.classList.add('hidden');
+            document.removeEventListener('click', closeMenuOutside);
+        }
+    }
+    
+    // --- LOGIC RIÊNG CỦA TRANG LOGIN/REGISTER ---
+
+    function showRegister() {
+        document.getElementById("loginBox").classList.add("hidden");
+        document.getElementById("registerBox").classList.remove("hidden");
+        applyTranslations(); // Áp dụng lại dịch thuật cho form mới hiện ra
+    }
+
+    function showLogin() {
+        document.getElementById("registerBox").classList.add("hidden");
+        document.getElementById("loginBox").classList.remove("hidden");
+        applyTranslations(); // Áp dụng lại dịch thuật cho form mới hiện ra
+    }
+
+    // ⭐ HÀM QUAN TRỌNG: SỬA LỖI MẤT ĐĂNG NHẬP BẰNG LOCALSTORAGE
+    function loginUser() {
+        const email = document.querySelector("#loginBox input[type='email']").value;
+        const pass = document.querySelector("#loginBox input[type='password']").value;
+
+        if (email === "" || pass === "") {
+            alert(getTranslation('alert_empty_fields')); 
+            return false;
+        }
+
+        // LƯU TRẠNG THÁI ĐĂNG NHẬP VÀO LOCAL STORAGE
+        localStorage.setItem('loggedInUserEmail', email);
+
+        // Chuyển hướng không cần tham số URL
+        window.location.href = `homepage.html`; 
+        return false;
+    }
+
+    // --- KHỞI TẠO TRANG ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tải ngôn ngữ đã lưu hoặc mặc định là Tiếng Việt
+        const defaultLang = localStorage.getItem('lang') || 'vi'; 
+        loadAndApplyLanguage(defaultLang);
+    });
+    </script>
 
 </body>
 </html>

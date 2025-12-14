@@ -47,7 +47,8 @@ lang = st.selectbox(
 st.session_state["lang"] = lang
 
 
-API_KEY = st.secrets["serpapi_key"]
+# API_KEY = st.secrets["serpapi_key"]
+API_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
 
 BOT_GREETING = "Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?"
 
@@ -375,7 +376,7 @@ def haversine_km(lon1, lat1, lon2, lat2):
 
     return R * c
 
-#def geocode(q: str):
+def geocode(q: str):
     """
     Geocode 1 địa chỉ/tên điểm bất kỳ (dùng cho điểm xuất phát).
     """
@@ -389,131 +390,206 @@ def haversine_km(lon1, lat1, lon2, lat2):
         return None
 
 
-def serpapi_geocode(q: str):
-    # 1. GÁN CỨNG KEY (Để đảm bảo hàm này luôn có key đúng)
-    # Bạn thay key của bạn vào đây:
-    HARDCODED_KEY = API_KEY
+# def serpapi_geocode(q: str):
+#     # 1. GÁN CỨNG KEY (Để đảm bảo hàm này luôn có key đúng)
+#     # Bạn thay key của bạn vào đây:
+#     # HARDCODED_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"
     
-    print(f"DEBUG: Đang Geocode '{q}' với SerpApi...")
+#     print(f"DEBUG: Đang Geocode '{q}' với SerpApi...")
 
-    params = {
-        "engine": "google_maps",
-        "q": q,
-        "type": "search",
-        "api_key": HARDCODED_KEY, # Dùng key cứng tại đây
-        "hl": "vi"
-    }
+#     params = {
+#         "engine": "google_maps",
+#         "q": q,
+#         "type": "search",
+#         "api_key": HARDCODED_KEY, # Dùng key cứng tại đây
+#         "hl": "vi"
+#     }
     
-    try:
-        # Gọi API
-        search = GoogleSearch(params)
-        results = search.get_dict()
+#     try:
+#         # Gọi API
+#         search = GoogleSearch(params)
+#         results = search.get_dict()
         
-        # 2. KIỂM TRA LỖI TỪ API
-        if "error" in results:
-            print(f"DEBUG: ❌ SerpApi Error: {results['error']}")
-            return None
+#         # 2. KIỂM TRA LỖI TỪ API
+#         if "error" in results:
+#             print(f"DEBUG: ❌ SerpApi Error: {results['error']}")
+#             return None
             
-        # 3. XỬ LÝ KẾT QUẢ (Thử nhiều trường hợp)
-        # Trường hợp 1: local_results (Kết quả địa điểm cụ thể)
-        if "local_results" in results and len(results["local_results"]) > 0:
-            place = results["local_results"][0]
-            print(f"DEBUG: ✅ Tìm thấy (local_results): {place.get('title')}")
-            return {
-                "name": place.get("title"),
-                "lat": place["gps_coordinates"]["latitude"],
-                "lon": place["gps_coordinates"]["longitude"],
-                "address": place.get("address", "")
-            }
+#         # 3. XỬ LÝ KẾT QUẢ (Thử nhiều trường hợp)
+#         # Trường hợp 1: local_results (Kết quả địa điểm cụ thể)
+#         if "local_results" in results and len(results["local_results"]) > 0:
+#             place = results["local_results"][0]
+#             print(f"DEBUG: ✅ Tìm thấy (local_results): {place.get('title')}")
+#             return {
+#                 "name": place.get("title"),
+#                 "lat": place["gps_coordinates"]["latitude"],
+#                 "lon": place["gps_coordinates"]["longitude"],
+#                 "address": place.get("address", "")
+#             }
             
-        # Trường hợp 2: place_results (Kết quả chính xác duy nhất)
-        if "place_results" in results:
-            place = results["place_results"]
-            print(f"DEBUG: ✅ Tìm thấy (place_results): {place.get('title')}")
-            return {
-                "name": place.get("title"),
-                "lat": place["gps_coordinates"]["latitude"],
-                "lon": place["gps_coordinates"]["longitude"],
-                "address": place.get("address", "")
-            }
+#         # Trường hợp 2: place_results (Kết quả chính xác duy nhất)
+#         if "place_results" in results:
+#             place = results["place_results"]
+#             print(f"DEBUG: ✅ Tìm thấy (place_results): {place.get('title')}")
+#             return {
+#                 "name": place.get("title"),
+#                 "lat": place["gps_coordinates"]["latitude"],
+#                 "lon": place["gps_coordinates"]["longitude"],
+#                 "address": place.get("address", "")
+#             }
             
-        # Nếu không tìm thấy gì
-        print("DEBUG: ⚠️ Không tìm thấy toạ độ nào trong phản hồi của Google Maps.")
-        # In thử các keys để debug xem Google trả về cái gì
-        print(f"DEBUG: Keys nhận được: {list(results.keys())}") 
-        return None
+#         # Nếu không tìm thấy gì
+#         print("DEBUG: ⚠️ Không tìm thấy toạ độ nào trong phản hồi của Google Maps.")
+#         # In thử các keys để debug xem Google trả về cái gì
+#         print(f"DEBUG: Keys nhận được: {list(results.keys())}") 
+#         return None
 
+#     except Exception as e:
+#         print(f"DEBUG: ❌ Lỗi ngoại lệ trong serpapi_geocode: {e}")
+#         return None
+
+def serpapi_geocode(q: str):
+    """
+    Sử dụng Nominatim để tìm tọa độ chính xác cho bản đồ OSRM.
+    """
+    try:
+        # Thêm user_agent để không bị chặn
+        geolocator = Nominatim(user_agent="my_travel_app_fix_final_v2")
+        location = geolocator.geocode(q, exactly_one=True, addressdetails=True, timeout=10)
+        if location:
+            return {
+                "name": location.address,
+                "lat": location.latitude,
+                "lon": location.longitude
+            }
     except Exception as e:
-        print(f"DEBUG: ❌ Lỗi ngoại lệ trong serpapi_geocode: {e}")
-        return None
+        print(f"Nominatim error: {e}")
+    
+    return None
 
+
+# def osrm_route(src, dst, profile="driving"):
+#     """
+#     Tính lộ trình bằng OSRM public:
+#       - src, dst: dict có keys 'lat', 'lon', 'name'
+#       - profile: 'driving' / 'walking' / 'cycling'
+
+#     Trả về:
+#       {
+#         distance_km: float,
+#         duration_min: float,
+#         geometry: list[(lat, lon)],
+#         steps: list[str],
+#         distance_text: str,
+#         duration_text: str
+#       }
+#     """
+#     url = (
+#         f"https://router.project-osrm.org/route/v1/"
+#         f"{profile}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}"
+#     )
+#     params = {
+#         "overview": "full",       # lấy full đường đi
+#         "geometries": "geojson",  # geometry dạng GeoJSON
+#         "steps": "true",          # lấy chi tiết từng bước
+#     }
+
+#     try:
+#         r = requests.get(url, params=params, timeout=20)
+#         r.raise_for_status()
+#         data = r.json()
+
+#         if data.get("code") != "Ok" or not data.get("routes"):
+#             print("⚠️ OSRM trả về code:", data.get("code"))
+#             return None
+
+#         route = data["routes"][0]
+
+#         distance_km = route["distance"] / 1000.0
+#         duration_min = route["duration"] / 60.0
+
+#         # ---- 1) Chuyển geometry GeoJSON -> list[(lat, lon)] cho draw_map ----
+#         coords = route["geometry"]["coordinates"]    # [[lon, lat], ...]
+#         geometry = [(lat, lon) for lon, lat in coords]
+
+#         # ---- 2) Tạo list hướng dẫn từng bước ----
+#         legs = route.get("legs", [])
+#         step_descriptions = []
+#         for leg in legs:
+#             for step in leg.get("steps", []):
+#                 desc = describe_osrm_step(step)      # đã có sẵn phía trên
+#                 if desc:
+#                     step_descriptions.append(desc)
+
+#         return {
+#             "distance_km": distance_km,
+#             "duration_min": duration_min,
+#             "geometry": geometry,
+#             "steps": step_descriptions,
+#             "distance_text": f"~{distance_km:.2f} km",
+#             "duration_text": f"~{duration_min:.1f} phút",
+#         }
+
+#     except Exception as e:
+#         print("❌ Lỗi khi gọi OSRM:", e)
+#         return None
 
 def osrm_route(src, dst, profile="driving"):
     """
-    Tính lộ trình bằng OSRM public:
-      - src, dst: dict có keys 'lat', 'lon', 'name'
-      - profile: 'driving' / 'walking' / 'cycling'
-
-    Trả về:
-      {
-        distance_km: float,
-        duration_min: float,
-        geometry: list[(lat, lon)],
-        steps: list[str],
-        distance_text: str,
-        duration_text: str
-      }
+    Tính lộ trình OSRM chuẩn xác + Hệ số kẹt xe Việt Nam.
     """
+    try:
+        s_lat, s_lon = float(src['lat']), float(src['lon'])
+        d_lat, d_lon = float(dst['lat']), float(dst['lon'])
+    except ValueError:
+        return None
+
+    # OSRM yêu cầu: Longitude trước, Latitude sau
     url = (
         f"https://router.project-osrm.org/route/v1/"
-        f"{profile}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}"
+        f"{profile}/{s_lon},{s_lat};{d_lon},{d_lat}"
     )
-    params = {
-        "overview": "full",       # lấy full đường đi
-        "geometries": "geojson",  # geometry dạng GeoJSON
-        "steps": "true",          # lấy chi tiết từng bước
-    }
+    
+    params = {"overview": "full", "geometries": "geojson", "steps": "true"}
 
     try:
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, timeout=10)
         r.raise_for_status()
         data = r.json()
 
         if data.get("code") != "Ok" or not data.get("routes"):
-            print("⚠️ OSRM trả về code:", data.get("code"))
             return None
 
         route = data["routes"][0]
-
         distance_km = route["distance"] / 1000.0
-        duration_min = route["duration"] / 60.0
+        
+        # SỬA LỖI: Nhân hệ số kẹt xe (3 lần cho xe, 12 lần cho đi bộ)
+        traffic_factor = 3.0 if profile in ["driving", "cycling"] else 12
+        duration_min = (route["duration"] / 60.0) * traffic_factor
 
-        # ---- 1) Chuyển geometry GeoJSON -> list[(lat, lon)] cho draw_map ----
-        coords = route["geometry"]["coordinates"]    # [[lon, lat], ...]
-        geometry = [(lat, lon) for lon, lat in coords]
+        # SỬA LỖI: Đảo ngược tọa độ để vẽ Map đúng
+        coords_geojson = route["geometry"]["coordinates"]
+        geometry = [(lat, lon) for lon, lat in coords_geojson]
 
-        # ---- 2) Tạo list hướng dẫn từng bước ----
+        # Xử lý steps (giữ nguyên logic lấy steps của bạn)
         legs = route.get("legs", [])
         step_descriptions = []
         for leg in legs:
             for step in leg.get("steps", []):
-                desc = describe_osrm_step(step)      # đã có sẵn phía trên
-                if desc:
-                    step_descriptions.append(desc)
+                desc = describe_osrm_step(step)
+                if desc: step_descriptions.append(desc)
 
         return {
             "distance_km": distance_km,
             "duration_min": duration_min,
             "geometry": geometry,
             "steps": step_descriptions,
-            "distance_text": f"~{distance_km:.2f} km",
-            "duration_text": f"~{duration_min:.1f} phút",
+            "distance_text": f"{distance_km:.2f} km",
+            "duration_text": f"~{duration_min:.0f} phút",
         }
-
     except Exception as e:
-        print("❌ Lỗi khi gọi OSRM:", e)
+        print("Lỗi OSRM:", e)
         return None
-
 
 
 def serpapi_route(src, dst, profile="driving"):
@@ -614,71 +690,122 @@ def _format_distance(meters: float) -> str:
     return f"{km:.1f} km"
 
 
+# def describe_osrm_step(step: dict) -> str:
+#     """
+#     Nhận 1 step từ OSRM và trả về 1 câu mô tả ngắn gọn bằng tiếng Việt.
+
+#     Ví dụ:
+#       - 'Đi thẳng 500 m trên đường Nguyễn Văn Cừ.'
+#       - 'Rẽ phải vào đường Lê Lợi.'
+#       - 'Đến điểm đến ở bên phải.'
+#     """
+#     maneuver = step.get("maneuver", {})
+#     step_type = maneuver.get("type", "")
+#     modifier = (maneuver.get("modifier") or "").lower()
+#     name = (step.get("name") or "").strip()
+#     distance = step.get("distance", 0.0)  # mét
+#     dist_str = _format_distance(distance)
+
+#     # Mapping hướng rẽ
+#     dir_map = {
+#         "right": "rẽ phải",
+#         "slight right": "chếch phải",
+#         "sharp right": "quẹo gắt phải",
+#         "left": "rẽ trái",
+#         "slight left": "chếch trái",
+#         "sharp left": "quẹo gắt trái",
+#         "straight": "đi thẳng",
+#         "uturn": "quay đầu",
+#     }
+
+#     # ---- Các trường hợp chính ----
+#     if step_type == "depart":
+#         if name:
+#             return f"Bắt đầu từ {name}."
+#         return "Bắt đầu từ điểm xuất phát."
+
+#     if step_type == "arrive":
+#         side = maneuver.get("modifier", "").lower()
+#         if side in ("right", "left"):
+#             side_vi = "bên phải" if side == "right" else "bên trái"
+#             return f"Đến điểm đến ở {side_vi}."
+#         return "Đến điểm đến."
+
+#     if step_type in ("turn", "end of road", "fork"):
+#         action = dir_map.get(modifier, "rẽ")
+#         if name:
+#             return f"Đi {dist_str} rồi {action} vào đường {name}."
+#         else:
+#             return f"Đi {dist_str} rồi {action}."
+
+#     if step_type == "roundabout":
+#         exit_nr = maneuver.get("exit")
+#         if exit_nr:
+#             return f"Vào vòng xuyến, đi hết lối ra thứ {exit_nr}."
+#         else:
+#             return "Vào vòng xuyến và tiếp tục theo hướng chính."
+
+#     if step_type in ("merge", "on ramp", "off ramp"):
+#         if name:
+#             return f"Nhập làn/ra khỏi làn và tiếp tục trên {name} khoảng {dist_str}."
+#         return f"Nhập làn/ra khỏi làn và tiếp tục khoảng {dist_str}."
+
+#     # Fallback: mô tả chung chung
+#     if name:
+#         return f"Đi tiếp {dist_str} trên đường {name}."
+#     return f"Đi tiếp {dist_str}."
+
 def describe_osrm_step(step: dict) -> str:
     """
-    Nhận 1 step từ OSRM và trả về 1 câu mô tả ngắn gọn bằng tiếng Việt.
-
-    Ví dụ:
-      - 'Đi thẳng 500 m trên đường Nguyễn Văn Cừ.'
-      - 'Rẽ phải vào đường Lê Lợi.'
-      - 'Đến điểm đến ở bên phải.'
+    Phiên bản nâng cấp: Dịch hướng dẫn đường đi OSRM sang tiếng Việt tự nhiên hơn.
     """
     maneuver = step.get("maneuver", {})
     step_type = maneuver.get("type", "")
     modifier = (maneuver.get("modifier") or "").lower()
     name = (step.get("name") or "").strip()
-    distance = step.get("distance", 0.0)  # mét
+    # Nếu không có tên đường, thử dùng ref (số hiệu đường, vd: QL1A)
+    if not name:
+        name = (step.get("ref") or "").strip()
+
+    distance = step.get("distance", 0.0)
     dist_str = _format_distance(distance)
 
-    # Mapping hướng rẽ
+    # Từ điển hướng
     dir_map = {
-        "right": "rẽ phải",
-        "slight right": "chếch phải",
-        "sharp right": "quẹo gắt phải",
-        "left": "rẽ trái",
-        "slight left": "chếch trái",
-        "sharp left": "quẹo gắt trái",
-        "straight": "đi thẳng",
-        "uturn": "quay đầu",
+        "right": "rẽ phải", "slight right": "chếch sang phải", "sharp right": "quẹo gắt sang phải",
+        "left": "rẽ trái", "slight left": "chếch sang trái", "sharp left": "quẹo gắt sang trái",
+        "straight": "đi thẳng", "uturn": "quay đầu xe",
     }
+    action = dir_map.get(modifier, "rẽ")
 
-    # ---- Các trường hợp chính ----
+    # 1. Khởi hành
     if step_type == "depart":
-        if name:
-            return f"Bắt đầu từ {name}."
-        return "Bắt đầu từ điểm xuất phát."
-
+        return f"🚀 Bắt đầu di chuyển từ {name if name else 'điểm xuất phát'}."
+    
+    # 2. Đến nơi
     if step_type == "arrive":
-        side = maneuver.get("modifier", "").lower()
-        if side in ("right", "left"):
-            side_vi = "bên phải" if side == "right" else "bên trái"
-            return f"Đến điểm đến ở {side_vi}."
-        return "Đến điểm đến."
+        side = maneuver.get("modifier", "")
+        side_text = "ở bên phải" if side == "right" else ("ở bên trái" if side == "left" else "")
+        return f"🏁 Đã đến điểm đến {side_text}."
 
-    if step_type in ("turn", "end of road", "fork"):
-        action = dir_map.get(modifier, "rẽ")
-        if name:
-            return f"Đi {dist_str} rồi {action} vào đường {name}."
-        else:
-            return f"Đi {dist_str} rồi {action}."
-
+    # 3. Vòng xuyến
     if step_type == "roundabout":
         exit_nr = maneuver.get("exit")
-        if exit_nr:
-            return f"Vào vòng xuyến, đi hết lối ra thứ {exit_nr}."
+        return f"🔄 Vào vòng xuyến, đi theo lối ra thứ {exit_nr}."
+
+    # 4. Các hành động rẽ / đi tiếp
+    if step_type in ("turn", "end of road", "fork", "merge", "new name", "continue"):
+        if modifier == "straight":
+            if name: return f"⬆️ Đi thẳng {dist_str} trên {name}."
+            return f"⬆️ Đi thẳng {dist_str}."
         else:
-            return "Vào vòng xuyến và tiếp tục theo hướng chính."
+            if name: return f" {action.capitalize()} vào {name}, đi tiếp {dist_str}."
+            return f" {action.capitalize()}, sau đó đi {dist_str}."
 
-    if step_type in ("merge", "on ramp", "off ramp"):
-        if name:
-            return f"Nhập làn/ra khỏi làn và tiếp tục trên {name} khoảng {dist_str}."
-        return f"Nhập làn/ra khỏi làn và tiếp tục khoảng {dist_str}."
-
-    # Fallback: mô tả chung chung
+    # Mặc định
     if name:
-        return f"Đi tiếp {dist_str} trên đường {name}."
+        return f"Đi tiếp {dist_str} trên {name}."
     return f"Đi tiếp {dist_str}."
-
 
 
 def draw_map(src, dst, route):
@@ -737,89 +864,350 @@ def recommend_transport_mode(distance_km: float, duration_min: float):
       - best_profile: "walking" / "cycling" / "driving"
       - explanation: chuỗi tiếng Việt giải thích ngắn gọn
     """
-    if distance_km <= 1.5:
-        return "walking", (
-            "Quãng đường rất ngắn, bạn có thể đi bộ để tiết kiệm chi phí "
-            "và thoải mái ngắm cảnh xung quanh."
-        )
-    elif distance_km <= 7:
-        return "walking", (
-            "Quãng đường không quá xa, đi bộ hoặc xe đạp đều phù hợp. "
-            "Nếu mang nhiều hành lý có thể gọi xe máy/ô tô."
-        )
-    elif distance_km <= 25:
-        return "cycling", (
-            "Quãng đường trung bình, phù hợp đi xe máy hoặc xe đạp nếu bạn quen di chuyển xa."
-        )
-    elif distance_km <= 300:
-        return "driving", (
-            "Quãng đường khá xa, nên đi ô tô/xe máy, taxi hoặc xe công nghệ "
-            "để đảm bảo thời gian và sự thoải mái."
-        )
+    if distance_km <= 2.0:
+        return "walking", "Quãng đường ngắn, đi bộ hoặc xe đạp là lựa chọn tốt cho sức khỏe, tiết kiệm chi phí và thoải mái ngắm cảnh xung quanh."
+    elif distance_km <= 5:
+        return "cycling", "Quãng đường khá ngắn, đi xe đạp hoặc xe máy sẽ nhanh và tiện lợi hơn. Nếu không mang hành lí và thời gian thoải mái thì có thể đi bộ."
+    elif distance_km <= 30:
+        return "cycling", "Quãng đường trung bình, phù hợp đi xe máy. Nếu mang nhiều hành lý hoặc muốn thoải mái có thể gọi ô tô."
+    elif distance_km <= 100:
+        return "driving", "Quãng đường khá xa, nên đi ô tô hoặc xe máy để đảm bảo thời gian và sự thoải mái."
     else:
-        return "driving", (
-            "Đây là quãng đường rất xa. Thực tế nên cân nhắc đi máy bay, tàu hoặc xe khách "
-            "rồi bắt taxi/xe buýt đến nơi ở."
-        )
+        return "driving", "Quãng đường rất xa, đi ô tô hoặc máy bay là lựa chọn duy nhất để đảm bảo an toàn và tiết kiệm thời gian." 
+
+# def analyze_route_complexity(route: dict, profile: str):
+#     """
+#     Phân tích độ phức tạp dựa trên dữ liệu từ Google Maps.
+#     """
+#     distance_km = route.get("distance_km", 0.0)
+#     # Google tính duration rất chuẩn (đã bao gồm tắc đường nếu có dữ liệu), tin tưởng nó hơn tính toán thủ công
+#     duration_min = route.get("duration_min", 0.0)
+#     steps_list = route.get("steps", [])
+#     steps_count = len(steps_list)
+
+#     difficulty_score = 0
+#     reasons = []
+
+#     # 1. Phân tích quãng đường
+#     if distance_km > 50:
+#         difficulty_score += 3
+#         reasons.append(f"Quãng đường rất dài ({distance_km:.1f} km), cần nghỉ ngơi giữa chừng.")
+#     elif distance_km > 20:
+#         difficulty_score += 2
+#         reasons.append("Quãng đường khá dài, hãy chuẩn bị sức khỏe.")
+    
+#     # 2. Phân tích độ phức tạp của đường đi (số lượng ngã rẽ)
+#     # Google thường gộp các hướng dẫn "đi thẳng" nên nếu steps nhiều nghĩa là phải rẽ nhiều
+#     if steps_count > 25:
+#         difficulty_score += 2
+#         reasons.append(f"Lộ trình rất phức tạp với {steps_count} chỉ dẫn chuyển hướng.")
+#     elif steps_count > 15:
+#         difficulty_score += 1
+#         reasons.append(f"Lộ trình có khá nhiều ngã rẽ ({steps_count} bước).")
+
+#     # 3. Phân tích tốc độ trung bình (để phát hiện tắc đường/đường xấu)
+#     if duration_min > 0 and distance_km > 0:
+#         avg_speed = distance_km / (duration_min / 60.0) # km/h
+        
+#         if profile == "driving":
+#             if avg_speed < 20: # Ô tô/xe máy mà < 20km/h là rất chậm
+#                 difficulty_score += 2
+#                 reasons.append("Tốc độ di chuyển dự kiến rất chậm (đường đông hoặc xấu).")
+#         elif profile == "cycling":
+#             if avg_speed < 8:
+#                 difficulty_score += 1
+#                 reasons.append("Tốc độ đạp xe dự kiến chậm hơn bình thường.")
+
+#     # 4. Kết luận
+#     if difficulty_score <= 1:
+#         level = "low"
+#         label_vi = "Dễ đi"
+#         summary = "Lộ trình đơn giản, đường thông thoáng."
+#     elif difficulty_score <= 3:
+#         level = "medium"
+#         label_vi = "Trung bình"
+#         summary = "Lộ trình có chút thử thách về khoảng cách hoặc các ngã rẽ."
+#     else:
+#         level = "high"
+#         label_vi = "Phức tạp"
+#         summary = "Lộ trình khó, tốn nhiều thời gian hoặc đường đi phức tạp."
+
+#     return level, label_vi, summary, reasons
 
 def analyze_route_complexity(route: dict, profile: str):
     """
-    Phân tích độ phức tạp dựa trên dữ liệu từ Google Maps.
+    Phân tích độ phức tạp lộ trình (Phiên bản tối ưu cho giao thông Việt Nam).
+    Dựa trên: Thời gian di chuyển thực tế, Số lượng khúc cua, và Quãng đường.
     """
     distance_km = route.get("distance_km", 0.0)
-    # Google tính duration rất chuẩn (đã bao gồm tắc đường nếu có dữ liệu), tin tưởng nó hơn tính toán thủ công
-    duration_min = route.get("duration_min", 0.0)
+    duration_min = route.get("duration_min", 0.0) # Thời gian này đã nhân hệ số kẹt xe ở bước trước
     steps_list = route.get("steps", [])
     steps_count = len(steps_list)
 
     difficulty_score = 0
     reasons = []
 
-    # 1. Phân tích quãng đường
-    if distance_km > 50:
+    # 1. Đánh giá theo THỜI GIAN (Quan trọng nhất ở VN)
+    # Đi xe máy/ô tô mà trên 45 phút là bắt đầu mệt
+    if duration_min > 90:
         difficulty_score += 3
-        reasons.append(f"Quãng đường rất dài ({distance_km:.1f} km), cần nghỉ ngơi giữa chừng.")
-    elif distance_km > 20:
+        reasons.append(f"Thời gian di chuyển rất lâu (~{int(duration_min // 60)}h{int(duration_min % 60)}p), dễ gây mệt mỏi.")
+    elif duration_min > 45:
         difficulty_score += 2
-        reasons.append("Quãng đường khá dài, hãy chuẩn bị sức khỏe.")
-    
-    # 2. Phân tích độ phức tạp của đường đi (số lượng ngã rẽ)
-    # Google thường gộp các hướng dẫn "đi thẳng" nên nếu steps nhiều nghĩa là phải rẽ nhiều
-    if steps_count > 25:
-        difficulty_score += 2
-        reasons.append(f"Lộ trình rất phức tạp với {steps_count} chỉ dẫn chuyển hướng.")
-    elif steps_count > 15:
+        reasons.append(f"Thời gian di chuyển khá lâu (~{int(duration_min)} phút).")
+    elif duration_min > 25:
         difficulty_score += 1
-        reasons.append(f"Lộ trình có khá nhiều ngã rẽ ({steps_count} bước).")
 
-    # 3. Phân tích tốc độ trung bình (để phát hiện tắc đường/đường xấu)
-    if duration_min > 0 and distance_km > 0:
-        avg_speed = distance_km / (duration_min / 60.0) # km/h
-        
-        if profile == "driving":
-            if avg_speed < 20: # Ô tô/xe máy mà < 20km/h là rất chậm
-                difficulty_score += 2
-                reasons.append("Tốc độ di chuyển dự kiến rất chậm (đường đông hoặc xấu).")
-        elif profile == "cycling":
-            if avg_speed < 8:
-                difficulty_score += 1
-                reasons.append("Tốc độ đạp xe dự kiến chậm hơn bình thường.")
+    # 2. Đánh giá theo QUÃNG ĐƯỜNG
+    # Ở nội thành, >15km là xa. Ngoại thành >30km là xa.
+    if distance_km > 30:
+        difficulty_score += 2
+        reasons.append(f"Quãng đường xa ({distance_km:.1f} km).")
+    elif distance_km > 15:
+        difficulty_score += 1
+        reasons.append("Quãng đường tương đối dài so với di chuyển nội thành.")
 
-    # 4. Kết luận
+    # 3. Đánh giá theo ĐỘ RẮC RỐI (Số lượng ngã rẽ)
+    # Quá nhiều ngã rẽ (trên 20) dễ bị lạc hoặc nhầm đường
+    if steps_count > 30:
+        difficulty_score += 2
+        reasons.append(f"Đường đi rất rắc rối, có tới {steps_count} lần chuyển hướng.")
+    elif steps_count > 18:
+        difficulty_score += 1
+        reasons.append("Lộ trình có nhiều ngã rẽ, cần chú ý quan sát bản đồ.")
+
+    # 4. Đánh giá TỐC ĐỘ TRUNG BÌNH (Phát hiện kẹt xe nặng)
+    # Nếu đi xe máy mà tốc độ < 15km/h => Kẹt xe hoặc đường rất xấu
+    if duration_min > 0:
+        avg_speed = distance_km / (duration_min / 60.0)
+        if profile == "driving" and avg_speed < 15:
+            difficulty_score += 2
+            reasons.append("Cảnh báo: Tốc độ di chuyển dự kiến rất chậm (khu vực đông đúc/kẹt xe).")
+
+    # --- KẾT LUẬN ---
     if difficulty_score <= 1:
         level = "low"
-        label_vi = "Dễ đi"
-        summary = "Lộ trình đơn giản, đường thông thoáng."
+        label_vi = " Dễ đi"
+        summary = "Lộ trình ngắn, đơn giản, phù hợp để đi ngay."
     elif difficulty_score <= 3:
         level = "medium"
-        label_vi = "Trung bình"
-        summary = "Lộ trình có chút thử thách về khoảng cách hoặc các ngã rẽ."
+        label_vi = " Trung bình"
+        summary = "Lộ trình tốn chút thời gian hoặc cần chú ý các ngã rẽ."
     else:
         level = "high"
-        label_vi = "Phức tạp"
-        summary = "Lộ trình khó, tốn nhiều thời gian hoặc đường đi phức tạp."
+        label_vi = " Phức tạp"
+        summary = "Lộ trình khó (xa, lâu hoặc tắc đường). Nên cân nhắc nghỉ ngơi hoặc chọn giờ thấp điểm."
 
     return level, label_vi, summary, reasons
+
+
+#def geocode_city(city_name: str):
+    """
+    Dùng Nominatim để lấy toạ độ (lat, lon) của một thành phố.
+    Trả về dict {"name", "lat", "lon"} hoặc None nếu lỗi.
+    """
+    geocoder = Nominatim(user_agent="smart_tourism_demo")
+    try:
+        loc = geocoder.geocode(city_name, exactly_one=True, addressdetails=True, language="en")
+        if not loc:
+            return None
+        return {
+            "name": loc.address,
+            "lat": loc.latitude,
+            "lon": loc.longitude,
+        }
+    except Exception:
+        return None
+
+OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+
+def fetch_osm_accommodations(city_name: str, radius_km: float = 5.0, max_results: int = 50):
+    """
+    Gọi OpenStreetMap (Overpass API) để lấy danh sách nơi ở quanh một thành phố.
+
+    Bước:
+    1) Geocode tên thành phố -> (lat_city, lon_city)
+    2) Dùng Overpass query lấy các node/way/relation có tourism=hotel|hostel|guest_house|apartment
+       trong bán kính radius_km quanh city.
+    3) Convert về list[Accommodation], trong đó:
+       - price, rating, capacity, amenities được GIẢ LẬP từ sao + một số tag.
+    """
+
+    # ----- 1. Geocode city -----
+    city_geo = serpapi_geocode(city_name + ", Vietnam")
+    if not city_geo:
+        return [], None  # không tìm được city
+
+    city_lat = city_geo["lat"]
+    city_lon = city_geo["lon"]
+    radius_m = int(radius_km * 1000)
+
+    # ----- 2. Overpass query -----
+    # Lấy các đối tượng có tourism là hotel, hostel, guest_house hoặc apartment
+    query = f"""
+    [out:json][timeout:25];
+    (
+      node["tourism"~"hotel|hostel|guest_house|apartment"](around:{radius_m},{city_lat},{city_lon});
+      way["tourism"~"hotel|hostel|guest_house|apartment"](around:{radius_m},{city_lat},{city_lon});
+      relation["tourism"~"hotel|hostel|guest_house|apartment"](around:{radius_m},{city_lat},{city_lon});
+    );
+    out center {max_results};
+    """
+
+    resp = requests.post(OVERPASS_URL, data=query)
+    resp.raise_for_status()
+    data = resp.json()
+
+    elements = data.get("elements", [])
+    accommodations: list[Accommodation] = []
+
+    # ----- 3. Duyệt kết quả Overpass & convert -> Accommodation -----
+    for el in elements:
+        tags = el.get("tags", {})
+
+        # 👉 Dùng id OSM để CỐ ĐỊNH random cho từng chỗ ở
+        acc_id = str(el.get("id"))
+        random.seed(acc_id)
+
+        # Lấy lat, lon: node có sẵn; way/relation dùng 'center'
+        if el["type"] == "node":
+            lat = el.get("lat")
+            lon = el.get("lon")
+        else:
+            center = el.get("center") or {}
+            lat = center.get("lat")
+            lon = center.get("lon")
+
+        if lat is None or lon is None:
+            continue  # bỏ qua nếu không có toạ độ
+
+        # Tên chỗ ở
+        name = tags.get("name", "Chỗ ở không tên")
+
+        # Thành phố: ưu tiên addr:city, fallback dùng city_name user nhập
+        city = tags.get("addr:city", city_name)
+
+        # Loại chỗ ở
+        tourism_type = tags.get("tourism", "hotel")  # hotel / hostel / guest_house / apartment
+        # Quy ước type đơn giản cho thuật toán
+        if tourism_type == "guest_house":
+            acc_type = "homestay"
+        elif tourism_type == "apartment":
+            acc_type = "apartment"
+        elif tourism_type == "hostel":
+            acc_type = "hostel"
+        else:
+            acc_type = "hotel"
+
+        # Số sao: nếu OSM có tag 'stars' thì dùng, nếu không thì random theo phân bố
+        raw_stars = tags.get("stars")
+        if raw_stars:
+            stars = float(raw_stars)
+        else:
+            # Phân bố "tự nhiên" hơn: 3★ nhiều nhất, 4★ & 2★ ít hơn, 1★ & 5★ hiếm
+            r = random.random()
+            if r < 0.05:
+                stars = 1.0
+            elif r < 0.25:
+                stars = 2.0
+            elif r < 0.75:
+                stars = 3.0
+            elif r < 0.95:
+                stars = 4.0
+            else:
+                stars = 5.0
+
+        # Giới hạn trong [1, 5]
+        stars = max(1.0, min(5.0, stars))
+
+
+        # GIẢ LẬP GIÁ dựa trên số sao (cho phù hợp thuật toán)
+        base_by_star = {1: 300_000, 2: 450_000, 3: 700_000, 4: 1_000_000, 5: 1_500_000}
+        base_price = base_by_star.get(int(stars), 700_000)
+        # random nhẹ  ±10% cho giống thật
+        price = base_price * (0.9 + 0.2 * random.random())
+
+        # GIẢ LẬP RATING: phụ thuộc vào số sao, cộng thêm chút nhiễu Gaussian
+        base_rating = 6 + 0.6 * stars   # 1★ ~ 6.6, 3★ ~ 7.8, 5★ ~ 9 (trung bình)
+        rating = random.gauss(base_rating, 0.4)
+        rating = max(5.0, min(9.8, rating))  # giới hạn 5.0-9.8 cho hợp lý
+
+        # GIẢ LẬP SỨC CHỨA (cho đơn giản: 2-6 người)
+        capacity = 2 + int(random.random() * 4)
+
+        # Tiện ích: map từ một số tag OSM cơ bản
+        amenities = []
+        # WiFi
+        internet = tags.get("internet_access")
+        if internet in ("wlan", "yes", "free"):
+            amenities.append("wifi")
+        # Parking - có khá nhiều kiểu
+        if tags.get("parking") in ("yes", "underground", "multi-storey"):
+            amenities.append("parking")
+        if tags.get("amenity") == "parking":
+            amenities.append("parking")
+        # Breakfast - rất ít nơi gắn thẳng, nhưng nếu có cứ lấy
+        if tags.get("breakfast") == "yes":
+            amenities.append("breakfast")
+        # Pool - có thể xuất hiện dưới dạng leisure
+        if tags.get("swimming_pool") == "yes" or tags.get("leisure") == "swimming_pool":
+            amenities.append("pool")
+
+        # Sau khi lấy từ OSM thật:
+        amenities = list(set(amenities))  # bỏ trùng
+        # Đoán thêm tiện ích dựa trên số sao
+        # (để demo, ghi rõ trong báo cáo là "giả lập" khi thiếu dữ liệu)
+        if stars >= 3 and "wifi" not in amenities:
+            if random.random() < 0.7:
+                amenities.append("wifi")
+
+        if stars >= 3 and "breakfast" not in amenities:
+            if random.random() < 0.5:
+                amenities.append("breakfast")
+
+        if stars >= 4 and "pool" not in amenities:
+            if random.random() < 0.35:
+                amenities.append("pool")
+
+        if stars >= 2 and "parking" not in amenities:
+            if random.random() < 0.6:
+                amenities.append("parking")
+        
+        # Một số chỗ 4★–5★ hiếm hoi sẽ có đủ cả 4 tiện ích
+        # (để demo có vài nơi "full service")
+        if stars >= 4:
+            # Chỉ những chỗ đã có ít nhất 2 tiện ích, và xác suất nhỏ (15%)
+            if len(amenities) >= 2 and random.random() < 0.20:
+                full_set = {"wifi", "breakfast", "pool", "parking"}
+                amenities = list(set(amenities) | full_set)
+
+
+        # Địa chỉ hiển thị
+        address = tags.get("addr:full") or tags.get("addr:street") or tags.get("addr:housenumber") or city
+
+        # Khoảng cách tới tâm city (km)
+        distance_km = haversine_km(city_lon, city_lat, lon, lat)
+
+        acc = Accommodation(
+            id=str(el.get("id")),
+            name=name,
+            city=city,
+            type=acc_type,
+            price=price,
+            stars=stars,
+            rating=rating,
+            capacity=capacity,
+            amenities=amenities,
+            address=address,
+            lon=lon,
+            lat=lat,
+            distance_km=distance_km,
+        )
+        accommodations.append(acc)
+
+    return accommodations, (city_lon, city_lat)
+
 
 def fetch_google_hotels(city_name: str, radius_km: float = 5.0, wanted_types: List[str] | None = None,):
     """
@@ -863,7 +1251,7 @@ def fetch_google_hotels(city_name: str, radius_km: float = 5.0, wanted_types: Li
 
 
     # 2. Gọi API SerpAPI – Google Maps search
-    REAL_API_KEY = API_KEY  # giữ nguyên key của cậu
+    REAL_API_KEY = "484389b5b067640d3df6e554063f22f10f0b24f784c8c91e489f330a150d5a69"  # giữ nguyên key của cậu
 
     search_query = build_search_query(city_name, wanted_types)
 
@@ -1026,6 +1414,31 @@ def fetch_google_hotels(city_name: str, radius_km: float = 5.0, wanted_types: Li
 
     return accommodations, (city_lon, city_lat)
 
+
+def recommend_top5_from_api(q: SearchQuery):
+    """
+    ...
+    Trả về:
+      - danh sách top-5
+      - toạ độ tâm city
+      - relaxation_note: giải thích mức nới tiêu chí
+    """
+    accommodations, city_center = fetch_osm_accommodations(
+        city_name=q.city,
+        radius_km=q.radius_km,
+        max_results=50,
+    )
+
+    if not accommodations:
+        return [], city_center, (
+            "Không tìm thấy dữ liệu chỗ ở nào quanh khu vực này từ OpenStreetMap. "
+            "Bạn có thể thử tăng bán kính tìm kiếm hoặc chọn thành phố khác."
+        )
+
+    top5, relax_note = rank_accommodations(accommodations, q, top_k=5)
+    return top5, city_center, relax_note
+
+
 def home_page():
     st.markdown("<h1>🏠 Home</h1>", unsafe_allow_html=True)
 
@@ -1081,6 +1494,7 @@ def ollama_generate_itinerary(prompt: str):
     return response['message']['content']
 
 def save_message(uid: str, role: str, content: str):
+    if db is None: return
     doc = {
         "role": role,
         "content": content,
@@ -1153,6 +1567,12 @@ auth, db = get_firebase_clients()
 
 if "current_page" not in st.session_state:
     st.session_state.current_page = "home"   # mặc định sau login về Home
+    
+# Tự động đăng nhập giả để test
+if "user" not in st.session_state:
+    st.session_state.user = {"email": "test@demo.com", "uid": "123"}
+auth = None
+db = None
 
 if "user" not in st.session_state:
     st.session_state.user = None 
@@ -1399,8 +1819,12 @@ def route_dialog():
 
     # Thông tin tổng quãng đường + thời gian
     st.markdown(
-        f"**Quãng đường:** ~{route['distance_km']:.2f} km  ·  "
-        f"**Thời gian ước tính:** ~{route['duration_min']:.1f} phút"
+        f"""
+        <div style="padding:12px;border-radius:8px;background:#f0f2f6;color:#31333F;">
+             🛣️Quãng đường: {route['distance_km']:.2f} km &nbsp;·&nbsp; ⏱️Thời gian ước tính: ~{route['duration_min']:.1f} phút
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     # 🗺️ Bản đồ lộ trình (Folium)
@@ -1685,10 +2109,14 @@ if st.session_state.user:
 
                     with st.spinner("Đang tìm kiếm và xếp hạng các nơi ở phù hợp..."):
                         try:
-                            accommodations, city_center = fetch_google_hotels(
-                                city_name=q.city,
-                                radius_km=q.radius_km,
-                                wanted_types=q.types,      # ⬅ truyền loại user chọn
+                            # accommodations, city_center = fetch_google_hotels(
+                            #     city_name=q.city,
+                            #     radius_km=q.radius_km,
+                            #     wanted_types=q.types,      # ⬅ truyền loại user chọn
+                            # )
+                            # top5, relax_note = rank_accommodations(accommodations, q, 5)
+                            accommodations, city_center = fetch_osm_accommodations(
+                            city_name=q.city, radius_km=q.radius_km, max_results=50
                             )
                             top5, relax_note = rank_accommodations(accommodations, q, 5)
 
@@ -1767,7 +2195,7 @@ if st.session_state.user:
                             st.markdown(
                                 f"**Giá:** {price_text} | "
                                 f"**Rating:** {acc.rating:.1f}/10 ({acc.stars}⭐) | "
-                                f"**Khoảng cách:** {acc.distance_km:.2f} km"
+                                f"**Cách trung tâm đó:** {acc.distance_km:.2f} km"
                             )
 
                             # 3. Tiện ích và Score (Dùng caption - chữ nhỏ hơn)
@@ -1829,136 +2257,209 @@ if st.session_state.user:
                 st.write(f"Điểm đến hiện tại: **{acc.name} ({acc.city})**")
 
                 # === Input điểm xuất phát + phương tiện ===
-                origin_query = st.text_input(
-                    "Điểm xuất phát (địa chỉ hoặc tên địa điểm)",
-                    value="HCMUS, Ho Chi Minh City",
-                    key="origin_query",
-                )
+            origin_query = st.text_input(
+                "Điểm xuất phát (địa chỉ hoặc tên địa điểm)",
+                value="HCMUS, Ho Chi Minh City",
+                key="origin_query",
+            )
 
-                col_profile, col_zoom = st.columns(2)
-                with col_profile:
-                    profile = st.radio(
-                        "Phương tiện",
-                        ["driving", "walking", "cycling"],
-                        horizontal=True,
-                        key="route_profile",
-                    )
-                with col_zoom:
-                    zoom = st.slider(
-                        "Mức zoom bản đồ",
-                        6, 18, 12,
-                        key="map_zoom",
-                    )
+            # --- SỬA ĐỔI: Bỏ chia cột, bỏ Slider Zoom, chỉ giữ lại Radio chọn phương tiện ---
+            profile_label = st.radio(
+                "Phương tiện",
+                ["Car", "Walking", "Motorbike"],
+                horizontal=True,
+                key="route_profile",
+            )
+            
+            # Map UI labels to OSRM/logic profile keys
+            _PROFILE_MAP = {
+                "Car": "driving",
+                "Walking": "walking",
+                "Motorbike": "cycling",
+            }
+            profile = _PROFILE_MAP.get(profile_label, "driving")
+#                 # Nút tìm đường
+#                 if st.button("🚗 Đường đi", key="find_route_btn"):
+#                     if not origin_query.strip():
+#                         st.error("Vui lòng nhập điểm xuất phát.")
+#                     else:
+#                         # 1) Geocode điểm xuất phát
+#                         with st.spinner("Đang tìm tọa độ điểm xuất phát..."):
+#                             src = serpapi_geocode(origin_query)
 
-                # Nút tìm đường
-                if st.button("🚗 Đường đi", key="find_route_btn"):
-                    if not origin_query.strip():
-                        st.error("Vui lòng nhập điểm xuất phát.")
-                    else:
-                        # 1) Geocode điểm xuất phát
-                        with st.spinner("Đang tìm tọa độ điểm xuất phát..."):
-                            src = serpapi_geocode(origin_query)
+
+#                         if not src:
+#                             st.error("Không tìm được tọa độ điểm xuất phát. Hãy nhập chi tiết hơn.")
+#                         else:
+#                             # 2) Chuẩn bị điểm đến
+#                             dst = {
+#                                 "name": f"{acc.name} ({acc.city})",
+#                                 "lat": acc.lat,
+#                                 "lon": acc.lon,
+#                             }
+
+#                             # 3) Gọi OSRM tìm route
+#                             with st.spinner("Đang tính lộ trình bằng OSRM..."):
+#                                 route = osrm_route(src, dst, profile=profile)
+
+#                             if not route:
+#                                 st.warning("Không tìm được lộ trình phù hợp. Thử đổi phương tiện hoặc địa điểm.")
+#                             else:
+#                                 st.session_state.route_result = {
+#                                     "src": src,
+#                                     "dst": dst,
+#                                     "profile": profile,
+#                                     "route": route,
+#                                 }
+#                                 # Mỗi lần tìm đường mới thì ẩn danh sách bước đi
+#                                 st.session_state.show_route_steps = False
+
+#                                 st.success(
+#                                     f"Lộ trình ~{route['distance_km']:.2f} km, "
+#                                     f"~{route['duration_min']:.1f} phút ({profile})."
+#                                 )
+
+#                                 # Gợi ý phương tiện (giữ nguyên đoạn dưới)
+#                                 best_profile, explain = recommend_transport_mode(
+#                                     route["distance_km"], route["duration_min"]
+#                                 )
+#                                 labels = {
+#                                     "walking": "đi bộ",
+#                                     "cycling": "xe đạp",
+#                                     "driving": "ô tô / xe máy",
+#                                 }
+
+#                                 if best_profile == profile:
+#                                     st.info(
+#                                         f"Hệ thống đánh giá quãng đường khoảng "
+#                                         f"**{route['distance_km']:.1f} km** "
+#                                         f"({route['duration_min']:.0f} phút) và "
+#                                         f"phương tiện hiện tại (**{labels[profile]}**) "
+#                                         f"**là phù hợp**. {explain}"
+#                                     )
+#                                 else:
+#                                     st.info(
+#                                         f"Hệ thống đánh giá quãng đường khoảng "
+#                                         f"**{route['distance_km']:.1f} km** "
+#                                         f"({route['duration_min']:.0f} phút). "
+#                                         f"Gợi ý nên di chuyển bằng **{labels[best_profile]}** – {explain} "
+#                                         f"Hiện tại bạn đang xem lộ trình cho **{labels[profile]}**; "
+#                                         "bạn có thể đổi phương tiện phía trên rồi bấm "
+#                                         "'Tìm đường' lại nếu muốn."
+#                                     )
+#                                 # 🔔 SAU KHI TÍNH XONG LỘ TRÌNH → MỞ HỘP THOẠI MAP
+#                                 route_dialog()
+
+#                                 # --- Phân tích độ phức tạp lộ trình & cảnh báo ---
+#                                 level, label_vi, summary, reasons = analyze_route_complexity(
+#                                     route, profile
+#                                 )
+
+#                                 if level == "low":
+#                                     st.success(
+#                                         f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
+#                                     )
+#                                 elif level == "medium":
+#                                     st.info(
+#                                         f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
+#                                     )
+#                                 else:
+#                                     st.warning(
+#                                         f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
+#                                     )
+
+#                                 if reasons:
+#                                     bullet_text = "\n".join(f"- {r}" for r in reasons)
+#                                     st.markdown(
+#                                         "**Một vài lưu ý trên đường đi:**\n" + bullet_text
+#                                     )
 
 
+#                 # Thêm chút info chi tiết chỗ ở (giữ từ bản map cũ của team)
+#                 st.markdown(f"**Địa chỉ:** {acc.address}")
+#                 st.markdown(f"**Khoảng cách tới TT:** {acc.distance_km:.2f} km")
+#                 st.markdown(f"**Tiện ích:** {', '.join(acc.amenities) or 'Không có thông tin'}")
+
+
+# else:
+#     # Nếu chưa đăng nhập thì vẫn giữ logic cũ: hiển thị form đăng ký / đăng nhập
+#     if st.session_state.get("show_signup", False):
+#         signup_form()
+#     elif st.session_state.get("show_login", True):
+#         login_form()
+
+                    # Nút tìm đường (LOGIC MỚI - ĐÃ SỬA TOÀN BỘ LỖI)
+                # Nút tìm đường (LOGIC MỚI - ĐÃ CẬP NHẬT GIAO DIỆN)
+            if st.button("🚗 Đường đi", key="find_route_btn"):
+                # 1. QUAN TRỌNG: Tắt Chat để không bị lỗi "Only one dialog"
+                st.session_state.chat_open = False
+                
+                if not origin_query.strip():
+                    st.error("Vui lòng nhập điểm xuất phát.")
+                else:
+                    with st.spinner("Đang tìm tọa độ & tính toán lộ trình..."):
+                        # a. Tìm tọa độ (Geocode)
+                        src = serpapi_geocode(origin_query)
+                        
                         if not src:
-                            st.error("Không tìm được tọa độ điểm xuất phát. Hãy nhập chi tiết hơn.")
+                            st.error(f"Không tìm thấy địa điểm: '{origin_query}'.")
                         else:
-                            # 2) Chuẩn bị điểm đến
                             dst = {
                                 "name": f"{acc.name} ({acc.city})",
-                                "lat": acc.lat,
-                                "lon": acc.lon,
+                                "lat": acc.lat, "lon": acc.lon,
                             }
-
-                            # 3) Gọi OSRM tìm route
-                            with st.spinner("Đang tính lộ trình bằng OSRM..."):
-                                route = osrm_route(src, dst, profile=profile)
-
+                            # b. Tìm đường OSRM
+                            route = osrm_route(src, dst, profile=profile)
+                            
                             if not route:
-                                st.warning("Không tìm được lộ trình phù hợp. Thử đổi phương tiện hoặc địa điểm.")
+                                st.warning("Không tìm được lộ trình. Vui lòng thử lại.")
                             else:
+                                # c. Lưu kết quả
                                 st.session_state.route_result = {
-                                    "src": src,
-                                    "dst": dst,
-                                    "profile": profile,
-                                    "route": route,
+                                    "src": src, "dst": dst,
+                                    "profile": profile, "route": route,
                                 }
-                                # Mỗi lần tìm đường mới thì ẩn danh sách bước đi
                                 st.session_state.show_route_steps = False
 
-                                st.success(
-                                    f"Lộ trình ~{route['distance_km']:.2f} km, "
-                                    f"~{route['duration_min']:.1f} phút ({profile})."
+                                # --- SỬA ĐỔI 1: Cập nhật nội dung hiển thị khung xám ---
+                                st.markdown(
+                                    f"""
+                                    <div style="
+                                        padding: 12px;
+                                        border-radius: 8px;
+                                        background: #f0f2f6;
+                                        color: #31333F;
+                                        border: 1px solid #d0d0d5;
+                                    ">
+                                        🛣️ <b>Quãng đường:</b> {route['distance_km']:.2f} km &nbsp;·&nbsp; 
+                                        ⏱️ <b>Thời gian ước tính:</b> ~{route['duration_min']:.1f} phút
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
                                 )
+                                
+                                # --- SỬA ĐỔI 2: Thêm khoảng cách (Spacing) giữa khung Lộ trình và Gợi ý ---
+                                st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+                                
+                                
+                                # e. Hiển thị Gợi ý phương tiện (Khung Xanh Dương - st.info)
+                                best, exp = recommend_transport_mode(route['distance_km'], route['duration_min'])
+                                st.info(f"💡 **Gợi ý:** {exp}")
 
-                                # Gợi ý phương tiện (giữ nguyên đoạn dưới)
-                                best_profile, explain = recommend_transport_mode(
-                                    route["distance_km"], route["duration_min"]
-                                )
-                                labels = {
-                                    "walking": "đi bộ",
-                                    "cycling": "xe đạp",
-                                    "driving": "ô tô / xe máy",
-                                }
 
-                                if best_profile == profile:
-                                    st.info(
-                                        f"Hệ thống đánh giá quãng đường khoảng "
-                                        f"**{route['distance_km']:.1f} km** "
-                                        f"({route['duration_min']:.0f} phút) và "
-                                        f"phương tiện hiện tại (**{labels[profile]}**) "
-                                        f"**là phù hợp**. {explain}"
-                                    )
+                                # f. Hiển thị Lưu ý (Khung Màu thay đổi) bên dưới gợi ý
+                                lvl, lbl, smm, reasons = analyze_route_complexity(route, profile)
+                                note_msg = f"**⚠️Lưu ý:** {lbl} – {smm}"
+                                
+                                if lvl == "low":
+                                    st.success(note_msg) # Xanh lá
+                                elif lvl == "medium":
+                                    st.warning(note_msg) # Vàng
                                 else:
-                                    st.info(
-                                        f"Hệ thống đánh giá quãng đường khoảng "
-                                        f"**{route['distance_km']:.1f} km** "
-                                        f"({route['duration_min']:.0f} phút). "
-                                        f"Gợi ý nên di chuyển bằng **{labels[best_profile]}** – {explain} "
-                                        f"Hiện tại bạn đang xem lộ trình cho **{labels[profile]}**; "
-                                        "bạn có thể đổi phương tiện phía trên rồi bấm "
-                                        "'Tìm đường' lại nếu muốn."
-                                    )
-                                # 🔔 SAU KHI TÍNH XONG LỘ TRÌNH → MỞ HỘP THOẠI MAP
+                                    st.error(note_msg)   # Đỏ
+                                
+                                # g. Mở Bản đồ sau cùng
                                 route_dialog()
-
-                                # --- Phân tích độ phức tạp lộ trình & cảnh báo ---
-                                level, label_vi, summary, reasons = analyze_route_complexity(
-                                    route, profile
-                                )
-
-                                if level == "low":
-                                    st.success(
-                                        f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
-                                    )
-                                elif level == "medium":
-                                    st.info(
-                                        f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
-                                    )
-                                else:
-                                    st.warning(
-                                        f"**Độ phức tạp lộ trình: {label_vi}.** {summary}"
-                                    )
-
-                                if reasons:
-                                    bullet_text = "\n".join(f"- {r}" for r in reasons)
-                                    st.markdown(
-                                        "**Một vài lưu ý trên đường đi:**\n" + bullet_text
-                                    )
-
-
-                # Thêm chút info chi tiết chỗ ở (giữ từ bản map cũ của team)
-                st.markdown(f"**Địa chỉ:** {acc.address}")
-                st.markdown(f"**Khoảng cách tới TT:** {acc.distance_km:.2f} km")
-                st.markdown(f"**Tiện ích:** {', '.join(acc.amenities) or 'Không có thông tin'}")
-
-
-else:
-    # Nếu chưa đăng nhập thì vẫn giữ logic cũ: hiển thị form đăng ký / đăng nhập
-    if st.session_state.get("show_signup", False):
-        signup_form()
-    elif st.session_state.get("show_login", True):
-        login_form()
 
 # --- Kết thúc: Phần Gợi ý Nơi Ở ---
 

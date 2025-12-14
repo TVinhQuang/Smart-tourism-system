@@ -1,5 +1,8 @@
+// js/homepage.js
+
 console.log("homepage.js loaded");
 
+// Dữ liệu mẫu (Giữ nguyên như cũ)
 const dummyList = [
     {
         name: "Intercontinental Saigon Hotel & Residences (JW Marriott Hotel & Suites Saigon)",
@@ -200,37 +203,110 @@ const dummyList = [
         img: "https://assets.hyatt.com/content/dam/hyatt/hyattdam/images/2020/03/15/2356/Park-Hyatt-Saigon-P670-Park-Lounge.jpg/Park-Hyatt-Saigon-P670-Park-Lounge.16x9.jpg?imwidth=2560",
         amenities: ["amenity_pool", "amenity_wifi", "amenity_breakfast", "amenity_parking"]
     },
-
-
-
-
 ];
 
-window.homeResults = dummyList;
+// Gán vào window để các file khác cũng dùng được nếu cần
+window.homeResults = dummyList; 
 
+// ==========================================
+// 1. HÀM XỬ LÝ TOGGLE YÊU THÍCH (QUAN TRỌNG: Gán thẳng vào window)
+// ==========================================
+window.toggleFavoriteHome = function(event, index) {
+    // Ngăn chặn sự kiện click lan ra ngoài (để không mở modal chi tiết khi ấn tim)
+    event.stopPropagation();
+    event.preventDefault(); // Thêm dòng này cho chắc chắn
+
+    const button = event.currentTarget;
+    const item = window.homeResults[index]; // Lấy từ biến toàn cục
+
+    if (!item) {
+        console.error("Không tìm thấy item tại index:", index);
+        return;
+    }
+
+    // Lấy danh sách từ LocalStorage (Key phải trùng khớp với bên favorite.html)
+    const STORAGE_KEY = 'favoriteAccommodations';
+    let favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+    // Kiểm tra xem item đã có chưa (So sánh theo tên)
+    const existingIndex = favorites.findIndex(fav => fav.name === item.name);
+
+    if (existingIndex >= 0) {
+        // Đã có -> Xóa
+        favorites.splice(existingIndex, 1);
+        button.classList.remove('active');
+        // Đổi lại màu icon về xám (nếu cần)
+        button.style.color = "#ccc";
+        console.log(`Đã xóa ${item.name} khỏi yêu thích`);
+    } else {
+        // Chưa có -> Thêm
+        favorites.push(item);
+        button.classList.add('active');
+        // Đổi màu icon sang đỏ ngay lập tức
+        button.style.color = "#e74c3c";
+        console.log(`Đã thêm ${item.name} vào yêu thích`);
+    }
+
+    // Lưu lại vào LocalStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+    
+    // Hiệu ứng rung nhẹ
+    button.style.transform = "scale(1.2)";
+    setTimeout(() => button.style.transform = "scale(1)", 200);
+};
+
+// ==========================================
+// 2. HÀM RENDER DANH SÁCH
+// ==========================================
 function renderAccommodationList() {
     const container = document.getElementById("accommodation-list");
     if (!container) return;
     container.innerHTML = "";
 
-    // 1. Lấy ngôn ngữ hiện tại từ bộ nhớ (mặc định là 'vi')
     const currentLang = localStorage.getItem('userLang') || 'vi'; 
+    const STORAGE_KEY = 'favoriteAccommodations';
+    let favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-    dummyList.forEach((item, index) => {
+    // Sử dụng window.homeResults thay vì dummyList cục bộ để đồng bộ
+    window.homeResults.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "accommodation-card"; 
         
-        // 2. CHỌN MÔ TẢ ĐÚNG NGÔN NGỮ
-        // Nếu không tìm thấy ngôn ngữ hiện tại thì lấy tiếng Việt làm mặc định
-        const description = item.desc[currentLang] || item.desc['vi'];
+        const description = item.desc ? (item.desc[currentLang] || item.desc['vi']) : "Mô tả đang cập nhật";
+
+        // Kiểm tra trạng thái yêu thích
+        const isFav = favorites.some(fav => fav.name === item.name);
+        // Set màu sắc inline luôn để đảm bảo hiện đúng ngay khi load
+        const heartColor = isFav ? "#e74c3c" : "#ccc"; 
 
         card.innerHTML = `
-            <div style="height:200px; overflow:hidden;">
+            <div class="img-container" style="height:200px; overflow:hidden; position:relative;">
                  <img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" alt="${item.name}">
+                 
+                 <button class="fav-btn-home" 
+                    onclick="window.toggleFavoriteHome(event, ${index})"
+                    style="
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background: rgba(255, 255, 255, 0.9);
+                        border: none;
+                        width: 35px;
+                        height: 35px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        font-size: 20px;
+                        z-index: 100;
+                        color: ${heartColor};
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                        transition: all 0.2s;
+                    "
+                 >
+                    ♥
+                 </button>
             </div>
             <div class="accommodation-content" style="padding:15px; display: flex; flex-direction: column; flex-grow: 1;">
                 <h3 class="accommodation-title">${item.name}</h3>
-                
                 <p class="accommodation-description" style="color:#666;">${description}</p>
                 
                 <div style="margin-top: auto;">
@@ -256,5 +332,6 @@ function renderAccommodationList() {
     }
 }
 
+// Gọi hàm chạy
 window.renderAccommodationList = renderAccommodationList;
-renderAccommodationList();
+document.addEventListener('DOMContentLoaded', renderAccommodationList);

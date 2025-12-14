@@ -1,29 +1,31 @@
 <nav class="navbar">
-    <div class="nav-left"></div> <!-- để giữ bố cục cân giữa -->
-
-    <div class="nav-center">
+    <div class="nav-left"></div> <div class="nav-center">
         <ul class="nav-menu">
  
             <li><a href="homepage.html">
-                <img src="../../images/homeicon.png" class="nav-icon"> Trang chủ
+                <img src="../../images/homeicon.png" class="nav-icon"> 
+                <span data-i18n="nav_home">Trang chủ</span>
             </a></li>
 
             <li><a href="rec_accomodation.html">
-                <img src="../../images/idea.png" class="nav-icon"> Gợi ý  
+                <img src="../../images/idea.png" class="nav-icon"> 
+                <span data-i18n="nav_suggestions">Gợi ý</span>
             </a></li>
 
             <li><a href="/frontend/page/favorite.html">
-                <img src="../../images/like.png" class="nav-icon"> Yêu thích
+                <img src="../../images/like.png" class="nav-icon"> 
+                <span data-i18n="nav_favorite">Yêu thích</span>
             </a></li>
 
-
             <li><a href="help.html">
-                <img src="../../images/help.png" class="nav-icon"> Giúp đỡ
+                <img src="../../images/help.png" class="nav-icon"> 
+                <span data-i18n="nav_help">Giúp đỡ</span>
             </a></li>
 
             <li class="dropdown">
                 <a href="#" class="dropdown-btn">
-                    <img src="../../images/translation.png" class="icon"> Dịch 🔽
+                    <img src="../../images/translation.png" class="icon"> 
+                    <span data-i18n="nav_language">Dịch</span> 🔽
                 </a>
 
                 <ul class="dropdown-menu">
@@ -37,7 +39,9 @@
     <div class="nav-right">
        <a href="login.html" class="login-btn">
             <img src="../../images/login.png" class="login-icon">
-            Đăng nhập
+            <span data-i18n="nav_login">Đăng nhập</span>
         </a>
     </div>
 </nav>
+
+<script src="language-handler.js"></script>
