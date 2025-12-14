@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="help_title">Trợ giúp & Hỗ trợ</title>
     
-    <link rel="stylesheet" href="../css/base.css"> 
-      <link rel="stylesheet" href="../css/navbar.css"> 
-      <link rel="stylesheet" href="../css/help.css"> 
+    <link rel="stylesheet" href="css/base.css"> 
+      <link rel="stylesheet" href="css/navbar.css"> 
+      <link rel="stylesheet" href="css/help.css"> 
+    <link rel="stylesheet" href="chatbot.css">
 </head>
 <body>
     
@@ -88,7 +89,7 @@
                         <div class="user-info-group">
                             <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
                             <button class="btn-logout" onclick="logoutUser()">
-                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                                <img src="../images/logout.png" class="logout-icon" style="height: 16px;">
                                 <span data-i18n="nav_logout">Đăng xuất</span>
                             </button>
                         </div>
@@ -98,7 +99,7 @@
                 if (loginButtonContainer) {
             loginButtonContainer.innerHTML = `
              <a href="login.html" class="btn-login">
-                 <img src="../../images/login.png" class="login-icon">
+                 <img src="../images/login.png" class="login-icon">
                  <span data-i18n="nav_login">Đăng nhập</span>
              </a>
                 `;
@@ -137,7 +138,7 @@
     }
 
     async function loadAndApplyLanguage(lang) {
-        const filePath = `../i18n/${lang}.json`;
+        const filePath = `i18n/${lang}.json`;
         
         try {
             const response = await fetch(filePath);
@@ -188,7 +189,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // 1. Load Navbar component (Giữ nguyên logic fetch)
-        fetch('../components/navbar.html')
+        fetch('components/navbar.html')
             .then(r => r.text())
             .then(html => { 
                 document.getElementById('navbar-root').innerHTML = html; 
@@ -225,5 +226,6 @@
     });
     </script>
     
+    <script src="chatbot.js"></script>
     </body>
 </html>

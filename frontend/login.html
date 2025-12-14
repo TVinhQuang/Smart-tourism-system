@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="app_title">Login/Register</title>
 
-    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
     
@@ -41,7 +41,7 @@
 
                 <button type="submit" class="btn" data-i18n="btn_login_submit">Đăng nhập</button>
                 
-                <a href="homepage.html" class="btn btn-back" data-i18n="btn_back_home">⬅ Quay lại Trang chủ</a> 
+                <a href="index.html" class="btn btn-back" data-i18n="btn_back_home">⬅ Quay lại Trang chủ</a> 
 
                 <p class="switch">
                     <span data-i18n="login_no_account">Chưa có tài khoản?</span> 
@@ -184,7 +184,7 @@
         localStorage.setItem('loggedInUserEmail', email);
 
         // Chuyển hướng không cần tham số URL
-        window.location.href = `homepage.html`; 
+        window.location.href = `index.html`; 
         return false;
     }
 

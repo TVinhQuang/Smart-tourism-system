@@ -145,7 +145,7 @@ function closeMenuOutside(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Load Navbar
-    fetch('../components/navbar.html')
+    fetch('components/navbar.html')
         .then(r => r.text())
         .then(html => { 
             document.getElementById('navbar-root').innerHTML = html; 

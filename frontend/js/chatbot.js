@@ -1,82 +1,158 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Danh sách các đường dẫn muốn ẨN chatbot
-    // Bạn hãy sửa lại cho đúng tên file hoặc đường dẫn trang login của bạn
+    // 1. Cấu hình: Danh sách các trang KHÔNG hiện chatbot
+    // Lưu ý: Điền đúng đường dẫn URL mà trình duyệt hiển thị
     const excludedPages = [
-       "../page/login.html", 
+        "/login",           // Ví dụ: http://localhost:8000/login
+        "/login.html",      // Ví dụ: http://localhost:8000/login.html
+        "signin",
+        "dang-nhap"
     ];
 
-    // 2. Lấy đường dẫn hiện tại của trình duyệt
-    const currentPath = window.location.pathname;
-
-    // 3. Kiểm tra: Nếu đường dẫn hiện tại chứa từ khóa trong danh sách trên
+    // 2. Kiểm tra URL hiện tại
+    const currentPath = window.location.pathname.toLowerCase();
     const isExcluded = excludedPages.some(page => currentPath.includes(page));
 
+    // 3. Nếu ĐANG ở trang login thì DỪNG LẠI, không làm gì cả
     if (isExcluded) {
-        // Tìm thẻ bao quanh chatbot và ẩn nó đi
-        const chatWidget = document.querySelector('.chat-widget-wrapper');
-        if (chatWidget) {
-            chatWidget.style.display = 'none'; // Ẩn hoàn toàn
-        }
+        return; 
     }
+
+    // 4. Nếu KHÔNG phải trang login, tiêm HTML của Chatbot vào trang
+    injectChatbotHTML();
 });
+
+function injectChatbotHTML() {
+    // Nội dung HTML của Chatbot (đã thu gọn vào biến string)
+    const chatbotHTML = `
+        <div class="chat-widget-wrapper">
+            <div id="greeting-bubble" class="chat-mini-bubble">
+                Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?
+            </div>
+            <button id="chat-fab" class="chat-fab-button" onclick="toggleChat()">
+                🤖
+            </button>
+        </div>
+
+        <div id="chat-dialog" class="chat-dialog-overlay" style="display: none;">
+            <div class="chat-dialog-container">
+                <div class="chat-header">
+                    <span>Trò chuyện với Mika</span>
+                    <button class="close-btn" onclick="toggleChat()">✖</button>
+                </div>
+                <div class="chat-body" id="chat-body">
+                    <div class="message-row bot">
+                        <div class="avatar">🤖</div>
+                        <div class="message-content">Xin chào! Tôi có thể giúp gì cho bạn?</div>
+                    </div>
+                </div>
+                <div class="chat-footer">
+                    <input type="text" placeholder="Nhập tin nhắn..." id="chat-input">
+                    <button onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Chèn HTML vào cuối thẻ <body>
+    document.body.insertAdjacentHTML('beforeend', chatbotHTML);
+    
+    // Gắn sự kiện phím Enter cho ô input (vì HTML giờ mới được tạo ra)
+    document.getElementById('chat-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+}
+
+// --- Các hàm xử lý logic cũ giữ nguyên bên dưới ---
 
 function toggleChat() {
     const dialog = document.getElementById('chat-dialog');
     const bubble = document.getElementById('greeting-bubble');
     
-    // Kiểm tra trạng thái hiện tại
     if (dialog.style.display === 'none' || dialog.style.display === '') {
-        // Mở chat
         dialog.style.display = 'flex';
-        // Ẩn bong bóng chào khi mở chat (tùy chọn, giống logic Streamlit rerender)
-        bubble.style.display = 'none';
+        if(bubble) bubble.style.display = 'none';
     } else {
-        // Đóng chat
         dialog.style.display = 'none';
-        // Hiện lại bong bóng (hoặc giữ ẩn tùy bạn)
-        bubble.style.display = 'block';
+        if(bubble) bubble.style.display = 'block';
     }
 }
 
-// Hàm gửi tin nhắn demo (để test giao diện)
-function sendMessage() {
+async function sendMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value;
     if (text.trim() === "") return;
 
     const chatBody = document.getElementById('chat-body');
+    
+    // 1. Lấy UID (Nếu user đã đăng nhập, UID sẽ có giá trị, nếu không thì null)
+    const userUid = localStorage.getItem("user_uid"); 
 
-    // Tạo HTML cho tin nhắn User
+    // 2. Hiển thị tin nhắn User NGAY LẬP TỨC (để tạo cảm giác mượt mà)
     const userMsgHTML = `
         <div class="message-row user">
             <div class="avatar">👤</div>
             <div class="message-content">${text}</div>
-        </div>
-    `;
-    
-    // Thêm vào chat body
+        </div>`;
     chatBody.insertAdjacentHTML('beforeend', userMsgHTML);
-    input.value = ""; // Xóa ô nhập
-    
-    // Cuộn xuống cuối
+    input.value = ""; // Xóa ô nhập liệu
+    chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+
+    // 3. Hiển thị hiệu ứng Loading (...)
+    const loadingId = "loading-" + Date.now();
+    const loadingHTML = `
+        <div class="message-row bot" id="${loadingId}">
+            <div class="avatar">🤖</div>
+            <div class="message-content">...</div>
+        </div>`;
+    chatBody.insertAdjacentHTML('beforeend', loadingHTML);
     chatBody.scrollTop = chatBody.scrollHeight;
 
-    // Giả lập bot trả lời sau 1 giây
-    setTimeout(() => {
+    // 4. Gọi API Backend
+    try {
+        // Đảm bảo port khớp với server.py (8000 hoặc 5000)
+        const response = await fetch('http://127.0.0.1:8000/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                message: text,
+                uid: userUid // Gửi kèm UID để server lưu lịch sử (QUAN TRỌNG)
+            })
+        });
+
+        const data = await response.json();
+        
+        // 5. Xóa hiệu ứng loading
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        // 6. Hiển thị câu trả lời từ Bot
         const botMsgHTML = `
             <div class="message-row bot">
                 <div class="avatar">🤖</div>
-                <div class="message-content">Đây là tin nhắn trả lời tự động.</div>
-            </div>
-        `;
+                <div class="message-content">${data.reply}</div>
+            </div>`;
         chatBody.insertAdjacentHTML('beforeend', botMsgHTML);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }, 1000);
-}
 
-// Cho phép nhấn Enter để gửi
-document.getElementById('chat-input').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        sendMessage();
+    } catch (error) {
+        console.error("Lỗi Chatbot:", error);
+        
+        // Xóa loading nếu lỗi
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+
+        // Thông báo lỗi cho người dùng
+        const errHTML = `
+            <div class="message-row bot">
+                <div class="avatar">🤖</div>
+                <div class="message-content" style="color: red;">Lỗi kết nối server!</div>
+            </div>`;
+        chatBody.insertAdjacentHTML('beforeend', errHTML);
     }
-});
+    
+    // Cuộn xuống cuối cùng sau khi bot trả lời
+    chatBody.scrollTop = chatBody.scrollHeight;
+}

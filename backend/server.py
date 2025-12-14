@@ -1,15 +1,45 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional
 from serpapi.google_search import GoogleSearch
 import re
 import math
 import requests
 import json
-from dataclasses import dataclass
-from deep_translator import GoogleTranslator
 import time
 import os
+from dataclasses import dataclass
+from datetime import datetime, timezone
+
+# --- THƯ VIỆN MỚI ---
+import firebase_admin
+from firebase_admin import credentials, firestore, auth as admin_auth
+import ollama
+
+# ==============================================================================
+# 0. INIT & CONFIG
+# ==============================================================================
+
+app = Flask(__name__)
+CORS(app)
+
+# 1. Cấu hình SerpApi
+SERPAPI_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
+
+# 2. Cấu hình Ollama
+OLLAMA_MODEL = "llama3.2:latest" # Hoặc "mistral", "gemma" tuỳ model bạn đã pull về
+# Lưu ý: Cần đảm bảo Ollama đang chạy (thường là port 11434)
+
+# 3. Cấu hình Firebase
+# Bạn cần tải file này từ Firebase Console -> Project Settings -> Service Accounts
+try:
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("DEBUG: ✅ Firebase Connected")
+except Exception as e:
+    print(f"DEBUG: ⚠️ Firebase Warning (Chưa có file key hoặc lỗi init): {e}")
+    db = None
 LAST_OSRM_CALL = 0
 OSRM_INTERVAL = 2.0  # 2 giây
 # Giả định file translator.py nằm cùng thư mục
@@ -632,6 +662,122 @@ def api_get_route():
         print("Error:", e)
         return jsonify({"status": "error", "message": str(e)})
 
+# 1. HELPER FUNCTIONS (OLLAMA & FIREBASE)
+# ==============================================================================
+
+def save_message(uid: str, role: str, content: str):
+    """Lưu tin nhắn vào Firestore"""
+    if not db: return
+    try:
+        doc = {
+            "role": role,
+            "content": content,
+            "ts": datetime.now(timezone.utc)
+        }
+        db.collection("chats").document(uid).collection("messages").add(doc)
+    except Exception as e:
+        print(f"Error saving message: {e}")
+
+def load_last_messages(uid: str, limit: int = 8):
+    """Tải lịch sử chat từ Firestore"""
+    if not db: return []
+    try:
+        q = (db.collection("chats").document(uid)
+             .collection("messages")
+             .order_by("ts", direction=firestore.Query.DESCENDING)
+             .limit(limit))
+        docs = list(q.stream())
+        docs.reverse()
+        out = []
+        for d in docs:
+            data = d.to_dict()
+            out.append({
+                "role": data.get("role", "assistant"),
+                "content": data.get("content", "")
+            })
+        return out
+    except Exception as e:
+        print(f"Error loading messages: {e}")
+        return []
+
+def ollama_stream(history_messages):
+    """Gửi request tới Ollama với lịch sử chat"""
+    cleaned = []
+    # Làm sạch messages
+    for msg in history_messages:
+        if msg["role"] in ("user", "assistant") and msg["content"].strip():
+            cleaned.append(msg)
+    
+    # Đảm bảo logic hội thoại
+    while cleaned and cleaned[0]["role"] == "assistant":
+        cleaned.pop(0)
+    if not cleaned:
+        cleaned = [{"role": "user", "content": "Hello"}]
+
+    try:
+        # Sử dụng thư viện ollama python
+        response = ollama.chat(model=OLLAMA_MODEL, messages=cleaned)
+        return response['message']['content']
+    except Exception as e:
+        return f"Lỗi kết nối Ollama: {str(e)}"
+
+@app.route('/api/chat', methods=['POST'])
+def chat_api():
+    """
+    Endpoint Chatbot thông minh sử dụng Ollama + Firebase History
+    """
+    try:
+        data = request.json
+        user_message = data.get("message", "")
+        uid = data.get("uid")  # Frontend gửi UID nếu user đã login
+        
+        if not user_message:
+            return jsonify({"reply": "..."})
+
+        # 1. Tải lịch sử chat (nếu có UID)
+        history = []
+        if uid and db:
+            history = load_last_messages(uid, limit=10)
+        
+        # 2. Thêm tin nhắn mới của user vào ngữ cảnh
+        history.append({"role": "user", "content": user_message})
+
+        # 3. Gọi AI (Ollama)
+        # Nếu chưa login, chỉ gọi AI với tin nhắn hiện tại
+        bot_reply = ollama_stream(history)
+
+        # 4. Lưu lại vào DB (nếu có UID)
+        if uid and db:
+            save_message(uid, "user", user_message)
+            save_message(uid, "assistant", bot_reply)
+        
+        return jsonify({"reply": bot_reply})
+
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        return jsonify({"reply": "Xin lỗi, server đang quá tải hoặc gặp lỗi AI."}), 500
+
+
+@app.route('/api/generate_itinerary', methods=['POST'])
+def generate_itinerary_api():
+    """
+    API tạo lịch trình du lịch (Sử dụng prompt 1 lần)
+    """
+    data = request.json
+    prompt = data.get("prompt", "")
+    
+    if not prompt:
+        return jsonify({"result": "Vui lòng cung cấp thông tin chuyến đi."})
+
+    try:
+        response = ollama.chat(
+            model=OLLAMA_MODEL,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return jsonify({"result": response['message']['content']})
+    except Exception as e:
+        return jsonify({"result": f"Lỗi tạo lịch trình: {e}"}), 500
+    
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000)) # Lấy port từ Railway
     app.run(host='0.0.0.0', port=port)

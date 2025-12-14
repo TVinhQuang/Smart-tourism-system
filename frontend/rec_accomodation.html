@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gợi ý Nơi Ở</title>
 
-    <link rel="stylesheet" href="../css/rec_accomodation.css">
-    <link rel="stylesheet" href="../css/navbar.css">
-    <link rel="stylesheet" href="../css/routing.css">
+    <link rel="stylesheet" href="css/rec_accomodation.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/routing.css">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -240,7 +240,7 @@
     // 2. Logic chạy khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
         // Load Navbar component
-        fetch('../components/navbar.html')
+        fetch('components/navbar.html')
             .then(r => r.text())
             .then(html => { 
                 document.getElementById('navbar-root').innerHTML = html; 
@@ -252,9 +252,9 @@
         });
     </script>
     
-    <script src="../js/static_trans.js"></script>
-    <script src="../js/display_result_rec.js"></script> 
-    <script src="../js/routing_rec_page.js"></script>
-    <script src="../js/submit_search.js"></script>
+    <script src="js/static_trans.js"></script>
+    <script src="js/display_result_rec.js"></script> 
+    <script src="js/routing_rec_page.js"></script>
+    <script src="js/submit_search.js"></script>
 </body>
 </html>

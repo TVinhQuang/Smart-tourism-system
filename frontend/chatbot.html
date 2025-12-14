@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tourism Chatbot</title>
+    
+</head>
+<body>
+
+    <div class="main-content">
+        <h1>Chào mừng đến với hệ thống Du lịch Thông minh</h1>
+        <p>Đây là trang web chính của bạn. Hãy thử bấm vào icon Robot ở góc dưới bên phải.</p>
+    </div>
+
+    <div class="chat-widget-wrapper">
+        <div id="greeting-bubble" class="chat-mini-bubble">
+            Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?
+        </div>
+
+        <button id="chat-fab" class="chat-fab-button" onclick="toggleChat()">
+            🤖
+        </button>
+    </div>
+
+    <div id="chat-dialog" class="chat-dialog-overlay" style="display: none;">
+        <div class="chat-dialog-container" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="chat-header">
+                <span>Trò chuyện với Mika</span>
+                <button class="close-btn" onclick="toggleChat()">✖</button>
+            </div>
+
+            <div class="chat-body" id="chat-body">
+                <div class="message-row bot">
+                    <div class="avatar">🤖</div>
+                    <div class="message-content">
+                        Xin chào! Tôi có thể giúp gì cho bạn?
+                    </div>
+                </div>
+                
+                </div>
+
+            <div class="chat-footer">
+                <input type="text" placeholder="Nhập tin nhắn..." id="chat-input">
+                <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+
+</body>
+</html>

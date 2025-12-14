@@ -4,19 +4,25 @@ let currentLang = 'vi';
 async function loadLanguage(lang) {
     try {
         currentLang = lang;
-        const response = await fetch(`../i18n/${lang}.json`); // Kiểm tra đúng đường dẫn folder
+        // LƯU Ý: Đường dẫn '../i18n/' giả định file html nằm trong thư mục con (vd: /pages/). 
+        // Nếu file html nằm ở root, hãy sửa thành 'i18n/'
+        const response = await fetch(`../i18n/${lang}.json`); 
         if (!response.ok) throw new Error(`Không tải được ngôn ngữ ${lang}`);
         
         window.langData = await response.json();
         localStorage.setItem('userLang', lang);
 
-        // --- SỬA LỖI TẠI ĐÂY ---
-        // 1. Render lại danh sách trước (để cập nhật mô tả Anh/Việt)
+        // --- CẬP NHẬT LOGIC RENDER ---
+        // 1. Render lại danh sách (nếu có) để cập nhật nội dung động
         if (typeof window.renderAccommodationList === 'function') {
+            // Trang Gợi ý
             window.renderAccommodationList(); 
+        } else if (typeof window.renderResults === 'function' && window.homeResults) {
+            // Trang Yêu thích (Favorite)
+            window.renderResults(window.homeResults);
         }
 
-        // 2. Sau đó mới dịch các text tĩnh (data-i18n)
+        // 2. Dịch các text tĩnh (data-i18n)
         applyTranslations();
         
         console.log(`Đã chuyển sang ngôn ngữ: ${lang}`);
@@ -26,16 +32,18 @@ async function loadLanguage(lang) {
 }
 
 function applyTranslations() {
-    // Chỉ thực hiện việc thay thế text, KHÔNG gọi lại renderAccommodationList ở đây nữa
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        if (window.langData[key]) {
+        // Kiểm tra xem key có tồn tại trong langData không
+        if (window.langData && window.langData[key]) {
             if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
                 el.placeholder = window.langData[key];
                 if(el.classList.contains('input-readonly') && key === 'val_my_location') {
                      el.value = window.langData[key];
                 }
             } else {
+                // Sử dụng innerHTML nếu muốn chèn icon hoặc tag b, strong...
+                // Nếu chỉ là text thuần thì dùng innerText
                 el.innerText = window.langData[key];
             }
         }
