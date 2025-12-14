@@ -223,7 +223,7 @@
                 if (loginButtonContainer) {
                     loginButtonContainer.innerHTML = `
                         <a href="login.html" class="btn-login">
-                            <img src="../images/login.png" class="login-icon">
+                            <img src="/images/login.png" class="login-icon">
                             <span>Đăng nhập</span>
                         </a>
                     `;
@@ -235,7 +235,7 @@
     // 2. Logic chạy khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
         // Load Navbar component
-        fetch('../components/navbar.html')
+        fetch('/components/navbar.html')
             .then(r => r.text())
             .then(html => { 
                 document.getElementById('navbar-root').innerHTML = html; 
@@ -246,11 +246,6 @@
             .catch(e => console.warn('Không thể load navbar component', e));
     });
     </script>
-    
-    <div style="padding: 20px;">
-        <h1>Trang Web Du Lịch Của Bạn</h1>
-        <p>Cuộn xuống để xem Chatbot ở góc phải...</p>
-        <div style="height: 150vh;"></div> </div>
 
     <div class="chat-widget-wrapper">
         
