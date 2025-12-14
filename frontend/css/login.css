@@ -1,0 +1,195 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #6f6b25, #3caece);
+}
+
+.container {
+    width: 380px;
+    padding: 30px;
+    background: #60b795;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    
+}
+
+.form-box {
+    transition: 0.4s ease-in-out;
+}
+
+.hidden {
+    display: none;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-bottom: 2px solid #888;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-bottom: 2px solid #256c9a;
+}
+
+.input-group label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: 0.3s;
+    color: #777;
+}
+
+.input-group input:focus + label,
+.input-group input:valid + label {
+    top: -5px;
+    font-size: 12px;
+    color: #43a697;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background: #32a18d;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background: #3ea79b;
+}
+
+.switch {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.switch span {
+    color: #d0e05a;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Thêm vào file ../css/login.css */
+
+.btn {
+    /* Giả sử bạn đã có style cho nút chính ở đây */
+    display: block;
+    width: 100%;
+    /* ... */
+}
+
+.btn-back {
+    /* Đảm bảo nút back là thẻ <a> và có màu khác biệt */
+    margin-top: 15px; 
+    background-color: #f5f4f4; /* Màu xám nhạt */
+    color: #333; /* Chữ màu tối */
+    text-align: center;
+    text-decoration: none; /* Bỏ gạch chân cho liên kết */
+    padding: 10px 0; /* Padding khớp với nút .btn */
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-back:hover {
+    background-color: #b0b0b0; /* Đậm hơn khi hover */
+}
+
+/* --- THÊM CÁC QUY TẮC ĐỊNH VỊ CHO KHỐI CHỌN NGÔN NGỮ --- */
+
+/* Khối bọc ngoài (Bạn cần thêm khối này trong HTML của login.html) */
+.language-selector {
+    position: absolute; /* Định vị tuyệt đối */
+    top: 20px; /* Cách mép trên 20px */
+    right: 20px; /* Cách mép phải 20px */
+    z-index: 10; /* Đảm bảo nó nằm trên các phần tử khác */
+}
+
+/* Các style cơ bản của Dropdown (Đã có sẵn, tôi chỉ liệt kê lại để đồng bộ) */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.dropdown-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.dropdown-btn .icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    padding: 5px 0;
+    margin-top: 5px;
+    border-radius: 5px;
+    min-width: 150px;
+}
+
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #f0f0f0;
+}
+
+.language-selector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}

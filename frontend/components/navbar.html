@@ -1,0 +1,47 @@
+<nav class="navbar">
+    <div class="nav-left"></div> <div class="nav-center">
+        <ul class="nav-menu">
+ 
+            <li><a href="homepage.html">
+                <img src="../../images/homeicon.png" class="nav-icon"> 
+                <span data-i18n="nav_home">Trang chủ</span>
+            </a></li>
+
+            <li><a href="rec_accomodation.html">
+                <img src="../../images/idea.png" class="nav-icon"> 
+                <span data-i18n="nav_suggestions">Gợi ý</span>
+            </a></li>
+
+            <li><a href="/frontend/page/favorite.html">
+                <img src="../../images/like.png" class="nav-icon"> 
+                <span data-i18n="nav_favorite">Yêu thích</span>
+            </a></li>
+
+            <li><a href="help.html">
+                <img src="../../images/help.png" class="nav-icon"> 
+                <span data-i18n="nav_help">Giúp đỡ</span>
+            </a></li>
+
+            <li class="dropdown">
+                <a href="#" class="dropdown-btn">
+                    <img src="../../images/translation.png" class="icon"> 
+                    <span data-i18n="nav_language">Dịch</span> 🔽
+                </a>
+
+                <ul class="dropdown-menu">
+                    <li><a href="#" onclick="changeLanguage('en')">English</a></li>
+                    <li><a href="#" onclick="changeLanguage('vi')">Tiếng Việt</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="nav-right">
+       <a href="login.html" class="login-btn">
+            <img src="../../images/login.png" class="login-icon">
+            <span data-i18n="nav_login">Đăng nhập</span>
+        </a>
+    </div>
+</nav>
+
+<script src="language-handler.js"></script>

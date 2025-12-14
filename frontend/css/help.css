@@ -1,0 +1,79 @@
+/* --- help.css --- */
+
+/* Khối chính của trang */
+.help-container {
+    max-width: 900px;
+    margin:  80px auto 50px; 
+    padding: 20px;
+}
+
+.help-container h1 {
+    text-align: center;
+    color: #1a73e8;
+    margin-bottom: 40px;
+    font-size: 2.5rem;
+}
+
+/* Phần FAQ (Accordion) */
+.faq-item {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.faq-question {
+    background-color: #f7f7f7;
+    padding: 15px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.faq-question:hover {
+    background-color: #eee;
+}
+
+.faq-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s;
+}
+
+.faq-answer {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    background-color: white;
+}
+
+.faq-answer.active {
+    max-height: 500px; /* Đặt giá trị đủ lớn để chứa nội dung */
+    padding: 15px 20px;
+}
+
+.faq-question.active .faq-icon {
+    transform: rotate(180deg);
+}
+
+/* Phần Contact */
+.contact-info {
+    margin-top: 50px;
+    padding: 30px;
+    background-color: #e8f0fe;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.contact-info h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.contact-info p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}

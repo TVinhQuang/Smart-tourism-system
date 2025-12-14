@@ -1,0 +1,122 @@
+{
+    "nav_home": "Trang chủ",
+    "nav_suggestions": "Gợi ý",
+    "nav_favorite": "Yêu thích",
+    "nav_help": "Giúp đỡ",
+    "nav_login": "Đăng nhập",
+    
+    "hero_title": "Nền tảng gợi ý nơi lưu trú thông minh dành cho mọi chuyến đi.",
+    "hero_desc": "Website sử dụng dữ liệu và phân tích để giúp bạn nhanh chóng tìm được khách sạn hoặc homestay phù hợp nhất.",
+    "top_suggestion_title": "Top homestay, khách sạn được gợi ý",
+    
+    "btn_view_map": "Xem bản đồ",
+    "label_price_from": "Từ",
+    
+    "modal_setup_title": "Thiết lập lộ trình",
+    "label_address": "Địa chỉ",
+    "label_price_night": "Giá mỗi đêm",
+    "label_rating": "Đánh giá",
+    "section_amenities": "Tiện ích nổi bật",
+    "section_desc": "Giới thiệu",
+    
+    "label_start_point": "Điểm xuất phát:",
+    "placeholder_my_loc": "Vị trí của bạn (TP.HCM)",
+    "label_destination": "Điểm đến:",
+    "label_transport_mode": "Phương tiện di chuyển:",
+    
+    "trans_car": "Ô tô / Xe máy",
+    "trans_bike": "Xe đạp",
+    "trans_walk": "Đi bộ",
+    
+    "btn_close": "Đóng",
+    "btn_find_route": "Tìm đường đi",
+    "btn_calculating": "⏳ Đang tính toán...",
+
+    "btn_back": "Quay lại",
+    "analysis_title": "Kết quả phân tích",
+    "instruction_title": "Hướng dẫn chi tiết",
+    
+    "stat_distance": "Khoảng cách",
+    "stat_duration": "Thời gian",
+    
+    "label_complexity": "Đánh giá độ khó",
+    "label_advice": "Lời khuyên",
+    
+    "alert_analysis_header": "KẾT QUẢ PHÂN TÍCH:",
+    "error_server": "Lỗi kết nối Server!",
+    "error_no_route": "Không tìm thấy đường đi!",
+    "msg_complexity_high": "Phức tạp",
+    "msg_complexity_medium": "Trung bình",
+    "msg_complexity_low": "Dễ đi",
+
+    "val_my_location": "Vị trí của bạn (TP.HCM)",
+    
+    "amenity_pool": "🏊 Hồ bơi",
+    "amenity_wifi": "📶 Wifi miễn phí",
+    "amenity_breakfast": "🍳 Bữa sáng",
+    "amenity_parking": "🅿️ Đỗ xe",
+    "amenity_gym": "🏋️ Gym",
+    "amenity_bar": "🍸 Bar",
+    "amenity_spa": "💆 Spa",
+
+    "page_title_rec": "🏨 Gợi Ý Nơi Ở Phù Hợp",
+    "page_subtitle_rec": "Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!",
+    "label_city": "Thành phố",
+    "label_group_size": "Số người",
+    "label_price_from1": "Giá từ",
+    "label_price_to1": "Giá đến",
+    "label_type": "Loại hình",
+    "label_search_params": "Thông số tìm kiếm",
+    "label_min_rating": "Đánh giá tối thiểu",
+    "label_radius": "Bán kính tìm kiếm (km)",
+    "label_amenity_req": "Tiện ích BẮT BUỘC",
+    "label_amenity_pref": "Tiện ích ƯU TIÊN",
+    "label_priority": "Ưu tiên xếp hạng",
+    "opt_balanced": "Cân bằng (giá, rating, tiện ích, khoảng cách)",
+    "opt_cheap": "Ưu tiên giá rẻ",
+    "opt_center": "Ưu tiên gần trung tâm",
+    "opt_amenities": "Ưu tiên tiện ích",
+    "btn_search_rec": "🔍 Gợi ý Top 5 nơi ở",
+    "header_results": "Kết quả",
+
+    "nav_logout": "Đăng xuất",
+    "nav_greeting": "Xin chào",
+    "nav_language": "Dịch",
+    "nav_lang_en": "English",      
+    "nav_lang_vi": "Tiếng Việt",
+    "login_title": "Đăng Nhập",
+    "login_email": "Email",
+    "login_password": "Mật khẩu",
+    "btn_login_submit": "Đăng nhập",
+    "login_no_account": "Chưa có tài khoản?",
+    "login_register_link": "Đăng ký",
+    "register_title": "Đăng Ký",
+    "register_username": "Tên tài khoản",
+    "btn_register_submit": "Tạo tài khoản",
+    "register_has_account": "Đã có tài khoản?",
+    "btn_back_home": "⬅ Quay lại Trang chủ",
+    "alert_empty_fields": "Vui lòng nhập đầy đủ email và mật khẩu",
+
+    "page_title_fav": "Yêu thích | Du lịch Việt Nam",
+    "fav_title": "❤️ Danh sách địa điểm yêu thích",
+    "fav_desc": "Quản lý các địa điểm bạn quan tâm và tìm đường đi ngay tại đây.",
+    "fav_empty_msg": "Bạn chưa yêu thích địa điểm nào.",
+    
+    "modal_step1_title": "🚙 Thiết lập lộ trình",
+    "input_start_label": "Điểm xuất phát:",
+
+    "btn_use_gps": "📍 Dùng vị trí hiện tại",
+    "input_dest_label": "Điểm đến:",
+    "input_transport_label": "Phương tiện di chuyển:",
+    
+    "trans_driving": "🚗 Ô tô / Xe máy",
+    "trans_cycling": "🚲 Xe đạp",
+    "trans_walking": "🚶 Đi bộ",
+    
+    "label_price": "Giá mỗi đêm:",
+    "label_amenities": "💎 Tiện ích nổi bật",
+
+    "steps_title": "📝 Hướng dẫn chi tiết"
+
+}
+

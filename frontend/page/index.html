@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Chatbot Widget</title>
+    <link rel="stylesheet" href="../css/chatbot.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div style="padding: 20px;">
+        <h1>Trang Web Du Lịch Của Bạn</h1>
+        <p>Cuộn xuống để xem Chatbot ở góc phải...</p>
+        <div style="height: 150vh;"></div> </div>
+
+    <div class="chat-widget-wrapper">
+        
+        <div id="greeting-bubble" class="chat-mini-bubble">
+            Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?
+        </div>
+
+        <button id="chat-fab" class="chat-fab-button" onclick="toggleChat()">
+            🤖
+        </button>
+    </div>
+
+    <div id="chat-dialog" class="chat-dialog-overlay" style="display: none;">
+        <div class="chat-dialog-container">
+            <div class="chat-header">
+                <span>Trò chuyện với Mika</span>
+                <button class="close-btn" onclick="toggleChat()">✖</button>
+            </div>
+
+            <div class="chat-body" id="chat-body">
+                
+                <div class="message-row bot">
+                    <div class="avatar">🤖</div>
+                    <div class="message-content">
+                        Xin chào! Tôi có thể giúp gì cho bạn?
+                    </div>
+                </div>
+
+                <div class="message-row user">
+                    <div class="avatar">👤</div>
+                    <div class="message-content">
+                        Gợi ý cho tôi một nơi ở Đà Lạt.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" placeholder="Nhập tin nhắn..." id="chat-input">
+                <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page_title_fav">Yêu thích</title>
+    
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/accomodation_card.css">
+    <link rel="stylesheet" href="../css/routing.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { background-color: #f9f9f9; }
+        .fav-header { max-width: 1200px; margin: 80px auto 20px; padding: 0 20px; text-align: center; }
+        .fav-header h2 { color: #333; margin-bottom: 10px; }
+        .fav-header p { color: #666; }
+    </style>
+</head>
+<body>
+
+    <div id="navbar-root"></div>
+
+    <div class="fav-header">
+        <h2 data-i18n="fav_title">❤️ Danh sách địa điểm yêu thích</h2>
+    </div>
+
+    <div id="results-list" style="max-width: 1200px; margin: 0 auto; padding: 20px;"></div>
+
+    <div id="routing-overlay" class="routing-overlay hidden">
+        <div class="routing-modal">     
+            <div id="view-step-1" class="view-container">
+                <div class="col-left-info">
+                    <div class="hotel-info-body">
+                        <h2 id="info-name" class="hotel-title">...</h2>
+                        
+                        <div class="favorite-row" style="display:none;">
+                            <span id="fav-toggle" class="fav-btn">❤️</span>
+                        </div>
+
+                        <div class="hotel-address-row">
+                            <span class="icon">📍</span> 
+                            <span id="info-address">...</span>
+                        </div>
+
+                        <div class="hotel-price-row">
+                            <span class="label" data-i18n="label_price">Giá:</span>
+                            <span id="info-price" class="price">...</span>
+                        </div>
+                        
+                        <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
+
+                        <hr class="divider">
+                        <div class="hotel-amenities-section">
+                            <h4 data-i18n="label_amenities">💎 Tiện ích</h4>
+                            <div id="info-amenities" class="amenities"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-right-selection">
+                    <h3 data-i18n="modal_step1_title">🚙 Thiết lập lộ trình</h3>
+                    
+                    <div class="form-group">
+                        <label data-i18n="input_start_label">Điểm xuất phát:</label>
+                        <input type="text" id="start-location" data-i18n="[placeholder]val_my_location" placeholder="Nhập vị trí..." class="input-text">
+                        <button id="btn-use-gps" class="btn-sm" style="margin-top:5px;" data-i18n="btn_use_gps">📍 Dùng vị trí hiện tại</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="input_dest_label">Điểm đến:</label>
+                        <input type="text" id="target-dest" value="..." disabled class="input-readonly">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="input_transport_label">Phương tiện:</label>
+                        <div class="transport-options">
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="driving" checked>
+                                <span data-i18n="trans_driving">🚗 Ô tô</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="cycling">
+                                <span data-i18n="trans_cycling">🚲 Xe đạp</span>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="transport" value="foot">
+                                <span data-i18n="trans_walking">🚶 Đi bộ</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="btn-close-step1" class="btn-secondary" data-i18n="btn_close">Đóng</button>
+                        <button id="btn-find-route" class="btn-primary" data-i18n="btn_find_route">🗺️ Tìm đường đi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-step-2" class="view-container hidden">
+                <div class="col-left-analysis">
+                    <button id="btn-back-step1" class="btn-back">⬅ <span data-i18n="btn_back">Quay lại</span></button>
+                    
+                    <div class="analysis-box">
+                        <h4 data-i18n="analysis_title">📊 Kết quả</h4>
+                        <div class="stats-grid">
+                            <div class="stat">📏 <span id="res-distance">...</span></div>
+                            <div class="stat">⏱ <span id="res-duration">...</span></div>
+                        </div>
+                        <div class="complexity-box">
+                            <strong id="res-label">...</strong>
+                            <p id="res-summary">...</p>
+                            <ul id="res-details"></ul>
+                        </div>
+                        <div class="advice-box">💡 <span id="res-advice">...</span></div>
+                    </div>
+
+                    <div class="steps-box">
+                        <h4 data-i18n="steps_title">📝 Hướng dẫn</h4>
+                        <div id="steps-list" class="steps-scroll"></div>
+                    </div>
+                </div>
+
+                <div class="col-right-map">
+                    <div id="rt-map" style="width: 100%; height: 100%; min-height: 400px;"></div>
+                    <div class="map-controls-overlay">
+                        <select id="quick-transport-change">
+                            <option value="driving" data-i18n="trans_driving">🚗 Ô tô</option>
+                            <option value="cycling" data-i18n="trans_cycling">🚲 Xe đạp</option>
+                            <option value="foot" data-i18n="trans_walking">🚶 Đi bộ</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script> <script src="../js/display_result_rec.js"></script> 
+    <script src="../js/routing_rec_page.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Load danh sách yêu thích
+            const favList = JSON.parse(localStorage.getItem("favorites") || "[]");
+            
+            // 2. Gán vào biến global để routing_rec_page.js sử dụng khi bấm "Chỉ đường"
+            window.homeResults = favList; 
+
+            const container = document.getElementById("results-list");
+
+            if (favList.length === 0) {
+                // Hiển thị thông báo trống
+                container.innerHTML = `
+                    <div style="text-align:center; padding:50px; color:#666;">
+                        <span data-i18n="fav_empty_msg">Bạn chưa yêu thích địa điểm nào.</span>
+                    </div>`;
+                
+                // Gọi lại hàm dịch để dịch dòng chữ thông báo vừa thêm
+                if(typeof applyTranslations === 'function') applyTranslations();
+
+            } else {
+                if (typeof renderResults === 'function') {
+                    // Vẽ các thẻ Card
+                    renderResults(favList);
+                    // Sau khi vẽ xong HTML mới, cần gọi dịch thuật lại để xử lý các text bên trong Card (nếu có data-i18n)
+                    if(typeof applyTranslations === 'function') applyTranslations();
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

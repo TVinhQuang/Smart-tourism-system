@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gợi ý Nơi Ở</title>
+
+    <link rel="stylesheet" href="../css/rec_accomodation.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/routing.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+    <div id="navbar-root"></div>
+
+    <h1 class="page-title" data-i18n="page_title_rec">🏨 Gợi Ý Nơi Ở Phù Hợp</h1>
+    <h2 class="page-subtitle" data-i18n="page_subtitle_rec">Điền thông tin dưới đây để nhận gợi ý nơi lưu trú tốt nhất cho chuyến đi của bạn!</h2>
+    
+    <div class="form-section">
+
+        <div class="form-group">
+            <label data-i18n="label_city">Thành phố Điểm đến</label>
+            <input type="text" id="city" value="Hồ Chí Minh" placeholder="Nhập tên thành phố...">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Ngày nhận phòng</label>
+                <input type="date" id="checkin">
+            </div>
+            <div class="form-group">
+                <label>Ngày trả phòng</label>
+                <input type="date" id="checkout">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Người lớn</label>
+                <input type="number" id="adults" value="2" min="1" max="20">
+            </div>
+            <div class="form-group">
+                <label>Trẻ em</label>
+                <input type="number" id="children" value="0" min="0" max="10">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label data-i18n="label_price_from1">Giá từ (VND)</label>
+                <input type="number" id="price-min" value="300000" step="50000">
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="label_price_to1">Giá đến (VND)</label>
+                <input type="number" id="price-max" value="1500000" step="50000">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-i18n="label_type">Loại hình</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="type-checkbox" value="hotel" checked> Hotel</label>
+                <label><input type="checkbox" class="type-checkbox" value="homestay" checked> Homestay</label>
+                <label><input type="checkbox" class="type-checkbox" value="hostel"> Hostel</label>
+                <label><input type="checkbox" class="type-checkbox" value="apartment"> Apartment</label>
+                <label><input type="checkbox" class="type-checkbox" value="resort"> Resort</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-i18n="label_search_params">Bộ lọc nâng cao</label>
+            
+            <div class="filter-row" style="margin-top: 15px;">
+    
+    <div class="filter-item">
+        <label data-i18n="label_min_rating">Đánh giá tối thiểu</label>
+        <div class="checkbox-group-vertical">
+            <label>
+                <input type="radio" name="min_rating" value="3" checked> 
+                Từ 3 sao trở lên
+            </label>
+            <label>
+                <input type="radio" name="min_rating" value="4"> 
+                Từ 4 sao trở lên
+            </label>
+            <label>
+                <input type="radio" name="min_rating" value="5"> 
+                5 sao
+            </label>
+        </div>
+    </div>
+
+        <div class="filter-item">
+            <label data-i18n="label_radius">Khoảng cách từ trung tâm</label>
+            <div class="checkbox-group-vertical">
+                <label>
+                    <input type="radio" name="radius" value="1"> 
+                    Dưới 1 km
+                </label>
+                <label>
+                    <input type="radio" name="radius" value="3"> 
+                    Dưới 3 km
+                </label>
+                <label>
+                    <input type="radio" name="radius" value="5" checked> 
+                    Dưới 5 km
+                </label>
+            </div>
+        </div>
+    </div>
+
+        <div class="form-group">
+            <label data-i18n="label_amenity_pref">Tiện ích ƯU TIÊN</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="amenity-preferred" value="wifi"> WiFi</label>
+                <label><input type="checkbox" class="amenity-preferred" value="breakfast" checked> Breakfast</label>
+                <label><input type="checkbox" class="amenity-preferred" value="pool"> Pool</label>
+                <label><input type="checkbox" class="amenity-preferred" value="parking"> Parking</label>
+                <label><input type="checkbox" class="amenity-preferred" value="gym"> Gym</label>
+                <label><input type="checkbox" class="amenity-preferred" value="spa"> Spa</label>
+                <label><input type="checkbox" class="amenity-preferred" value="airport_shuttle"> Airport Shuttle</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="priority" data-i18n="label_priority">Chiến lược xếp hạng</label>
+            <select id="priority">
+                <option value="balanced" data-i18n="opt_balanced">Cân bằng (Khuyên dùng)</option>
+                <option value="cheap" data-i18n="opt_cheap">Ưu tiên giá rẻ</option>
+                <option value="near_center" data-i18n="opt_center">Ưu tiên gần trung tâm</option>
+                <option value="amenities" data-i18n="opt_amenities">Ưu tiên tiện ích</option>
+            </select>
+        </div>
+
+        <button type="button" class="submit-btn" onclick="submitSearch()" data-i18n="btn_search_rec">🔍 Gợi ý Top 5 nơi ở</button>
+
+        <div id="results-container">
+            <h2 data-i18n="header_results">Kết quả</h2>
+            <div id="relaxation-note" style="display:none; background:#fff3cd; color:#856404; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ffeeba;"></div>
+            <div id="results-list"></div>
+        </div>
+    </div>
+
+    <div id="routing-overlay" class="routing-overlay hidden">
+       <div class="routing-modal">     
+            <div id="view-step-1" class="view-container">
+                <div class="col-left-info">
+                    <div class="hotel-cover">
+                        <div class="rating-badge">⭐ <span id="info-rating">...</span></div>
+                    </div>
+                    <div class="hotel-info-body">
+                        <h2 id="info-name" class="hotel-title">Tên khách sạn</h2>
+                        <div class="favorite-row"><span id="fav-toggle" class="fav-btn">♡</span></div>
+                        <div class="hotel-address-row"><span class="icon">📍</span> <span id="info-address">...</span></div>
+                        <div class="hotel-price-row"><span class="label">Giá mỗi đêm:</span><span id="info-price" class="price">...</span></div>
+                        <hr class="divider">
+                        <div class="hotel-amenities-section"><h4>💎 Tiện ích</h4><div id="info-amenities" class="amenities"></div></div>
+                    </div>
+                </div>
+                <div class="col-right-selection">
+                    <h3>🚙 Thiết lập lộ trình</h3>
+                    <div class="form-group"><label>Điểm xuất phát:</label><div style="display:flex;gap:5px;"><input type="text" id="start-location" class="input-editable" style="flex:1;"><button id="btn-use-gps">📍</button></div></div>
+                    <div class="form-group"><label>Điểm đến:</label><input type="text" id="target-dest" disabled class="input-readonly"></div>
+                    <div class="form-group"><label>Phương tiện:</label><div class="transport-options">
+                        <label class="radio-card"><input type="radio" name="transport" value="driving" checked><span>🚗 Ô tô</span></label>
+                        <label class="radio-card"><input type="radio" name="transport" value="cycling"><span>🚲 Xe đạp</span></label>
+                        <label class="radio-card"><input type="radio" name="transport" value="walking"><span>🚶 Đi bộ</span></label>
+                    </div></div>
+                    <div class="action-buttons"><button id="btn-close-step1" class="btn-secondary">Đóng</button><button id="btn-find-route" class="btn-primary">🗺️ Tìm đường đi</button></div>
+                </div>
+            </div>
+            <div id="view-step-2" class="view-container hidden" style="height: 80vh;">
+                <div class="col-left-analysis" style="overflow-y: auto; height: 100%;">
+                    <button id="btn-back-step1" class="btn-back">⬅ Quay lại</button>
+                    <div class="analysis-box">
+                        <h4>📊 Kết quả phân tích</h4>
+                        <div class="stats-grid"><div class="stat">Khoảng cách: <span id="res-distance">...</span></div><div class="stat">Thời gian: <span id="res-duration">...</span></div></div>
+                        <div class="complexity-box"><strong id="res-label">...</strong><p id="res-summary">...</p><ul id="res-details"></ul></div>
+                    </div>
+                    <div class="steps-box"><h4>📝 Hướng dẫn</h4><div id="steps-list" class="steps-scroll"></div></div>
+                </div> 
+                <div class="col-right-map" style="position: relative; height: 100%;"><div id="rt-map" style="width: 100%; height: 100%;"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function logoutUser() {
+        localStorage.removeItem('loggedInUserEmail');
+        window.location.href = location.reload(); // Hoặc reload lại trang
+    }
+
+    function formatEmail(email) {
+        if (!email) return "Người dùng";
+        const parts = email.split('@');
+        return parts[0]; 
+    }
+
+    function updateNavbarForLoggedInUser() {
+        const userEmail = localStorage.getItem('loggedInUserEmail'); 
+        const navbarRoot = document.getElementById('navbar-root');
+        
+        // Đảm bảo navbar đã được load xong mới thao tác
+        if (navbarRoot.innerHTML.trim() !== "") {
+            const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
+
+            if (userEmail) {
+                const displayName = formatEmail(userEmail);
+                if (loginButtonContainer) {
+                    loginButtonContainer.innerHTML = `
+                        <div class="user-info-group">
+                            <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                            <button class="btn-logout" onclick="logoutUser()">
+                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                // Nếu chưa đăng nhập, đảm bảo hiện nút Login
+                if (loginButtonContainer) {
+                    loginButtonContainer.innerHTML = `
+                        <a href="login.html" class="btn-login">
+                            <img src="../images/login.png" class="login-icon">
+                            <span>Đăng nhập</span>
+                        </a>
+                    `;
+                }
+            }
+        }
+    }
+
+    // 2. Logic chạy khi tải trang
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load Navbar component
+        fetch('../components/navbar.html')
+            .then(r => r.text())
+            .then(html => { 
+                document.getElementById('navbar-root').innerHTML = html; 
+                
+                // QUAN TRỌNG: Sau khi HTML của navbar hiện lên, mới gọi hàm cập nhật user
+                updateNavbarForLoggedInUser();
+            })
+            .catch(e => console.warn('Không thể load navbar component', e));
+        });
+    </script>
+    
+    <script src="../js/static_trans.js"></script>
+    <script src="../js/display_result_rec.js"></script> 
+    <script src="../js/routing_rec_page.js"></script>
+    <script src="../js/submit_search.js"></script>
+</body>
+</html>

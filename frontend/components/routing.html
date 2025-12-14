@@ -1,0 +1,112 @@
+<div id="routing-overlay" class="routing-overlay hidden">
+    <div class="routing-modal">
+        
+        <div id="view-step-1" class="view-container">
+            <div class="col-left-info">
+                <div class="hotel-cover">
+                    <img id="info-img" src="" alt="Hotel Image">
+                    <div class="rating-badge"><span id="info-rating">0.0</span> ★</div>
+                </div>
+                <div class="hotel-info-body">
+                    <h2 class="hotel-title" id="info-name">Hotel Name</h2>
+                    <div class="hotel-address-row">
+                        <i class="fas fa-map-marker-alt"></i> <span id="info-address">Address</span>
+                    </div>
+                    <div class="hotel-price-row">
+                        <span>Giá mỗi đêm:</span>
+                        <span class="price" id="info-price">0 VND</span>
+                    </div>
+                    <div class="hotel-desc-section">
+                        <h4>Mô tả</h4>
+                        <p id="info-desc">...</p>
+                    </div>
+                    <div class="divider"></div>
+                    <h4>Tiện ích</h4>
+                    <div class="amenities-grid" id="info-amenities">
+                        </div>
+                </div>
+            </div>
+
+            <div class="col-right-selection">
+                <h3><i class="fas fa-route"></i> Chọn phương tiện di chuyển</h3>
+                
+                <div class="form-group">
+                    <label>Vị trí của bạn:</label>
+                    <input type="text" class="input-readonly" data-i18n="val_my_location" value="Vị trí hiện tại của tôi" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Điểm đến:</label>
+                    <input type="text" id="target-dest" class="input-readonly" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Phương tiện:</label>
+                    <div class="transport-options">
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="driving" checked>
+                            <span class="icon">🚗</span>
+                            <span>Ô tô/Xe máy</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="walking">
+                            <span class="icon">🚶</span>
+                            <span>Đi bộ</span>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="transport" value="cycling">
+                            <span class="icon">🚲</span>
+                            <span>Xe đạp</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="btn-close-step1" class="btn-secondary">Đóng</button>
+                    <button id="btn-find-route" class="btn-primary">Tìm đường ngay</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-step-2" class="view-container hidden">
+            <div class="col-left-analysis">
+                <div class="analysis-header-sticky">
+                    <button id="btn-back-step1" class="btn-back">
+                        ← Quay lại chọn phương tiện
+                    </button>
+                </div>
+                
+                <div class="analysis-content-scroll">
+                    <div class="analysis-box">
+                        <div class="stats-grid">
+                            <div class="stat"><span id="res-distance">...</span></div>
+                            <div class="stat"><span id="res-duration">...</span></div>
+                        </div>
+                        <h4 id="res-label">Độ phức tạp</h4>
+                        <p id="res-summary">...</p>
+                        <ul id="res-details" style="padding-left: 20px; color: #555;"></ul>
+                        <div class="advice-box" id="res-advice">...</div>
+                    </div>
+
+                    <div class="steps-box">
+                        <h4>Chi tiết đường đi:</h4>
+                        <div id="steps-list">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-right-map">
+                <div class="map-controls-overlay">
+                    <select id="quick-transport-change">
+                        <option value="driving">🚗 Ô tô / Xe máy</option>
+                        <option value="walking">🚶 Đi bộ</option>
+                        <option value="cycling">🚲 Xe đạp</option>
+                    </select>
+                </div>
+                <div id="rt-map"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
