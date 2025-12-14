@@ -1,94 +1,28 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time
-import streamlit as st
-import pyrebase
-import pandas as pd
-import pydeck as pdk
-import firebase_admin
 import requests
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 import math
 import random
 import polyline
-import folium
-from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
-from firebase_admin import credentials, firestore
-from firebase_admin import auth as admin_auth
-from collections import deque
-from datetime import datetime, timezone
-from ollama import Client
-from streamlit_extras.stylable_container import stylable_container
 from serpapi import GoogleSearch
 import re
-import json, os
-from datetime import date, timedelta
-from datetime import datetime
-from dataclasses import dataclass
-from typing import List, Optional
+import json
+import os
+from datetime import date, timedelta, datetime, timezone
 
+# Khởi tạo Flask App
 app = Flask(__name__)
 CORS(app)
 
+# ==================== CONFIG & CONSTANTS ====================
 DB_PATH = "accommodation_cache.json"
-
-def load_accommodation_db() -> dict:
-    """
-    Đọc file JSON Lines → dict[id] = dict_thuộc_tính.
-    Mỗi dòng trong file là 1 object JSON.
-    """
-    if not os.path.exists(DB_PATH):
-        return {}
-
-    db: dict[str, dict] = {}
-    try:
-        with open(DB_PATH, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-
-                acc_id = rec.get("id")
-                if not acc_id:
-                    continue
-
-                db[acc_id] = rec
-    except Exception:
-        return {}
-
-    return db
-
-def save_accommodation_db(db: dict) -> None:
-    """
-    Ghi dict[id] → file JSON Lines.
-    Mỗi nơi ở = 1 dòng JSON (form ngang, dễ đếm).
-    """
-    dir_name = os.path.dirname(DB_PATH)
-    if dir_name:
-        os.makedirs(dir_name, exist_ok=True)
-
-    with open(DB_PATH, "w", encoding="utf-8") as f:
-        for rec in db.values():
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-
-def normalize_city(city: str) -> str:
-    """Chuẩn hoá tên thành phố cho nội bộ & DB."""
-    if not city:
-        return ""
-    return city.strip().lower()
-
-BOT_GREETING = "Xin chào! Hôm nay bạn đã nghĩ muốn đi đâu chưa?"
-
-# ===================== MÔ-ĐUN THUẬT TOÁN GỢI Ý NƠI Ở =====================
-# ==================== CONSTANTS ====================
+# Lưu ý: Nên dùng biến môi trường cho API Key trong thực tế
 API_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
-SERPAPI_KEY = "b8b60f1e9d32eea6e9851ded875c4e5997487c94952a990c39dbbf5081551a68"
+PAGE_SIZE = 20
 
 # ==================== DATA CLASSES ====================
 @dataclass
@@ -98,16 +32,9 @@ class Accommodation:
     city: str
     type: str
     price: float
-
-    # ⭐ Loại sao chính thức (hotel class 1–5, lấy từ Google Hotels)
     stars: float = 0.0
-
-    # 📊 Điểm review người dùng (0–5, lấy từ Google Maps)
     rating: float = 0.0
-
-    # 🧮 Số lượt đánh giá
     reviews: int = 0
-
     capacity: int = 0
     amenities: List[str] = field(default_factory=list)
     address: str = ""
@@ -115,710 +42,628 @@ class Accommodation:
     lat: float = 0.0
     distance_km: float = 0.0
 
-def acc_to_dict(a: Accommodation) -> dict:
-    return {
-        "id": a.id,
-        "name": a.name,
-        "city": normalize_city(a.city),
-        "type": a.type,
-        "price": a.price,
-        "stars": a.stars,
-        "rating": a.rating,
-        "reviews": getattr(a, "reviews", None),
-        "amenities": list(a.amenities or []),
-        "address": a.address,
-        "lon": a.lon,
-        "lat": a.lat,
-        "distance_km": a.distance_km,
-        "source": "serpapi_google_maps",
-        "updated_at": datetime.utcnow().isoformat()
-    }
-
-def dict_to_acc(d: dict) -> Accommodation:
-    return Accommodation(
-        id=d["id"],
-        name=d["name"],
-        city=normalize_city(d.get("city", "")),
-        type=d.get("type", "hotel"),
-        price=d.get("price", 0.0),
-        stars=d.get("stars", 0.0),
-        rating=d.get("rating", 0.0),
-
-        # ✅ FIX: thêm dòng này
-        reviews = int(d.get("reviews") or 0),
-
-        capacity=4,
-        amenities=d.get("amenities", []),
-        address=d.get("address", ""),
-        lon=d.get("lon", 0.0),
-        lat=d.get("lat", 0.0),
-        distance_km=d.get("distance_km", 0.0),
-    )
-
 @dataclass
 class SearchQuery:
-    """
-    Gói toàn bộ input người dùng cho thuật toán gợi ý.
-    Sau này ta sẽ build SearchQuery từ form trên web.
-    """
-    city: str                      # tên thành phố điểm đến
-    group_size: int                # số người
-    price_min: float               # ngân sách tối thiểu (cho 1 đêm)
-    price_max: float               # ngân sách tối đa
-    types: List[str]               # loại chỗ ở mong muốn: ["hotel","homestay",...]
-    rating_min: float              # điểm đánh giá tối thiểu (0–5)
-    amenities_preferred: List[str] # tiện ích ưu tiên (có thì cộng điểm)
-    radius_km: Optional[float]     # bán kính tìm kiếm quanh thành phố (km), có thể là số hoặc None 
-    priority: str = "balanced"     # 'balanced' / 'cheap' / 'near_center' / 'amenities'
-
-    # ✅ NEW: sao tối thiểu (chỉ áp dụng hotel/resort), 0 = không yêu cầu
+    city: str
+    group_size: int
+    price_min: float
+    price_max: float
+    types: List[str]
+    rating_min: float
+    amenities_preferred: List[str]
+    radius_km: Optional[float]
+    priority: str = "balanced"
     stars_min: int = 0
-
-    # --- mới thêm ---
     checkin: Optional[date] = None
     checkout: Optional[date] = None
     adults: int = 2
     children: int = 0
 
+# ==================== DATABASE HELPERS ====================
+def load_accommodation_db() -> dict:
+    if not os.path.exists(DB_PATH):
+        return {}
+    db = {}
+    try:
+        with open(DB_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line: continue
+                try:
+                    rec = json.loads(line)
+                    acc_id = rec.get("id")
+                    if acc_id: db[acc_id] = rec
+                except json.JSONDecodeError:
+                    continue
+    except Exception:
+        return {}
+    return db
 
-# ==================== TỪ ĐIỂN DỊCH THUẬT ====================
-TRANS = {
-    "vi": {
-        "start": "Bắt đầu từ",
-        "start_default": "điểm xuất phát",
-        "arrive": "Đến điểm đến",
-        "right": "bên phải",
-        "left": "bên trái",
-        "turn": "rẽ",
-        "go": "Đi",
-        "onto": "vào đường",
-        "continue": "Đi tiếp",
-        "roundabout": "Vào vòng xuyến",
-        "exit": "lối ra thứ",
-        "merge": "Nhập làn/ra khỏi làn",
-        
-        "walk_short": "Quãng đường rất ngắn, đi bộ là hợp lý nhất.",
-        "walk_med": "Không quá xa, đi bộ hoặc xe đạp đều ổn.",
-        "bike_med": "Quãng đường trung bình, phù hợp đi xe máy/xe đạp.",
-        "drive_long": "Khá xa, nên đi ô tô hoặc xe máy.",
-        "fly_long": "Rất xa! Cân nhắc đi máy bay/xe khách.",
-        
-        "easy": "Dễ đi",
-        "medium": "Trung bình",
-        "hard": "Phức tạp",
-        "easy_desc": "Đường đi đơn giản, ít ngã rẽ.",
-        "med_desc": "Lộ trình có chút thử thách về khoảng cách.",
-        "hard_desc": "Lộ trình dài hoặc nhiều ngã rẽ phức tạp.",
-        "dist_warn": "Quãng đường rất dài, cần nghỉ ngơi.",
-        "turn_warn": "Nhiều ngã rẽ, chú ý quan sát.",
-        "speed_warn": "Tốc độ di chuyển dự kiến chậm."
-    },
-    "en": {
-        "start": "Start from",
-        "start_default": "starting point",
-        "arrive": "Arrive at destination",
-        "right": "on the right",
-        "left": "on the left",
-        "turn": "turn",
-        "go": "Go",
-        "onto": "onto",
-        "continue": "Continue",
-        "roundabout": "Enter roundabout",
-        "exit": "exit",
-        "merge": "Merge/Take ramp",
-        
-        "walk_short": "Very short distance, walking is best.",
-        "walk_med": "Not too far, walking or cycling is fine.",
-        "bike_med": "Medium distance, suitable for motorbike/bicycle.",
-        "drive_long": "Quite far, prefer car or motorbike.",
-        "fly_long": "Very far! Consider flying or taking a bus.",
-        
-        "easy": "Easy",
-        "medium": "Medium",
-        "hard": "Complex",
-        "easy_desc": "Simple route, few turns.",
-        "med_desc": "Route is a bit challenging in distance.",
-        "hard_desc": "Long route or complex turns.",
-        "dist_warn": "Very long distance, take breaks.",
-        "turn_warn": "Many turns, pay attention.",
-        "speed_warn": "Expected speed is slow."
+def save_accommodation_db(db: dict) -> None:
+    dir_name = os.path.dirname(DB_PATH)
+    if dir_name: os.makedirs(dir_name, exist_ok=True)
+    with open(DB_PATH, "w", encoding="utf-8") as f:
+        for rec in db.values():
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+def normalize_city(city: str) -> str:
+    return city.strip().lower() if city else ""
+
+def acc_to_dict(a: Accommodation) -> dict:
+    return {
+        "id": a.id, "name": a.name, "city": normalize_city(a.city),
+        "type": a.type, "price": a.price, "stars": a.stars,
+        "rating": a.rating, "reviews": getattr(a, "reviews", 0),
+        "amenities": list(a.amenities or []), "address": a.address,
+        "lon": a.lon, "lat": a.lat, "distance_km": a.distance_km,
+        "source": "serpapi_google_maps",
+        "updated_at": datetime.now(timezone.utc).isoformat()
     }
-}
 
-# ==================== HELPER FUNCTIONS ====================
+def dict_to_acc(d: dict) -> Accommodation:
+    return Accommodation(
+        id=d["id"], name=d["name"], city=normalize_city(d.get("city", "")),
+        type=d.get("type", "hotel"), price=d.get("price", 0.0),
+        stars=d.get("stars", 0.0), rating=d.get("rating", 0.0),
+        reviews=int(d.get("reviews") or 0), capacity=4,
+        amenities=d.get("amenities", []), address=d.get("address", ""),
+        lon=d.get("lon", 0.0), lat=d.get("lat", 0.0),
+        distance_km=d.get("distance_km", 0.0),
+    )
 
-def _get_text(lang, key):
-    return TRANS.get(lang, TRANS["vi"]).get(key, "")
-
+# ==================== UTILS & GEOCODING ====================
 def haversine_km(lon1, lat1, lon2, lat2):
-    """
-    Tính khoảng cách đường tròn lớn giữa 2 điểm (lat, lon) trên Trái đất, đơn vị km.
-    Dùng công thức Haversine.
-    """
-    R = 6371.0  # bán kính Trái đất (km)
-
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
+    R = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
     dphi = phi2 - phi1
     dlambda = math.radians(lon2 - lon1)
-
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
     c = 2 * math.asin(math.sqrt(a))
-
     return R * c
-
-def _format_distance(meters: float) -> str:
-    """
-    Chuyển khoảng cách từ mét -> chuỗi dễ đọc:
-      - < 1000m: 'xxx m'
-      - >= 1000m: 'x.y km'
-    """
-    if meters < 1000:
-        return f"{int(round(meters))} m"
-    km = meters / 1000.0
-    return f"{km:.1f} km"
 
 def clamp01(x: float) -> float:
     return max(0.0, min(1.0, x))
 
-# ==================== GEOCODING ====================
-
 def serpapi_geocode(q: str):
-    """Geocode địa điểm sử dụng SerpAPI"""
-    HARDCODED_KEY = API_KEY
-    
-    print(f"DEBUG: Đang Geocode '{q}' với SerpApi...")
-
-    params = {
-        "engine": "google_maps",
-        "q": q,
-        "type": "search",
-        "api_key": HARDCODED_KEY,
-        "hl": "vi"
-    }
-    
+    print(f"DEBUG: Geocoding '{q}' via SerpApi...")
+    params = {"engine": "google_maps", "q": q, "type": "search", "api_key": API_KEY, "hl": "vi"}
     try:
-        search = GoogleSearch(params)
-        results = search.get_dict()
+        results = GoogleSearch(params).get_dict()
+        if "error" in results: return None
         
-        if "error" in results:
-            print(f"DEBUG: ❌ SerpApi Error: {results['error']}")
-            return None
-            
-        # TH1: local_results
-        if "local_results" in results and len(results["local_results"]) > 0:
+        place = None
+        if "local_results" in results and results["local_results"]:
             place = results["local_results"][0]
-            print(f"DEBUG: ✅ Tìm thấy (local_results): {place.get('title')}")
-            return {
-                "name": place.get("title"),
-                "lat": place["gps_coordinates"]["latitude"],
-                "lon": place["gps_coordinates"]["longitude"],
-                "address": place.get("address", "")
-            }
-            
-        # TH2: place_results
-        if "place_results" in results:
+        elif "place_results" in results:
             place = results["place_results"]
-            print(f"DEBUG: ✅ Tìm thấy (place_results): {place.get('title')}")
+            
+        if place:
             return {
                 "name": place.get("title"),
                 "lat": place["gps_coordinates"]["latitude"],
                 "lon": place["gps_coordinates"]["longitude"],
                 "address": place.get("address", "")
             }
+        return None
+    except Exception as e:
+        print(f"Geocode Error: {e}")
+        return None
+
+def smart_geocode(q: str):
+    loc = serpapi_geocode(q)
+    if loc: return loc
+    print(f"DEBUG: Fallback Geocoding '{q}' via Nominatim...")
+    try:
+        geocoder = Nominatim(user_agent="smart_tourism_backend")
+        res = geocoder.geocode(q, exactly_one=True, addressdetails=True, language="en")
+        if res:
+            return {"name": res.address, "lat": res.latitude, "lon": res.longitude, "address": res.address}
+    except Exception as e:
+        print(f"Nominatim Error: {e}")
+    return None
+
+# ==================== PARSING & ENRICHMENT HELPERS ====================
+# (Đã chuyển từ app.py sang để server chạy được logic stage 3)
+
+def parse_review_count(x) -> int:
+    if x is None: return 0
+    if isinstance(x, dict):
+        for k in ("count", "total", "value", "reviews"):
+            if k in x: return parse_review_count(x[k])
+        return 0
+    s = str(x).strip().lower()
+    m = re.search(r"([\d.,]+)\s*([km])\b", s)
+    if m:
+        num_str = m.group(1).replace(",", ".")
+        try:
+            num = float(num_str)
+            mult = 1000 if m.group(2) == "k" else 1_000_000
+            return int(num * mult)
+        except: return 0
+    digits = re.sub(r"\D", "", s)
+    return int(digits) if digits else 0
+
+def extract_amenities_from_google_property(prop: dict) -> list[str]:
+    # (Đã đem mapping từ app.py)
+    GOOGLE_AMENITY_KEYWORDS = {
+        "wifi": "wifi", "free parking": "parking", "parking": "parking",
+        "pool": "pool", "gym": "gym", "fitness": "gym", "restaurant": "restaurant",
+        "bar": "bar", "breakfast": "breakfast", "spa": "spa",
+        "air-conditioned": "air_conditioning", "shuttle": "airport_shuttle"
+    }
+    result_codes = set()
+    raw_amenities = prop.get("amenities", []) or []
+    desc = str(prop.get("description", "")).lower()
+    
+    # Check list
+    for raw in raw_amenities:
+        text = str(raw).lower()
+        for key, code in GOOGLE_AMENITY_KEYWORDS.items():
+            if key in text: result_codes.add(code)
+    # Check description
+    for key, code in GOOGLE_AMENITY_KEYWORDS.items():
+        if key in desc: result_codes.add(code)
             
-        print("DEBUG: ⚠️ Không tìm thấy tọa độ nào trong phản hồi của Google Maps.")
-        print(f"DEBUG: Keys nhận được: {list(results.keys())}") 
-        return None
+    return list(result_codes)
 
-    except Exception as e:
-        print(f"DEBUG: ❌ Lỗi ngoại lệ trong serpapi_geocode: {e}")
-        return None
-
-# ==================== ROUTING FUNCTIONS ====================
-
-def describe_osrm_step(step: dict, lang="vi") -> str:
-    t = lambda k: _get_text(lang, k)
-    maneuver = step.get("maneuver", {})
-    type = maneuver.get("type", "")
-    modifier = (maneuver.get("modifier") or "").lower()
-    name = (step.get("name") or "").strip()
-    dist_str = _format_distance(step.get("distance", 0.0))
-
-    dir_map = {
-        "right": "right", "slight right": "right", "sharp right": "right",
-        "left": "left", "slight left": "left", "sharp left": "left",
-        "straight": "straight", "uturn": "uturn"
-    }
-    
-    action_en = dir_map.get(modifier, "turn")
-    action_vi = "rẽ phải" if "right" in action_en else ("rẽ trái" if "left" in action_en else "đi thẳng")
-    if lang == 'en': action_text = action_en
-    else: action_text = action_vi
-
-    if type == "depart":
-        return f"{t('start')} {name if name else t('start_default')}."
-    if type == "arrive":
-        return t("arrive") + "."
-    
-    if type in ("turn", "end of road", "fork"):
-        if name: return f"{t('go')} {dist_str}, {action_text} {t('onto')} {name}."
-        return f"{t('go')} {dist_str}, {action_text}."
-
-    if type == "roundabout":
-        exit_nr = maneuver.get("exit")
-        return f"{t('roundabout')}, {t('exit')} {exit_nr}." if exit_nr else t('roundabout') + "."
-
-    if name: return f"{t('continue')} {dist_str} ({name})."
-    return f"{t('continue')} {dist_str}."
-
-def osrm_route(src, dst, profile="driving"):
-    """
-    Tính lộ trình bằng OSRM public
-    """
-    url = (
-        f"https://router.project-osrm.org/route/v1/"
-        f"{profile}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}"
-    )
-    params = {
-        "overview": "full",
-        "geometries": "geojson",
-        "steps": "true",
-    }
-
+def enrich_amenities_with_hotels_api(acc: Accommodation, api_key: str):
+    params = {"engine": "google_hotels", "q": f"{acc.name} {acc.city}", "hl": "vi", "gl": "vn", "api_key": api_key}
     try:
-        r = requests.get(url, params=params, timeout=20)
-        r.raise_for_status()
-        data = r.json()
+        data = GoogleSearch(params).get_dict()
+        props = data.get("properties") or []
+        if not props: return
 
-        if data.get("code") != "Ok" or not data.get("routes"):
-            print("⚠️ OSRM trả về code:", data.get("code"))
-            return None
-
-        route = data["routes"][0]
-
-        distance_km = route["distance"] / 1000.0
-        duration_min = route["duration"] / 60.0
-
-        coords = route["geometry"]["coordinates"]
-        geometry = [(lat, lon) for lon, lat in coords]
-
-        legs = route.get("legs", [])
-        step_descriptions = []
-        for leg in legs:
-            for step in leg.get("steps", []):
-                desc = describe_osrm_step(step)
-                if desc:
-                    step_descriptions.append(desc)
-
-        return {
-            "distance_km": distance_km,
-            "duration_min": duration_min,
-            "geometry": geometry,
-            "steps": step_descriptions,
-            "distance_text": f"~{distance_km:.2f} km",
-            "duration_text": f"~{duration_min:.1f} phút",
-        }
-
-    except Exception as e:
-        print("❌ Lỗi khi gọi OSRM:", e)
-        return None
-
-def draw_map(src, dst, route):
-    """
-    Vẽ bản đồ Folium với Polyline từ Google Maps.
-    """
-    m = folium.Map(
-        location=[src["lat"], src["lon"]],
-        zoom_start=12,
-        tiles="OpenStreetMap",
-    )
-
-    folium.Marker(
-        [src["lat"], src["lon"]],
-        tooltip="Xuất phát",
-        popup=src["name"],
-        icon=folium.Icon(color="green", icon="play"),
-    ).add_to(m)
-
-    folium.Marker(
-        [dst["lat"], dst["lon"]],
-        tooltip="Đích đến",
-        popup=dst["name"],
-        icon=folium.Icon(color="red", icon="stop"),
-    ).add_to(m)
-
-    if route and route.get("geometry"):
-        path_coords = route["geometry"]
+        prop0 = props[0]
+        full_amenities = []
+        for am in prop0.get("amenities") or []:
+            if isinstance(am, str): full_amenities.append(am.strip())
         
-        folium.PolyLine(
-            locations=path_coords,
-            color="blue",
-            weight=5,
-            opacity=0.7,
-            tooltip=f"{route.get('distance_text')} - {route.get('duration_text')}"
-        ).add_to(m)
+        groups = ((prop0.get("amenities_detailed") or {}).get("groups") or [])
+        for g in groups:
+            for item in g.get("list", []):
+                if item.get("title"): full_amenities.append(item.get("title").strip())
+        
+        if full_amenities:
+            acc.amenities = list(dict.fromkeys(full_amenities + acc.amenities))
+    except Exception:
+        pass
 
-        m.fit_bounds(path_coords)
-    else:
-        m.fit_bounds([[src["lat"], src["lon"]], [dst["lat"], dst["lon"]]])
-
-    return m
-
-def recommend_transport_mode(dist_km, lang="vi"):
-    t = lambda k: _get_text(lang, k)
-    if dist_km <= 1.5: return "walking", t("walk_short")
-    elif dist_km <= 7: return "walking", t("walk_med")
-    elif dist_km <= 25: return "cycling", t("bike_med")
-    elif dist_km <= 300: return "driving", t("drive_long")
-    else: return "driving", t("fly_long")
-
-def analyze_route_complexity(route, profile, lang="vi"):
-    t = lambda k: _get_text(lang, k)
-    dist_km = route["distance_km"]
-    steps = len(route["steps_raw"])
+def enrich_hotel_class_one_with_hotels_api(acc: Accommodation, api_key: str, checkin=None, checkout=None, adults=2, children=0):
+    params = {"engine": "google_hotels", "q": f"{acc.name} {acc.city}", "hl": "vi", "gl": "vn", "api_key": api_key}
+    if checkin: params["check_in_date"] = checkin.isoformat()
+    if checkout: params["check_out_date"] = checkout.isoformat()
+    params["adults"] = adults
     
-    score = 0
-    reasons = []
-
-    if dist_km > 50: score += 3; reasons.append(f"{t('dist_warn')} ({dist_km:.1f} km).")
-    elif dist_km > 20: score += 2
-    
-    if steps > 25: score += 2; reasons.append(f"{t('turn_warn')} ({steps}).")
-    elif steps > 15: score += 1
-
-    if score <= 1: return "low", t("easy"), t("easy_desc"), reasons
-    elif score <= 3: return "medium", t("medium"), t("med_desc"), reasons
-    return "high", t("hard"), t("hard_desc"), reasons
-
-# ==================== ACCOMMODATION FUNCTIONS ====================
-
-def detect_acc_type(item) -> str:
-    """Suy luận loại chỗ ở từ text của Google Maps"""
-    name = (item.get("title") or "").lower()
-    main_type = (item.get("type") or "").lower()
-    extra_types = " ".join(t.lower() for t in item.get("types", []) if t)
-    text = " ".join([name, main_type, extra_types])
-
-    if any(kw in text for kw in ["homestay", "guest house", "nhà nghỉ", "nhà trọ"]):
-        return "homestay"
-
-    if "resort" in text:
-        return "resort"
-
-    if "hostel" in text:
-        return "hostel"
-
-    if any(kw in text for kw in ["apartment", "căn hộ", "condotel", "serviced apartment"]):
-        return "apartment"
-
-    return "hotel"
-
-def fetch_google_hotels(
-    city_name: str,
-    radius_km: float = 5.0,
-    wanted_types: List[str] | None = None,
-):
-    """
-    Lấy danh sách khách sạn bằng SerpAPI
-    """
-    if wanted_types is None:
-        wanted_types = []
-    wanted_types = [t.lower() for t in wanted_types]
-
-    city_geo = serpapi_geocode(city_name + ", Vietnam")
-    if not city_geo:
-        print(f"[ERROR] Không tìm thấy tọa độ thành phố: {city_name}")
-        return [], None
-
-    city_lat, city_lon = city_geo["lat"], city_geo["lon"]
-
-    def build_search_query(city: str, types: List[str]) -> str:
-        if not types or len(types) > 2:
-            return f"khách sạn homestay hostel apartment ở {city}"
-        s = set(types)
-
-        if s == {"hotel"}:
-            return f"khách sạn ở {city}"
-        if s == {"homestay"}:
-            return f"homestay, guest house, nhà nghỉ ở {city}"
-        if s == {"hostel"}:
-            return f"hostel, backpacker hostel ở {city}"
-        if s == {"apartment"}:
-            return f"căn hộ, serviced apartment ở {city}"
-
-        return f"khách sạn homestay hostel apartment ở {city}"
-
-    REAL_API_KEY = SERPAPI_KEY
-    search_query = build_search_query(city_name, wanted_types)
-
-    params = {
-        "engine": "google_maps",
-        "type": "search",
-        "google_domain": "google.com.vn",
-        "q": search_query,
-        "ll": f"@{city_lat},{city_lon},14z",
-        "api_key": REAL_API_KEY,
-        "hl": "vi",
-    }
-
     try:
-        search = GoogleSearch(params)
-        results = search.get_dict()
-        local_results = results.get("local_results", [])
-    except Exception as e:
-        print(f"[ERROR] Lỗi khi gọi SerpAPI: {e}")
-        return [], (city_lon, city_lat)
+        data = GoogleSearch(params).get_dict()
+        props = data.get("properties") or []
+        if not props: return
+        
+        prop0 = props[0]
+        hotel_class = prop0.get("extracted_hotel_class")
+        if hotel_class is None:
+            raw_class = prop0.get("hotel_class")
+            if isinstance(raw_class, str):
+                m = re.search(r"(\d+)", raw_class)
+                if m: hotel_class = int(m.group(1))
+        
+        if hotel_class is not None:
+            acc.stars = float(hotel_class)
+    except Exception:
+        pass
 
-    accommodations: List[Accommodation] = []
+# ==================== LOGIC: FILL & RANKING ====================
 
-    for item in local_results:
-        raw_name = (item.get("title") or item.get("name") or "").strip()
-        if not raw_name:
-            continue
-        name = raw_name
+def build_query_phrases(city: str, wanted_types: List[str]) -> List[str]:
+    city = city.strip()
+    wanted_types = [t.lower() for t in (wanted_types or [])]
+    base = [f"khách sạn ở {city}", f"homestay ở {city}", f"resort ở {city}", f"apartment {city}"]
+    type_specific = []
+    if "hotel" in wanted_types: type_specific.append(f"khách sạn ở {city}")
+    if "homestay" in wanted_types: type_specific.append(f"homestay ở {city}")
+    if "resort" in wanted_types: type_specific.append(f"resort ở {city}")
+    
+    pool = list(dict.fromkeys(base + type_specific))
+    random.shuffle(pool)
+    return pool
 
-        data_id = item.get("data_id")
-        if data_id is None:
-            data_id = hash(name + str(item.get("address", "")))
-        acc_id = str(data_id)
+def serpapi_google_maps_search(query: str, city_lat: float, city_lon: float, start: int) -> list:
+    params = {
+        "engine": "google_maps", "type": "search", "google_domain": "google.com.vn",
+        "q": query, "ll": f"@{city_lat},{city_lon},8z", "api_key": API_KEY,
+        "hl": "vi", "start": start,
+    }
+    return GoogleSearch(params).get_dict().get("local_results", []) or []
 
-        # Price processing
-        raw_price = item.get("price")
-        price = 0.0
+def parse_maps_item_to_acc(item: dict, city_name: str, city_lat: float, city_lon: float, radius_km: Optional[float]) -> Optional[Accommodation]:
+    raw_name = (item.get("title") or item.get("name") or "").strip()
+    if not raw_name: return None
+    
+    data_id = item.get("data_id") or hash(raw_name + str(item.get("address", "")))
+    
+    # Price
+    raw_price = item.get("price")
+    price = 0.0
+    if raw_price:
+        s = str(raw_price)
+        m = re.search(r"\d+(?:[.,]\d+)?", s)
+        val = float(m.group(0).replace(",", ".")) if m else 0.0
+        if "₫" in s or val >= 50000: price = val
+        else: price = val * 26405
+        
+    rating = float(item.get("rating") or 0.0)
+    reviews = parse_review_count(item.get("reviews") or item.get("user_ratings_total"))
+    
+    # Amenities
+    amenities = extract_amenities_from_google_property(item)
+    desc = str(item).lower()
+    if "pool" in desc: amenities.append("pool")
+    if "wifi" in desc: amenities.append("wifi")
+    amenities = list(dict.fromkeys(amenities))
+    
+    # GPS
+    gps = item.get("gps_coordinates") or {}
+    lat, lon = gps.get("latitude"), gps.get("longitude")
+    if not lat or not lon: return None
+    
+    dist = haversine_km(city_lon, city_lat, lon, lat)
+    
+    # Type detection logic (simplified)
+    acc_type = "hotel"
+    text_type = (str(item.get("type")) + str(item.get("title"))).lower()
+    if "homestay" in text_type: acc_type = "homestay"
+    elif "resort" in text_type: acc_type = "resort"
+    elif "apartment" in text_type: acc_type = "apartment"
+    
+    if radius_km is not None and dist > radius_km: return None
+    
+    return Accommodation(
+        id=str(data_id), name=raw_name, city=normalize_city(city_name),
+        type=acc_type, price=price, rating=rating, reviews=reviews,
+        amenities=amenities, address=item.get("address", city_name),
+        lon=lon, lat=lat, distance_km=dist
+    )
 
-        if raw_price:
-            s = str(raw_price)
-            m = re.search(r"\d+(?:[.,]\d+)?", s)
-            if m:
-                value = float(m.group(0).replace(",", "."))
-            else:
-                value = 0.0
+def has_amenity(have_lower: set[str], code: str) -> bool:
+    KEYWORDS = {
+        "wifi": ["wifi"], "breakfast": ["breakfast", "bữa sáng"], 
+        "pool": ["pool", "bể bơi"], "parking": ["parking", "đỗ xe"]
+    }
+    keywords = KEYWORDS.get(code, [code])
+    for text in have_lower:
+        for kw in keywords:
+            if kw in text: return True
+    return False
 
-            if "₫" in s or value >= 50_000:
-                price = value
-            else:
-                price = value * 25_000
+def score_accommodation(a: Accommodation, q: SearchQuery) -> float:
+    mode = getattr(q, "priority", "balanced")
+    
+    # 1. Price
+    Pmin, Pmax = q.price_min, q.price_max
+    if Pmax > Pmin and a.price > 0:
+        t = clamp01((a.price - Pmin) / (Pmax - Pmin))
+        if mode == "cheap": S_price = 1.0 - t
+        elif mode == "balanced": S_price = 1.0 - abs(t - 0.5) * 2.0
+        else: S_price = t
+    else: S_price = 1.0
+    
+    # 2. Rating & Stars
+    S_rating = clamp01(a.rating / 5.0)
+    is_hr = a.type in ("hotel", "resort")
+    if is_hr and a.stars > 0:
+        S_stars = clamp01(a.stars / 5.0)
+        w_rating, w_stars = 0.28, 0.05
+    else:
+        S_stars = 0.0
+        w_rating, w_stars = 0.33, 0.0
+        
+    # 3. Amenities
+    have = set(x.lower() for x in a.amenities)
+    pref = set(x.lower() for x in q.amenities_preferred)
+    S_amen = sum(1 for c in pref if has_amenity(have, c)) / len(pref) if pref else 1.0
+    
+    # 4. Distance
+    r_lim = q.radius_km or 0.0
+    S_dist = (1.0 - min(a.distance_km / r_lim, 1.0)) if r_lim > 0 else 1.0
+    
+    return 0.32*S_price + w_stars*S_stars + w_rating*S_rating + 0.15*S_amen + 0.20*S_dist
 
-            if price < 200_000:
-                price = 700_000.0
-
-        # Rating
-        rating_val = item.get("rating")
-        try:
-            rating = float(rating_val) if rating_val is not None else 0.0
-        except Exception:
-            rating = 0.0
-
-        stars = max(0.0, min(5.0, rating))
-        rating_10 = rating * 2.0
-
-        # Amenities
-        amenities: List[str] = []
-        desc = str(item).lower()
-
-        def add_if(keywords, tag):
-            for kw in keywords:
-                if kw in desc:
-                    amenities.append(tag)
-                    break
-
-        add_if(["wifi", "wi-fi"], "wifi")
-        add_if(["free breakfast", "breakfast", "bữa sáng", "ăn sáng"], "breakfast")
-        add_if(["pool", "swimming pool", "bể bơi"], "pool")
-        add_if(["parking", "bãi đỗ xe", "chỗ đỗ xe"], "parking")
-
-        amenities = list(dict.fromkeys(amenities))
-
-        # GPS coordinates
-        gps = item.get("gps_coordinates") or {}
-        lat = gps.get("latitude")
-        lon = gps.get("longitude")
-        if lat is None or lon is None:
-            continue
-        try:
-            lat = float(lat)
-            lon = float(lon)
-        except Exception:
-            continue
-
-        dist = haversine_km(city_lon, city_lat, lon, lat)
-        acc_type = detect_acc_type(item)
-
-        acc = Accommodation(
-            id=acc_id,
-            name=name,
-            city=city_name,
-            type=acc_type,
-            price=price,
-            stars=stars,
-            rating=rating_10,
-            capacity=4,
-            amenities=amenities,
-            address=item.get("address", city_name),
-            lon=lon,
-            lat=lat,
-            distance_km=dist,
-        )
-        accommodations.append(acc)
-
-    return accommodations, (city_lon, city_lat)
-
-def filter_with_relaxation(accommodations: List[Accommodation], q: SearchQuery):
-    def _do_filter(rating_min, amenity_mode="all", price_relax=1.0):
+def filter_with_relaxation(accommodations: List[Accommodation], q: SearchQuery, top_k: int = 5):
+    # (Giữ logic từ app.py)
+    def _do(rating_min, amenity_mode="all", price_relax=1.0, radius_relax=1.0):
         pmin, pmax = q.price_min, q.price_max
         if price_relax > 1.0 and pmax > pmin:
-            center = (pmin + pmax)/2.0
-            half = (pmax - pmin)/2.0
-            extra = half*(price_relax-1.0)
-            pmin = max(0, center-half-extra)
-            pmax = center+half+extra
-        out = []
-        required_lower = [x.lower() for x in q.amenities_required]
+            half = (pmax - pmin)/2
+            extra = half * (price_relax - 1.0)
+            pmin = max(0, (pmin+pmax)/2 - half - extra)
+            pmax = (pmin+pmax)/2 + half + extra
+            
+        r_lim = (q.radius_km or 0.0) * radius_relax
+        
+        res = []
         for a in accommodations:
-            if pmin>0 and a.price < pmin: continue
-            if pmax>0 and a.price > pmax: continue
-            if a.capacity < q.group_size: continue
-            if q.types and (a.type not in q.types): continue
+            if r_lim > 0 and a.distance_km > r_lim: continue
+            if pmin > 0 and a.price < pmin: continue
+            if pmax > 0 and a.price > pmax: continue
+            if q.types and a.type not in q.types: continue
             if a.rating < rating_min: continue
-            have=[am.lower() for am in a.amenities]
-            if required_lower:
-                if amenity_mode=="all":
-                    if any(req not in have for req in required_lower): continue
-                elif amenity_mode=="any":
-                    if not any(req in have for req in required_lower): continue
-            out.append(a)
-        return out
+            if q.stars_min > 0 and a.type in ("hotel", "resort") and a.stars < q.stars_min: continue
+            res.append(a)
+        return res
 
     levels = [
-        {"desc":"Strict", "amenity_mode":"all","rating_min":q.rating_min,"price_relax":1.0},
+        {"desc": "Thỏa mãn đầy đủ tiêu chí.", "rat": q.rating_min, "p": 1.0, "r": 1.0},
+        {"desc": "Nới lỏng tiện ích.", "rat": q.rating_min, "p": 1.0, "r": 1.0},
+        {"desc": "Nới lỏng rating, bán kính nhẹ.", "rat": max(0, q.rating_min - 1.0), "p": 1.0, "r": 1.2},
+        {"desc": "Nới rộng giá và bán kính.", "rat": max(0, q.rating_min - 1.0), "p": 1.2, "r": 1.5},
     ]
-    if q.amenities_required:
-        levels.append({"desc":"Relax any","amenity_mode":"any","rating_min":q.rating_min,"price_relax":1.0})
-    levels.append({"desc":"Lower rating","amenity_mode":"ignore","rating_min":max(0,q.rating_min-1.0),"price_relax":1.0})
-    levels.append({"desc":"Expand price","amenity_mode":"ignore","rating_min":max(0,q.rating_min-1.0),"price_relax":1.2})
 
-    for cfg in levels:
-        cand = _do_filter(cfg["rating_min"], cfg["amenity_mode"], cfg["price_relax"])
-        if cand:
-            return cand, cfg["desc"]
-    return accommodations, "Very limited data"
- 
-def score_accommodation(a: Accommodation, q: SearchQuery) -> float:
-    Pmin, Pmax = q.price_min, q.price_max
-    if Pmax > Pmin:
-        Pc = (Pmin + Pmax)/2.0
-        denom = max(1.0, (Pmax - Pmin)/2.0)
-        S_price = 1.0 - min(abs(a.price - Pc)/denom, 1.0)
-    else:
-        S_price = 1.0
-    S_stars = clamp01(a.stars / 5.0)
-    S_rating = clamp01(a.rating / 10.0)
-    have = set(x.lower() for x in a.amenities)
-    req = set(x.lower() for x in q.amenities_required)
-    pref = set(x.lower() for x in q.amenities_preferred)
-    if req or pref:
-        match_req = len(have.intersection(req))
-        match_pref = len(have.intersection(pref))
-        matched_score = match_req + 0.5 * match_pref
-        max_possible = max(1.0, len(req) + 0.5 * len(pref))
-        S_amen = matched_score / max_possible
-    else:
-        S_amen = 1.0
-    if q.radius_km > 0:
-        S_dist = 1.0 - min(a.distance_km / q.radius_km, 1.0)
-    else:
-        S_dist = 1.0
-
-    mode = getattr(q, "priority", "balanced")
-    if mode == "cheap":
-        w_price, w_stars, w_rating, w_amen, w_dist = 0.40, 0.15, 0.20, 0.15, 0.10
-    elif mode == "near_center":
-        w_price, w_stars, w_rating, w_amen, w_dist = 0.20, 0.10, 0.20, 0.15, 0.35
-    elif mode == "amenities":
-        w_price, w_stars, w_rating, w_amen, w_dist = 0.20, 0.10, 0.20, 0.40, 0.10
-    else:
-        w_price, w_stars, w_rating, w_amen, w_dist = 0.25, 0.20, 0.25, 0.20, 0.10
-
-    return (w_price*S_price + w_stars*S_stars + w_rating*S_rating + w_amen*S_amen + w_dist*S_dist)
+    final, note = [], ""
+    seen = set()
+    
+    for lvl in levels:
+        cands = _do(lvl["rat"], price_relax=lvl["p"], radius_relax=lvl["r"])
+        if cands:
+            if not note: note = lvl["desc"]
+            for a in cands:
+                if a.id not in seen:
+                    final.append(a)
+                    seen.add(a.id)
+        if len(final) >= top_k: break
+        
+    return final, note
 
 def rank_accommodations(accommodations: List[Accommodation], q: SearchQuery, top_k: int = 5):
-    """
-    Lọc và xếp hạng accommodations
-    """
-    filtered, relax_note = filter_with_relaxation(accommodations, q)
+    filtered, note = filter_with_relaxation(accommodations, q, top_k)
+    if not filtered: return [], note
+    
+    scored = [{"score": score_accommodation(a, q), "accommodation": a} for a in filtered]
+    # Sort: Score desc, Rating desc, Reviews desc, Dist asc
+    scored.sort(key=lambda x: (-x["score"], -x["accommodation"].rating, -x["accommodation"].reviews, x["accommodation"].distance_km))
+    return scored[:top_k], note
 
-    if not filtered:
-        return [], relax_note
+# ==================== 3-STAGE PIPELINE ====================
+def stage1_fill_db_from_maps(q: SearchQuery, target_new=50, max_pages=8):
+    city_name = normalize_city(q.city)
+    geo = smart_geocode(city_name + ", Vietnam")
+    if not geo: raise ValueError("City not found")
+    
+    lat, lon = geo["lat"], geo["lon"]
+    db = load_accommodation_db()
+    queries = build_query_phrases(city_name, q.types)
+    
+    starts = list(range(0, PAGE_SIZE*10, PAGE_SIZE))
+    attempts = [(qq, s) for qq in queries for s in starts]
+    random.shuffle(attempts)
+    
+    new_added, pages = 0, 0
+    for qq, s in attempts:
+        if new_added >= target_new or pages >= max_pages: break
+        
+        try: results = serpapi_google_maps_search(qq, lat, lon, s)
+        except: results = []
+        pages += 1
+        if not results: continue
+        
+        added_page = 0
+        for item in results:
+            acc = parse_maps_item_to_acc(item, city_name, lat, lon, radius_km=None)
+            if acc and acc.id not in db:
+                db[acc.id] = acc_to_dict(acc)
+                new_added += 1
+                added_page += 1
+                if new_added >= target_new: break
+        if added_page == 0: break
+        
+    save_accommodation_db(db)
+    return db, (lon, lat), {"new_added": new_added, "pages_used": pages}
 
-    scored = []
-    for a in filtered:
-        s = score_accommodation(a, q)
-        scored.append({
-            "score": s,
-            "accommodation": a,
-        })
+def stage2_rank_from_db(q: SearchQuery, db: dict, top_n=30):
+    city_norm = normalize_city(q.city)
+    all_acc = []
+    for d in db.values():
+        if normalize_city(d.get("city", "")) == city_norm:
+            try: all_acc.append(dict_to_acc(d))
+            except: continue
+    return rank_accommodations(all_acc, q, top_k=top_n)
 
-    scored.sort(
-        key=lambda item: (item["score"], item["accommodation"].rating),
-        reverse=True
-    )
-    return scored[:top_k], relax_note
+def is_fresh(rec: dict, days=7) -> bool:
+    ts = rec.get("updated_at")
+    if not ts: return False
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        if not dt.tzinfo: dt = dt.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - dt) < timedelta(days=days)
+    except: return False
+
+def stage3_enrich_topN_and_rerank(topN_items: list, q: SearchQuery, db: dict, top_k=5):
+    if not API_KEY:
+        accs = [x["accommodation"] for x in topN_items]
+        return rank_accommodations(accs, q, top_k)
+    
+    for item in topN_items:
+        acc = item["accommodation"]
+        cached = db.get(acc.id)
+        
+        # Restore cache if available
+        if cached:
+            if cached.get("amenities"): acc.amenities = cached["amenities"]
+            if cached.get("stars"): acc.stars = float(cached["stars"])
+            
+        # Enrich if missing
+        if not acc.amenities: enrich_amenities_with_hotels_api(acc, API_KEY)
+        if acc.type in ("hotel", "resort") and acc.stars <= 0:
+            enrich_hotel_class_one_with_hotels_api(acc, API_KEY, q.checkin, q.checkout, q.adults, q.children)
+            
+        new_rec = acc_to_dict(acc)
+        # Update logic: merge if fresh, overwrite if stale/new
+        if cached and is_fresh(cached):
+            for k in ["amenities", "stars", "rating"]:
+                if new_rec.get(k) and not cached.get(k): cached[k] = new_rec[k]
+            db[acc.id] = cached
+        else:
+            db[acc.id] = new_rec
+            
+    save_accommodation_db(db)
+    accs = [x["accommodation"] for x in topN_items]
+    return rank_accommodations(accs, q, top_k)
+
+def perform_recommendation(q: SearchQuery):
+    t0 = time.perf_counter()
+    db, center, s1 = stage1_fill_db_from_maps(q)
+    t1 = time.perf_counter()
+    top30, note2 = stage2_rank_from_db(q, db)
+    t2 = time.perf_counter()
+    top5, note3 = stage3_enrich_topN_and_rerank(top30, q, db)
+    t3 = time.perf_counter()
+    
+    return top5, center, (note3 or note2), {
+        "stage1": t1-t0, "stage2": t2-t1, "stage3": t3-t2, "total": t3-t0
+    }
+
+# ==================== ROUTING HELPERS ====================
+
+def describe_osrm_step(step: dict, lang: str = 'vi') -> str:
+    # Logic dịch step sang text (được lấy từ app.py)
+    maneuver = step.get("maneuver", {})
+    type_ = maneuver.get("type", "")
+    modifier = (maneuver.get("modifier") or "").lower()
+    name = (step.get("name") or "").strip()
+    dist = step.get("distance", 0.0)
+    
+    dist_str = f"{int(dist)} m" if dist < 1000 else f"{dist/1000:.1f} km"
+    
+    # Simple mapping for brevity (bạn có thể dùng TRANS dict nếu muốn full multi-lang)
+    dir_map = {
+        "right": "rẽ phải", "slight right": "chếch phải", 
+        "left": "rẽ trái", "slight left": "chếch trái",
+        "straight": "đi thẳng", "uturn": "quay đầu"
+    }
+    action = dir_map.get(modifier, "rẽ")
+    
+    if type_ == "depart": return f"Bắt đầu từ {name or 'điểm xuất phát'}."
+    if type_ == "arrive": return "Đến điểm đến."
+    if type_ in ("turn", "end of road", "fork"):
+        return f"Đi {dist_str} rồi {action} vào {name}." if name else f"Đi {dist_str} rồi {action}."
+    if name: return f"Đi tiếp {dist_str} trên {name}."
+    return f"Đi tiếp {dist_str}."
+
+def recommend_transport_mode(distance_km: float, lang: str = 'vi'):
+    # Logic gợi ý phương tiện
+    if distance_km <= 1.5:
+        return "walking", "Quãng đường ngắn, đi bộ là tốt nhất."
+    elif distance_km <= 7:
+        return "walking", "Khá gần, đi bộ hoặc xe đạp đều ổn."
+    elif distance_km <= 300:
+        return "driving", "Nên đi xe máy hoặc ô tô."
+    return "driving", "Rất xa, cân nhắc xe khách hoặc máy bay."
+
+def analyze_route_complexity(route_data: dict, profile: str, lang: str = 'vi'):
+    dist = route_data.get("distance_km", 0)
+    steps = len(route_data.get("steps_raw", []))
+    
+    lvl, lbl = "low", "Dễ"
+    summ = "Đường đi đơn giản."
+    reasons = []
+    
+    if dist > 20:
+        lvl, lbl = "medium", "Trung bình"
+        reasons.append("Quãng đường khá xa.")
+    if steps > 20:
+        lvl, lbl = "high", "Phức tạp"
+        reasons.append("Nhiều ngã rẽ.")
+        
+    return lvl, lbl, summ, reasons
 
 # ==================== API ENDPOINTS ====================
 
+@app.route('/api/recommend', methods=['POST'])
+def api_recommend():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"status": "error", "message": "No JSON data provided"}), 400
+
+        # Parse date strings to date objects
+        def parse_date(d_str):
+            return datetime.strptime(d_str, "%Y-%m-%d").date() if d_str else None
+
+        # Construct SearchQuery object from JSON
+        q = SearchQuery(
+            city=data.get("city", "Hồ Chí Minh"),
+            group_size=data.get("group_size", 2),
+            price_min=float(data.get("price_min", 0)),
+            price_max=float(data.get("price_max", 0)),
+            types=data.get("types", []),
+            rating_min=float(data.get("rating_min", 0)),
+            amenities_preferred=data.get("amenities_preferred", []),
+            radius_km=data.get("radius_km"),
+            priority=data.get("priority", "balanced"),
+            stars_min=data.get("stars_min", 0),
+            checkin=parse_date(data.get("checkin")),
+            checkout=parse_date(data.get("checkout")),
+            adults=int(data.get("adults", 2)),
+            children=int(data.get("children", 0))
+        )
+        
+        # Run Algorithm
+        top5, center, note, timing = perform_recommendation(q)
+        
+        # Serialize Result
+        results_json = []
+        for item in top5:
+            # Convert Accommodation object back to dict for JSON response
+            acc_dict = acc_to_dict(item["accommodation"])
+            # Add the score explicitly
+            acc_dict["_score"] = item["score"]
+            results_json.append(acc_dict)
+
+        return jsonify({
+            "status": "success",
+            "city_center": {"lon": center[0], "lat": center[1]},
+            "results": results_json,
+            "note": note,
+            "timing": timing
+        })
+
+    except Exception as e:
+        print(f"Recommend API Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route('/api/route', methods=['POST'])
 def api_get_route():
-    # 1. Lấy dữ liệu và in RA NGAY LẬP TỨC để kiểm tra
     data = request.json
-    print(f"\n{'='*10} DEBUG REQUEST {'='*10}", flush=True)
-    print(f"📦 RAW DATA NHẬN ĐƯỢC: {data}", flush=True) # <--- Dòng này quan trọng nhất
+    print(f"DEBUG ROUTE REQ: {data}")
     
     src = data.get("src")
     dst = data.get("dst")
-    profile = data.get("profile", "driving") # Mặc định là driving nếu không có key
+    profile = data.get("profile", "driving")
     lang = data.get("lang", "vi")
 
     if not src or not dst:
         return jsonify({"status": "error", "message": "Missing src/dst"}), 400
 
-    # 2. Logic ánh xạ (Code của bạn đã đúng, tôi chỉ làm gọn lại)
-    if profile in ['foot', 'walking', 'di_bo']:
-        osrm_mode = 'walking'
-    elif profile in ['cycling', 'bike', 'bicycle', 'xe_dap']:
-        osrm_mode = 'cycling'
-    else:
-        osrm_mode = 'driving'
+    osrm_mode = 'driving'
+    if profile in ['foot', 'walking', 'di_bo']: osrm_mode = 'walking'
+    elif profile in ['cycling', 'bike', 'xe_dap']: osrm_mode = 'cycling'
 
-    # 3. Tạo URL
     url = f"https://router.project-osrm.org/route/v1/{osrm_mode}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}?overview=full&geometries=geojson&steps=true"
-
-    # 4. In thông tin kiểm tra lần cuối
-    print(f"📡 PROFILE XỬ LÝ: '{profile}'", flush=True)
-    print(f"🛠️ MODE OSRM:     '{osrm_mode}'", flush=True)
-    print(f"🔗 URL GỌI ĐI:    {url}", flush=True)
-    print("="*35, flush=True)
     
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code != 200: 
-            return jsonify({"status": "error", "message": "OSRM Error"})
-            
+        r = requests.get(url, timeout=30)
+        if r.status_code != 200: return jsonify({"status": "error", "message": "OSRM Error"})
+        
         res = r.json()
-        if not res.get("routes"): 
-            return jsonify({"status": "error", "message": "No route found"})
+        if not res.get("routes"): return jsonify({"status": "error", "message": "No route found"})
         
         route = res["routes"][0]
         dist_km = route["distance"] / 1000.0
         
-        # ⚠️ FIX LỖI OSRM: Tự tính lại thời gian nếu server trả về sai
-        # Tốc độ trung bình: Đi bộ 5km/h, Xe đạp 15km/h, Ô tô lấy theo API
-        if osrm_mode == 'walking':
-            dur_min = (dist_km / 5.0) * 60  # Tính phút
-        elif osrm_mode == 'cycling':
-            dur_min = (dist_km / 15.0) * 60 # Tính phút
-        else:
-            dur_min = route["duration"] / 60.0 # Ô tô thì tin tưởng API
+        # Re-calc duration
+        if osrm_mode == 'walking': dur_min = (dist_km / 5.0) * 60
+        elif osrm_mode == 'cycling': dur_min = (dist_km / 15.0) * 60
+        else: dur_min = route["duration"] / 60.0
 
         steps_raw = route["legs"][0]["steps"]
         instructions = [describe_osrm_step(s, lang) for s in steps_raw]
@@ -831,7 +676,7 @@ def api_get_route():
             "path": [[lat, lon] for lon, lat in route["geometry"]["coordinates"]],
             "info": {
                 "distance_text": f"{dist_km:.2f} km",
-                "duration_text": f"{int(dur_min)} min" if lang == 'en' else f"{int(dur_min)} phút",
+                "duration_text": f"{int(dur_min)} min",
                 "complexity_level": lvl,
                 "complexity_label": lbl,
                 "complexity_summary": summ,
@@ -842,54 +687,8 @@ def api_get_route():
         })
 
     except Exception as e:
-        print("Error:", e, flush=True)
-        return jsonify({"status": "error", "message": str(e)})
-
-@app.route('/api/recommend', methods=['POST'])
-def recommend_api():
-    data = request.json
-    lang = data.get("lang", "vi")
-
-    query = SearchQuery(
-        city=data.get("city"),
-        group_size=int(data.get("group_size", 1)),
-        price_min=float(data.get("price_min", 0)),
-        price_max=float(data.get("price_max", 0)),
-        types=data.get("types", []),
-        rating_min=float(data.get("rating_min", 0)),
-        amenities_required=data.get("amenities_required", []),
-        amenities_preferred=data.get("amenities_preferred", []),
-        radius_km=float(data.get("radius_km", 5)),
-        priority=data.get("priority", "balanced")
-    )
-
-    accommodations, center = fetch_google_hotels(query.city, query.radius_km, query.types)
-    ranked_results, note = rank_accommodations(accommodations, query, top_k=10)
-
-    results = []
-    for item in ranked_results:
-        acc = item["accommodation"]
-        results.append({
-            "id": acc.id,
-            "name": translate_text(acc.name, lang),
-            "price": acc.price,
-            "rating": acc.rating,
-            "stars": acc.stars,
-            "address": translate_text(acc.address, lang),
-            "amenities": acc.amenities,
-            "distance_km": acc.distance_km,
-            "score": item["score"],
-            "lat": acc.lat,
-            "lon": acc.lon
-        })
-
-    return jsonify({
-        "results": results,
-        "relaxation_note": translate_text(note, lang),
-        "center": {"lat": center[1], "lon": center[0]} if center else None
-    })
-
-# ==================== MAIN ====================
+        print(f"Route API Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
