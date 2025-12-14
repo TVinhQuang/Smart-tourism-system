@@ -9,7 +9,7 @@ import json
 from dataclasses import dataclass
 from deep_translator import GoogleTranslator
 import time
-
+import os
 LAST_OSRM_CALL = 0
 OSRM_INTERVAL = 2.0  # 2 giây
 # Giả định file translator.py nằm cùng thư mục
@@ -632,5 +632,6 @@ def api_get_route():
         print("Error:", e)
         return jsonify({"status": "error", "message": str(e)})
 
-if __name__ == "__main__":
-    app.run(port=8000, debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8000)) # Lấy port từ Railway
+    app.run(host='0.0.0.0', port=port)

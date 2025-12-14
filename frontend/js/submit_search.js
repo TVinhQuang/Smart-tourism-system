@@ -63,7 +63,10 @@ function submitSearch() {
     const relaxationNote = document.getElementById("relaxation-note");
     if(relaxationNote) relaxationNote.style.display = 'none'; // Ẩn note cũ
 
-    fetch("http://localhost:5000/api/recommend", {
+    // Lưu ý: Không có dấu / ở cuối domain nếu trong đường dẫn đã có /
+const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
+
+    fetch(`${BASE_URL}/api/recommend-hotel`,{
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)

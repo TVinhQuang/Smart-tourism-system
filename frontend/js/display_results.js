@@ -116,7 +116,10 @@ function viewMap(dstLat, dstLon, dstName) {
         dst: { lat: dstLat, lon: dstLon, name: dstName }
     };
 
-    fetch("http://localhost:5000/api/route", {
+    // Lưu ý: Không có dấu / ở cuối domain nếu trong đường dẫn đã có /
+    const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
+
+    fetch(`${BASE_URL}/api/recommend-hotel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
