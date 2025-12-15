@@ -12,7 +12,7 @@
 
 * Python 3.x
 * Other dependencies in `requirements.txt`
-* Download Docker: https://www.docker.com/products/docker-desktop/ and install it with default setting
+* Download Docker: https://www.docker.com/products/docker-desktop and install it with default setting
 * Download drive: https://drive.google.com/drive/folders/1OHd58IBESf6Hmhe9QoolqtdJ4-7PsvWN
 
 ## ⚙️ Installation

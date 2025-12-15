@@ -79,6 +79,9 @@ function toggleChat() {
     }
 }
 
+// --- Thêm biến toàn cục để lưu lịch sử chat ngay đầu file hoặc trước hàm sendMessage ---
+let chatHistory = []; 
+
 async function sendMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value;
@@ -86,10 +89,7 @@ async function sendMessage() {
 
     const chatBody = document.getElementById('chat-body');
     
-    // 1. Lấy UID (Nếu user đã đăng nhập, UID sẽ có giá trị, nếu không thì null)
-    const userUid = localStorage.getItem("user_uid"); 
-
-    // 2. Hiển thị tin nhắn User NGAY LẬP TỨC (để tạo cảm giác mượt mà)
+    // 1. Hiển thị tin nhắn User lên giao diện
     const userMsgHTML = `
         <div class="message-row user">
             <div class="avatar">👤</div>
@@ -97,7 +97,10 @@ async function sendMessage() {
         </div>`;
     chatBody.insertAdjacentHTML('beforeend', userMsgHTML);
     input.value = ""; // Xóa ô nhập liệu
-    chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+    chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống
+
+    // 2. Cập nhật lịch sử chat (Client side)
+    chatHistory.push({ "role": "user", "content": text });
 
     // 3. Hiển thị hiệu ứng Loading (...)
     const loadingId = "loading-" + Date.now();
@@ -111,15 +114,14 @@ async function sendMessage() {
 
     // 4. Gọi API Backend
     try {
-        // Đảm bảo port khớp với server.py (8000 hoặc 5000)
         const response = await fetch('http://127.0.0.1:8000/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            // --- SỬA LỖI Ở ĐÂY: Gửi đúng key "messages" mà server cần ---
             body: JSON.stringify({ 
-                message: text,
-                uid: userUid // Gửi kèm UID để server lưu lịch sử (QUAN TRỌNG)
+                messages: chatHistory 
             })
         });
 
@@ -130,21 +132,25 @@ async function sendMessage() {
         if (loadingEl) loadingEl.remove();
 
         // 6. Hiển thị câu trả lời từ Bot
+        // Nếu server trả về lỗi, data.reply có thể undefined, cần fallback
+        const botReply = data.reply || "Xin lỗi, mình không nhận được phản hồi.";
+        
         const botMsgHTML = `
             <div class="message-row bot">
                 <div class="avatar">🤖</div>
-                <div class="message-content">${data.reply}</div>
+                <div class="message-content">${botReply}</div>
             </div>`;
         chatBody.insertAdjacentHTML('beforeend', botMsgHTML);
+
+        // 7. Cập nhật lịch sử chat với câu trả lời của Bot (để ngữ cảnh liên tục)
+        chatHistory.push({ "role": "assistant", "content": botReply });
 
     } catch (error) {
         console.error("Lỗi Chatbot:", error);
         
-        // Xóa loading nếu lỗi
         const loadingEl = document.getElementById(loadingId);
         if (loadingEl) loadingEl.remove();
 
-        // Thông báo lỗi cho người dùng
         const errHTML = `
             <div class="message-row bot">
                 <div class="avatar">🤖</div>
@@ -153,6 +159,5 @@ async function sendMessage() {
         chatBody.insertAdjacentHTML('beforeend', errHTML);
     }
     
-    // Cuộn xuống cuối cùng sau khi bot trả lời
     chatBody.scrollTop = chatBody.scrollHeight;
 }
