@@ -9,19 +9,23 @@ import json
 import time
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
 # --- THƯ VIỆN MỚI ---
 import firebase_admin
 from firebase_admin import credentials, firestore, auth as admin_auth
-import ollama
+
+# Xử lý import optional cho ollama
+try:
+    import ollama
+except ImportError:
+    ollama = None
 
 # ==============================================================================
 # 0. INIT & CONFIG
 # ==============================================================================
 
 app = Flask(__name__)
-# Cho phép tất cả các nguồn (origins="*") để tránh lỗi CORS tuyệt đối
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 1. Cấu hình SerpApi
@@ -32,16 +36,20 @@ OLLAMA_MODEL = "llama3.2:latest"
 
 # 3. Cấu hình Firebase
 try:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    print("DEBUG: ✅ Firebase Connected")
+    if os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        print("DEBUG: ✅ Firebase Connected")
+    else:
+        print("DEBUG: ⚠️ serviceAccountKey.json not found. Firebase disabled.")
+        db = None
 except Exception as e:
     print(f"DEBUG: ⚠️ Firebase Warning: {e}")
     db = None
 
 LAST_OSRM_CALL = 0
-OSRM_INTERVAL = 2.0 
+OSRM_INTERVAL = 0.5 
 
 # Fallback translator
 try:
@@ -129,6 +137,7 @@ def _get_text(lang, key): return TRANS.get(lang, TRANS["vi"]).get(key, "")
 def _format_distance(meters: float) -> str: return f"{int(round(meters))} m" if meters < 1000 else f"{meters/1000.0:.1f} km"
 
 def serpapi_geocode(q: str):
+    # (Giữ nguyên logic cũ)
     print(f"DEBUG: Đang Geocode '{q}'...")
     params = {"engine": "google_maps", "q": q, "type": "search", "api_key": SERPAPI_KEY, "hl": "vi"}
     try:
@@ -148,10 +157,8 @@ def serpapi_geocode(q: str):
 # ==============================================================================
 # LOGIC & RANKING
 # ==============================================================================
-# (Giữ nguyên logic của bạn, chỉ thu gọn để dễ nhìn)
 
 def describe_osrm_step(step: dict, lang="vi") -> str:
-    # ... (Giữ nguyên logic cũ)
     t = lambda k: _get_text(lang, k)
     maneuver = step.get("maneuver", {})
     type_ = maneuver.get("type", "")
@@ -195,99 +202,162 @@ def analyze_route_complexity(route, profile, lang="vi"):
     return "high", t("hard"), t("hard_desc"), reasons
 
 def detect_acc_type(item) -> str:
-    text = " ".join([item.get("title", ""), item.get("type", ""), " ".join(item.get("types", []))]).lower()
-    if any(kw in text for kw in ["homestay", "guest house", "nhà nghỉ"]): return "homestay"
-    if "resort" in text: return "resort"
-    if "hostel" in text: return "hostel"
-    if any(kw in text for kw in ["apartment", "căn hộ"]): return "apartment"
-    return "hotel"
+    # (Giữ nguyên logic cũ)
+    title = item.get("title", "")
+    type_str = item.get("type", "")
+    types_list = " ".join(item.get("types", [])) if item.get("types") else ""
+    text = f"{title} {type_str} {types_list}".lower()
+    
+    if any(kw in text for kw in ["homestay", "guest house", "nhà nghỉ", "nhà dân"]): return "Homestay"
+    if "resort" in text: return "Resort"
+    if "hostel" in text: return "Hostel"
+    if any(kw in text for kw in ["apartment", "căn hộ", "chung cư"]): return "Apartment"
+    if "villa" in text: return "Villa"
+    return "Hotel"
 
 def fetch_google_hotels(city_name: str, radius_km: float = 5.0, wanted_types: List[str] = None):
-    # ... (Giữ nguyên logic fetch của bạn)
     if wanted_types is None: wanted_types = []
+    
     city_geo = serpapi_geocode(city_name + ", Vietnam")
     if not city_geo: return [], None
     city_lat, city_lon = city_geo["lat"], city_geo["lon"]
     
-    q_str = f"khách sạn homestay ở {city_name}" # Simplified for brevity
-    params = {"engine": "google_maps", "type": "search", "google_domain": "google.com.vn", "q": q_str, "ll": f"@{city_lat},{city_lon},14z", "api_key": SERPAPI_KEY, "hl": "vi"}
+    # TỰ ĐỘNG TẠO NGÀY: Ngày mai -> Ngày kia (Để lấy giá từ Google)
+    tomorrow = datetime.now() + timedelta(days=1)
+    next_day = tomorrow + timedelta(days=1)
     
-    try:
-        local_results = GoogleSearch(params).get_dict().get("local_results", [])
-    except: return [], (city_lon, city_lat)
+    q_str = f"hotel homestay in {city_name}"
+    params = {
+        "engine": "google_maps", 
+        "type": "search", 
+        "google_domain": "google.com.vn", 
+        "q": q_str, 
+        "ll": f"@{city_lat},{city_lon},14z", 
+        "check_in_date": tomorrow.strftime("%Y-%m-%d"),
+        "check_out_date": next_day.strftime("%Y-%m-%d"),
+        "api_key": SERPAPI_KEY, 
+        "hl": "vi"
+    }
+    
+    accommodations = [] 
 
-    accommodations = []
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        local_results = results.get("local_results", [])
+    except Exception as e:
+        print(f"DEBUG: SerpApi error: {e}")
+        return [], (city_lon, city_lat)
+
     for item in local_results:
-        # ... (Logic parse item giữ nguyên)
-        raw_name = item.get("title", "").strip()
-        if not raw_name: continue
-        gps = item.get("gps_coordinates") or {}
-        if not gps.get("latitude"): continue
-        
-        acc = Accommodation(
-            id=str(item.get("data_id") or hash(raw_name)),
-            name=raw_name, city=city_name, type=detect_acc_type(item),
-            price=700000.0, # Placeholder logic ngắn gọn
-            stars=0.0, rating=0.0, capacity=4, amenities=[], 
-            address=item.get("address", ""), lon=float(gps["longitude"]), lat=float(gps["latitude"]), 
-            distance_km=haversine_km(city_lon, city_lat, float(gps["longitude"]), float(gps["latitude"]))
-        )
-        accommodations.append(acc)
+        try:
+            gps = item.get("gps_coordinates")
+            if not gps: continue
+
+            raw_name = item.get("title", "Unknown")
+            
+            price_val = 700000.0 # Giá mặc định nếu Google không trả về
+            price_raw = item.get("price")
+            if price_raw:
+                clean_price = "".join(filter(str.isdigit, str(price_raw)))
+                if clean_price:
+                    price_val = float(clean_price)
+
+            acc = Accommodation(
+                id=str(item.get("data_id") or hash(raw_name)),
+                name=raw_name,
+                city=city_name,
+                type=detect_acc_type(item),
+                price=price_val,
+                stars=float(item.get("rating", 0.0)),
+                rating=float(item.get("rating", 0.0)),
+                capacity=4, # Mặc định capacity vì đã bỏ input
+                amenities=item.get("amenities", []),
+                address=item.get("address", "Đang cập nhật địa chỉ"),
+                lon=float(gps["longitude"]),
+                lat=float(gps["latitude"]),
+                distance_km=haversine_km(city_lon, city_lat, float(gps["longitude"]), float(gps["latitude"]))
+            )
+            accommodations.append(acc)
+        except Exception as e:
+            continue
+
     return accommodations, (city_lon, city_lat)
 
 def rank_accommodations(accommodations, q, top_k=5):
-    # Trả về dummy để code chạy được, bạn giữ logic cũ của bạn nếu muốn chi tiết
-    return [{"score": 0.9, "accommodation": a} for a in accommodations[:top_k]], "OK"
+    # Hàm xếp hạng đơn giản hóa
+    ranked = []
+    for acc in accommodations:
+        # Logic chấm điểm đơn giản
+        score = 0.5
+        if acc.rating >= 4.0: score += 0.2
+        if acc.price <= q.price_max: score += 0.2
+        ranked.append({"score": score, "accommodation": acc})
+    
+    ranked.sort(key=lambda x: x["score"], reverse=True)
+    return ranked[:top_k], "Đã lọc theo tiêu chí tốt nhất."
 
 # ==============================================================================
-# 5. API ENDPOINTS (ĐÃ SỬA TÊN ROUTE)
+# 5. API ENDPOINTS
 # ==============================================================================
 
-# --- SỬA QUAN TRỌNG: Đổi route từ /api/recommend thành /api/recommend-hotel ---
 @app.route('/api/recommend-hotel', methods=['POST'])
 def recommend_api():
-    data = request.json
-    lang = data.get("lang", "vi")
+    try:
+        data = request.json
+        lang = data.get("lang", "vi")
 
-    query = SearchQuery(
-        city=data.get("city"),
-        group_size=int(data.get("group_size", 1)),
-        price_min=float(data.get("price_min", 0)),
-        price_max=float(data.get("price_max", 0)),
-        types=data.get("types", []),
-        rating_min=float(data.get("rating_min", 0)),
-        amenities_required=data.get("amenities_required", []),
-        amenities_preferred=data.get("amenities_preferred", []),
-        radius_km=float(data.get("radius_km", 5)),
-        priority=data.get("priority", "balanced")
-    )
+        # CẬP NHẬT: Không lấy group_size từ request nữa
+        query = SearchQuery(
+            city=data.get("city"),
+            # group_size=int(data.get("group_size", 1)), --> ĐÃ XÓA
+            price_min=float(data.get("price_min", 0)),
+            price_max=float(data.get("price_max", 0)),
+            types=data.get("types", []),
+            rating_min=float(data.get("rating_min", 0)),
+            amenities_required=data.get("amenities_required", []),
+            amenities_preferred=data.get("amenities_preferred", []),
+            radius_km=float(data.get("radius_km", 5)),
+            priority=data.get("priority", "balanced")
+        )
 
-    # Sử dụng logic cũ để lấy dữ liệu
-    accommodations, center = fetch_google_hotels(query.city, query.radius_km, query.types)
-    ranked_results, note = rank_accommodations(accommodations, query, top_k=5)
+        accommodations, center = fetch_google_hotels(query.city, query.radius_km, query.types)
+        
+        if not accommodations:
+             return jsonify({
+                "results": [],
+                "relaxation_note": "Không tìm thấy khách sạn nào.",
+                "center": {"lat": center[1], "lon": center[0]} if center else None
+            })
 
-    results = []
-    for item in ranked_results:
-        acc = item["accommodation"]
-        results.append({
-            "id": acc.id,
-            "name": translate_text(acc.name, lang),
-            "price": acc.price,
-            "rating": acc.rating,
-            "stars": acc.stars,
-            "address": translate_text(acc.address, lang),
-            "amenities": acc.amenities,
-            "distance_km": acc.distance_km,
-            "score": item["score"],
-            "lat": acc.lat,
-            "lon": acc.lon
+        ranked_results, note = rank_accommodations(accommodations, query, top_k=5)
+
+        results = []
+        for item in ranked_results:
+            acc = item["accommodation"]
+            results.append({
+                "id": acc.id,
+                "name": acc.name, 
+                "type": acc.type,
+                "price": acc.price,
+                "rating": acc.rating,
+                "stars": acc.stars,
+                "address": acc.address,
+                "amenities": acc.amenities,
+                "distance_km": acc.distance_km,
+                "score": item["score"],
+                "lat": acc.lat,
+                "lon": acc.lon
+            })
+
+        return jsonify({
+            "results": results,
+            "relaxation_note": note,
+            "center": {"lat": center[1], "lon": center[0]} if center else None
         })
-
-    return jsonify({
-        "results": results,
-        "relaxation_note": translate_text(note, lang),
-        "center": {"lat": center[1], "lon": center[0]} if center else None
-    })
+    except Exception as e:
+        print(f"API Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/route', methods=['POST'])
 def api_get_route():
@@ -306,10 +376,9 @@ def api_get_route():
     LAST_OSRM_CALL = now
 
     osrm_mode = 'foot' if profile in ['foot', 'walking'] else 'driving'
-    # URL OSRM Demo server (nếu bạn không chạy local OSRM trên Railway)
-    # Lưu ý: Trên Railway bạn không thể gọi localhost:5000 cho OSRM trừ khi bạn chạy OSRM trong cùng container
-    # Tạm thời dùng public server cho demo:
-    url = f"http://router.project-osrm.org/route/v1/{osrm_mode}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}?overview=full&geometries=geojson&steps=true"
+    
+    # [GIỮ NGUYÊN] URL Local OSRM
+    url = f"http://127.0.0.1:5000/route/v1/{osrm_mode}/{src['lon']},{src['lat']};{dst['lon']},{dst['lat']}?overview=full&geometries=geojson&steps=true"
     
     try:
         r = requests.get(url, timeout=10)
@@ -345,8 +414,12 @@ def chat_api():
     try:
         data = request.json
         user_message = data.get("message", "")
-        # Dummy response nếu không có Ollama server
-        return jsonify({"reply": f"Server nhận được: {user_message}. (Ollama chưa kết nối)"})
+        # Nếu có Ollama local, uncomment đoạn này:
+        # if ollama:
+        #    res = ollama.chat(model=OLLAMA_MODEL, messages=[{'role': 'user', 'content': user_message}])
+        #    return jsonify({"reply": res['message']['content']})
+        
+        return jsonify({"reply": f"Server nhận được: {user_message}. (Ollama chưa kích hoạt)"})
     except Exception as e:
         return jsonify({"reply": "Lỗi server."}), 500
 
@@ -356,4 +429,5 @@ def generate_itinerary_api():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
+    print(f"Server running on port {port}")
     app.run(host='0.0.0.0', port=port)
