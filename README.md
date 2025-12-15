@@ -1,6 +1,4 @@
-# streamlit-chat
 
-A simple and extensible chat interface built with **Streamlit**.
 
 ## 🚀 Features
 
@@ -13,30 +11,19 @@ A simple and extensible chat interface built with **Streamlit**.
 ## 🧰 Requirements
 
 * Python 3.x
-* Streamlit
 * Other dependencies in `requirements.txt`
+* Download Docker: https://www.docker.com/products/docker-desktop/ and install it with default setting
+* Download drive: https://drive.google.com/drive/folders/1OHd58IBESf6Hmhe9QoolqtdJ4-7PsvWN
 
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/Khoan-IT/streamlit-chat.git
-cd streamlit-chat
+git clone https://github.com/TVinhQuang/Smart-tourism-system.git
+cd backend
 pip install -r requirements.txt
-```
 
 ## ▶️ Run
-
-```bash
-streamlit run app.py
-```
-
-Then open the local URL shown in the terminal.
-
-## 🛠️ Customization
-
-Edit `app.py` to:
-
-* Change UI elements (titles, avatars, layout)
-* Integrate with AI APIs (e.g., OpenAI, Hugging Face)
-* Modify authorization logic or data storage
-* Save chat logs to a file or database
+cd backend
+python server.py (Active backend)
+Open Docker Desktop, run run_osrm.bat in osrm folder from link drive
+Then run web with live server
