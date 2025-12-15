@@ -110,68 +110,19 @@ function openRoutingModal(index) {
 // 2. XỬ LÝ TÌM ĐƯỜNG (CHẠY LOCAL - KHÔNG MOCK)
 // =======================================================
 document.getElementById("btn-find-route").addEventListener("click", () => {
-    // Lấy phương tiện đang chọn
+    // Lấy phương tiện đang chọn ở Bước 1
     const modeEl = document.querySelector('input[name="transport"]:checked');
     const mode = modeEl ? modeEl.value : 'driving';
     
-    // Hiển thị loading
-    const btn = document.getElementById("btn-find-route");
-    const originalText = btn.innerText;
-    btn.innerText = (window.langData && window.langData["status_calculating"]) ? window.langData["status_calculating"] : "⏳ Đang tính toán...";
-    btn.disabled = true;
-    btn.classList.add("btn-loading");
+    // Chuyển view trước để người dùng thấy loading
+    switchView(2);
+    
+    // Đồng bộ select box ở bước 2
+    const quickSelect = document.getElementById("quick-transport-change");
+    if(quickSelect) quickSelect.value = mode;
 
-    // Lấy ngôn ngữ để gửi cho Backend
-    const currentLang = localStorage.getItem('userLang') || 'vi';
-
-    // Chỉ trỏ về gốc server Python Local
-    const BASE_URL = 'http://127.0.0.1:8000'; 
-
-    fetch(`${BASE_URL}/api/route`, {  
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            src: { lat: YOUR_LAT, lon: YOUR_LON },
-            dst: { lat: routingItem.lat, lon: routingItem.lon },
-            profile: mode,
-            lang: currentLang 
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === "success") {
-            // Chuyển sang Bước 2
-            switchView(2);
-            
-            // Đồng bộ select box ở bước 2
-            const quickSelect = document.getElementById("quick-transport-change");
-            if(quickSelect) quickSelect.value = mode;
-
-            // --- HIỂN THỊ DỮ LIỆU THẬT TỪ SERVER ---
-            if (data.info) renderAnalysis(data.info);
-            if (data.instructions) renderSteps(data.instructions);
-            if (data.path) initMap(data.path);
-
-        } else {
-            // Xử lý lỗi từ server trả về
-            const errorMsg = (window.langData && window.langData["error_not_found"]) 
-                             ? window.langData["error_not_found"] 
-                             : "Không tìm thấy đường đi";
-            alert(`${errorMsg}: ${data.message || ""}`);
-        }
-    })
-    .catch(err => {
-        console.error("Fetch Error:", err);
-        const serverError = (window.langData && window.langData["error_server"]) 
-                            ? window.langData["error_server"] 
-                            : "Lỗi kết nối Server Local!";
-        alert(serverError + "\nHãy kiểm tra xem Python backend đã chạy chưa?");
-    })
-    .finally(() => {
-        btn.innerText = originalText; 
-        btn.disabled = false;
-        btn.classList.remove("btn-loading");
-    });
+    // Gọi hàm tìm đường
+    findRouteWithMode(mode);
 });
 
 // =======================================================
@@ -417,4 +368,87 @@ document.getElementById("quick-transport-change").addEventListener("change", (e)
     const radio = document.querySelector(`input[name="transport"][value="${mode}"]`);
     if(radio) radio.checked = true;
     document.getElementById("btn-find-route").click();
+});
+
+// =======================================================
+// XỬ LÝ ĐỔI PHƯƠNG TIỆN NHANH (BƯỚC 2)
+// =======================================================
+// =======================================================
+// XỬ LÝ LOGIC ĐỒNG BỘ & TÌM ĐƯỜNG
+// =======================================================
+
+// 1. Khi đổi ở Bước 2 (Trên bản đồ) -> Gọi tìm đường ngay
+const quickTransportSelect = document.getElementById("quick-transport-change");
+if (quickTransportSelect) {
+    quickTransportSelect.addEventListener("change", (e) => {
+        const newMode = e.target.value;
+        console.log("🔄 Bước 2 đổi sang:", newMode);
+
+        // Đồng bộ ngược lại Radio ở Bước 1
+        const radioStep1 = document.querySelector(`input[name="transport"][value="${newMode}"]`);
+        if (radioStep1) radioStep1.checked = true;
+
+        // Gọi API tìm đường mới
+        findRouteWithMode(newMode);
+    });
+}
+
+// 2. Hàm tìm đường (Gọi API)
+function findRouteWithMode(mode) {
+    // Hiển thị loading
+    const contentArea = document.getElementById("analysis-content-area") || document.querySelector(".complexity-box");
+    if(contentArea) {
+        contentArea.innerHTML = `
+            <div style="text-align:center; padding:30px; color:#666;">
+                <div style="font-size:24px; margin-bottom:10px;">⏳</div>
+                Đang tính toán lại lộ trình cho <b>${mode === 'driving' ? 'Ô tô' : (mode === 'walking' ? 'Đi bộ' : 'Xe đạp')}</b>...
+            </div>`;
+    }
+
+    const currentLang = localStorage.getItem('userLang') || 'vi';
+    const BASE_URL = 'http://127.0.0.1:8000'; 
+
+    fetch(`${BASE_URL}/api/route`, {  
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            src: { lat: YOUR_LAT, lon: YOUR_LON },
+            dst: { lat: routingItem.lat, lon: routingItem.lon },
+            profile: mode, 
+            lang: currentLang 
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "success") {
+            // Cập nhật giao diện
+            if (data.info) renderAnalysis(data.info);
+            if (data.instructions) renderSteps(data.instructions);
+            if (data.path) initMap(data.path);
+            console.log("✅ Cập nhật lộ trình thành công!");
+        } else {
+            alert(`Lỗi: ${data.message}`);
+        }
+    })
+    .catch(err => {
+        console.error("Fetch Error:", err);
+        if(contentArea) contentArea.innerHTML = `<p style="color:red; text-align:center;">❌ Lỗi kết nối server.</p>`;
+    });
+}
+
+// 3. Khi bấm nút "Tìm đường ngay" ở Bước 1
+document.getElementById("btn-find-route").addEventListener("click", () => {
+    // Lấy phương tiện đang chọn ở Bước 1
+    const modeEl = document.querySelector('input[name="transport"]:checked');
+    const mode = modeEl ? modeEl.value : 'driving';
+    
+    // Chuyển sang Bước 2
+    switchView(2);
+    
+    // Đồng bộ giá trị cho cái Select Box ở Bước 2 vừa hiện ra
+    const quickSelect = document.getElementById("quick-transport-change");
+    if(quickSelect) quickSelect.value = mode;
+
+    // Gọi hàm tìm đường
+    findRouteWithMode(mode);
 });

@@ -271,10 +271,54 @@ def extract_amenities_basic(item: dict) -> list[str]:
 # ==============================================================================
 
 def filter_with_relaxation(accommodations: List[Accommodation], q: SearchQuery, top_k: int = 5):
-    def _do_filter(rating_min, price_relax=1.0, radius_relax=1.0):
-        pmin = q.price_min
-        pmax = q.price_max
+    """
+    THUẬT TOÁN GOM DẦN (ACCUMULATION) - Dựa trên app.py (Streamlit)
+    Cơ chế: Chạy qua từng level, nhặt kết quả bỏ vào giỏ.
+    Nếu giỏ chưa đủ 5 món -> Chạy level tiếp theo để nhặt thêm.
+    """
 
+    # Hàm kiểm tra tiện ích theo 3 chế độ: 'all', 'any', 'ignore'
+    def _check_amenities(acc_amenities: List[str], preferred: List[str], mode: str) -> bool:
+        if not preferred or mode == "ignore":
+            return True
+        
+        acc_amenities_lower = [a.lower() for a in acc_amenities]
+        
+        # Đếm số lượng tiện ích khớp
+        matched_count = 0
+        for req in preferred:
+            req_lower = req.lower()
+            
+            # Mapping từ khóa
+            check_list = [req_lower]
+            if req_lower == "breakfast": check_list.append("bữa sáng")
+            if req_lower == "pool": check_list.extend(["pool", "hồ bơi", "bể bơi"])
+            if req_lower == "parking": check_list.extend(["parking", "đỗ xe", "giữ xe"])
+            if req_lower == "wifi": check_list.extend(["wifi", "mạng", "internet"])
+            
+            found = False
+            for item in acc_amenities_lower:
+                if any(k in item for k in check_list):
+                    found = True
+                    break
+            
+            if found:
+                matched_count += 1
+        
+        # Logic quyết định
+        if mode == "all":
+            # Phải khớp 100% số lượng yêu cầu
+            return matched_count == len(preferred)
+        elif mode == "any":
+            # Chỉ cần khớp ít nhất 1 cái
+            return matched_count >= 1
+            
+        return True
+
+    # Hàm lọc nội bộ
+    def _do_filter(rating_min, amenity_mode="all", price_relax=1.0, radius_relax=1.0):
+        # 1. Tính toán giới hạn giá
+        pmin, pmax = q.price_min, q.price_max
         if price_relax > 1.0 and pmax > 0 and pmax > pmin:
             center = (pmin + pmax) / 2
             half_span = (pmax - pmin) / 2
@@ -282,96 +326,118 @@ def filter_with_relaxation(accommodations: List[Accommodation], q: SearchQuery, 
             pmin = max(0, center - half_span - extra)
             pmax = center + half_span + extra
 
+        # 2. Tính toán bán kính
         dist_limit = (q.radius_km * radius_relax) if q.radius_km > 0 else None
 
         filtered = []
         for a in accommodations:
-            # ... (các điều kiện cũ) ...
-            if dist_limit and a.distance_km > dist_limit: continue
+            # Check cơ bản
+            if dist_limit is not None and a.distance_km > dist_limit: continue
             if pmin > 0 and a.price < pmin: continue
             if pmax > 0 and a.price > pmax: continue
             if q.types and (a.type not in q.types): continue
+            
+            # Check Rating
             if a.rating < rating_min: continue
             
-            # --- THÊM LOGIC LỌC TIỆN ÍCH TẠI ĐÂY ---
-            if q.amenities_preferred:
-                # Chuyển tiện ích khách sạn về chữ thường để so sánh
-                hotel_amenities_lower = [am.lower() for am in a.amenities]
-                
-                # Kiểm tra: Nếu thiếu bất kỳ tiện ích ưu tiên nào -> Bỏ qua khách sạn này
-                # (Logic AND: Cần Bữa sáng VÀ Wifi -> Phải có đủ cả 2)
-                missing_amenity = False
-                for req_am in q.amenities_preferred:
-                    # Mapping từ khóa Frontend (ví dụ "Breakfast") sang từ khóa Backend tìm thấy ("Bữa sáng", "breakfast")
-                    req_lower = req_am.lower()
-                    
-                    # Logic so sánh tương đối
-                    found = False
-                    
-                    # Mapping nhanh cho Bữa sáng (vì Frontend gửi 'Breakfast' nhưng data có thể là 'Bữa sáng')
-                    check_list = [req_lower]
-                    if req_lower == "breakfast": check_list.append("bữa sáng")
-                    if req_lower == "pool": check_list = ["pool", "hồ bơi", "bể bơi"]
-                    if req_lower == "parking": check_list = ["parking", "đỗ xe", "giữ xe"]
-                    
-                    for item in hotel_amenities_lower:
-                        if any(k in item for k in check_list):
-                            found = True
-                            break
-                    
-                    if not found:
-                        missing_amenity = True
-                        break
-                
-                if missing_amenity: continue 
-            # ---------------------------------------
+            # Check Tiện ích theo Mode ('all', 'any', 'ignore')
+            if not _check_amenities(a.amenities, q.amenities_preferred, amenity_mode):
+                continue
 
             filtered.append(a)
-        # === LOGIC SẮP XẾP MỚI DỰA TRÊN PRIORITY ===
-        if q.priority == "cheap":
-            # Ưu tiên 1: Giá rẻ (tăng dần). 
-            # (Mẹo: Giá = 0 để xuống cuối vì có thể là lỗi data)
-            filtered.sort(key=lambda x: x.price if x.price > 10000 else 9999999999)
-            
-        elif q.priority == "near_center":
-            # Ưu tiên 2: Gần trung tâm (distance_km tăng dần)
-            filtered.sort(key=lambda x: x.distance_km)
-            
-        elif q.priority == "amenities":
-            # Ưu tiên 3: Nhiều tiện ích (đếm số lượng amenities giảm dần)
-            # Khách sạn nào "Đang cập nhật" (list rỗng) sẽ tự động bị đẩy xuống dưới cùng
-            filtered.sort(key=lambda x: len(x.amenities), reverse=True)
-            
-        else: 
-            # Mặc định (Balanced): Rating cao -> Review nhiều -> Giá tốt
-            filtered.sort(key=lambda x: (x.rating, x.reviews), reverse=True)
-        # ============================================
-
+        
         return filtered
 
-    levels = [
-        {"desc": "Thỏa mãn đầy đủ tiêu chí.", "rating_min": q.rating_min, "price_relax": 1.0, "radius_relax": 1.0},
-        {"desc": "Đã nới lỏng rating tối thiểu.", "rating_min": max(0.0, q.rating_min - 0.5), "price_relax": 1.0, "radius_relax": 1.0},
-        {"desc": "Đã mở rộng bán kính tìm kiếm.", "rating_min": max(0.0, q.rating_min - 1.0), "price_relax": 1.0, "radius_relax": 1.5},
-        {"desc": "Đã nới rộng khoảng giá và bán kính.", "rating_min": 0.0, "price_relax": 1.3, "radius_relax": 2.0},
-    ]
+    # ==================================================
+    # CẤU HÌNH CÁC LEVEL (Dựa trên file app.py của bạn)
+    # ==================================================
+    levels = []
 
+    # Level 0: Gắt nhất (Đúng bán kính, Đúng giá, Tiện ích phải có ĐỦ HẾT)
+    levels.append({
+        "desc": "Thỏa mãn đầy đủ tất cả tiêu chí.",
+        "amenity_mode": "all",  # <--- Khắt khe
+        "rating_min": q.rating_min,
+        "price_relax": 1.0,
+        "radius_relax": 1.0,
+    })
+
+    # Level 1: Nới lỏng tiện ích (Chỉ cần có 1 món trong list là được)
+    levels.append({
+        "desc": "Ưu tiên nơi đáp ứng được ít nhất một phần tiện ích.",
+        "amenity_mode": "any",  # <--- Dễ tính hơn
+        "rating_min": q.rating_min,
+        "price_relax": 1.0,
+        "radius_relax": 1.0,
+    })
+
+    # Level 2: Giảm Rating, Mở rộng bán kính, BỎ QUA tiện ích
+    levels.append({
+        "desc": "Đã nới lỏng đánh giá và bỏ qua tiện ích để tìm thêm kết quả.",
+        "amenity_mode": "ignore", # <--- Vét cạn
+        "rating_min": max(0.0, q.rating_min - 1.0),
+        "price_relax": 1.0,
+        "radius_relax": 1.2,
+    })
+
+    # Level 3: Mở rộng tối đa (Giá, Bán kính, Rating)
+    levels.append({
+        "desc": "Đã mở rộng tối đa phạm vi tìm kiếm.",
+        "amenity_mode": "ignore",
+        "rating_min": 0.0,
+        "price_relax": 1.3,
+        "radius_relax": 2.0,
+    })
+
+    # ==================================================
+    # VÒNG LẶP GOM KẾT QUẢ (ACCUMULATION LOOP)
+    # ==================================================
     final_list = []
-    final_note = ""
     used_ids = set()
+    final_note = ""
 
     for cfg in levels:
-        candidates = _do_filter(cfg["rating_min"], cfg["price_relax"], cfg["radius_relax"])
+        # Nếu đã gom đủ hàng thì nghỉ khỏe
+        if len(final_list) >= top_k:
+            break
+
+        candidates = _do_filter(
+            rating_min=cfg["rating_min"],
+            amenity_mode=cfg["amenity_mode"],
+            price_relax=cfg["price_relax"],
+            radius_relax=cfg["radius_relax"]
+        )
+        
         if candidates:
+            # Lưu note của level đầu tiên tìm thấy (để báo user biết chất lượng list)
             if not final_note: final_note = cfg["desc"]
+            
+            # Gom hàng vào giỏ (tránh trùng lặp)
             for c in candidates:
                 if c.id not in used_ids:
                     final_list.append(c)
                     used_ids.add(c.id)
-        if len(final_list) >= top_k:
-            break
+                    
+                    # Kiểm tra lại ngay sau khi thêm, nếu đủ thì break ngay
+                    if len(final_list) >= top_k:
+                        break
     
-    # Cắt danh sách đúng bằng top_k (ví dụ 5) trước khi trả về
+    # ==================================================
+    # SẮP XẾP LẠI KẾT QUẢ CUỐI CÙNG (SORTING)
+    # ==================================================
+    # Sau khi gom đủ tạp nham (xịn có, vừa vừa có), ta sắp xếp lại theo priority
+    # để những cái xịn nhất (gom được ở Level 0, 1) nổi lên trên.
+    
+    if q.priority == "cheap":
+        final_list.sort(key=lambda x: x.price if x.price > 10000 else 9999999999)
+    elif q.priority == "near_center":
+        final_list.sort(key=lambda x: x.distance_km)
+    elif q.priority == "amenities":
+        final_list.sort(key=lambda x: len(x.amenities), reverse=True)
+    else: 
+        # Balanced: Rating cao -> Review nhiều
+        final_list.sort(key=lambda x: (x.rating, x.reviews), reverse=True)
+
     return final_list[:top_k], final_note
 
 def parse_maps_item_to_acc(item: dict, city_name: str, city_lat: float, city_lon: float) -> Optional[Accommodation]:
@@ -561,7 +627,10 @@ def _format_distance(meters: float) -> str:
     km = meters / 1000.0
     return f"{km:.1f} km"
 
-def describe_osrm_step(step: dict) -> str:
+def describe_osrm_step(step: dict, profile: str = "driving") -> str:
+    """
+    Mô tả chi tiết bước đi, tùy chỉnh văn phong theo phương tiện (profile).
+    """
     maneuver = step.get("maneuver", {})
     step_type = maneuver.get("type", "")
     modifier = (maneuver.get("modifier") or "").lower()
@@ -572,6 +641,45 @@ def describe_osrm_step(step: dict) -> str:
     distance = step.get("distance", 0.0)
     dist_str = _format_distance(distance)
 
+    # Lấy hướng rẽ (bên trái/phải) của điểm đến
+    side = maneuver.get("modifier", "")
+    side_text = "ở bên phải" if side == "right" else ("ở bên trái" if side == "left" else "")
+
+    # ==================================================
+    # 1. LOGIC RIÊNG CHO NGƯỜI ĐI BỘ (WALKING)
+    # ==================================================
+    if profile == "walking":
+        dir_map_walk = {
+            "right": "rẽ phải", "slight right": "chếch sang phải", "sharp right": "ngoặt phải",
+            "left": "rẽ trái", "slight left": "chếch sang trái", "sharp left": "ngoặt trái",
+            "straight": "đi thẳng", "uturn": "quay lại",
+        }
+        action = dir_map_walk.get(modifier, "rẽ")
+
+        if step_type == "depart":
+            return f"🚶 Bắt đầu đi bộ từ {name if name else 'điểm xuất phát'}."
+        
+        if step_type == "arrive":
+            return f"🏁 Đã đến nơi {side_text}."
+
+        if step_type == "roundabout":
+            exit_nr = maneuver.get("exit")
+            return f"🔄 Đi qua vòng xuyến theo lối ra thứ {exit_nr}."
+
+        # Các hành động di chuyển
+        if name:
+            if modifier == "straight":
+                return f"⬆️ Đi bộ thẳng {dist_str} trên {name}."
+            return f"{action.capitalize()} vào {name}, đi bộ {dist_str}."
+        
+        # Nếu không có tên đường
+        if modifier == "straight":
+             return f"⬆️ Đi bộ thẳng {dist_str}."
+        return f"{action.capitalize()}, đi bộ khoảng {dist_str}."
+
+    # ==================================================
+    # 2. LOGIC CHO XE (DRIVING / CYCLING) - GIỮ NGUYÊN
+    # ==================================================
     dir_map = {
         "right": "rẽ phải", "slight right": "chếch sang phải", "sharp right": "quẹo gắt sang phải",
         "left": "rẽ trái", "slight left": "chếch sang trái", "sharp left": "quẹo gắt sang trái",
@@ -583,8 +691,6 @@ def describe_osrm_step(step: dict) -> str:
         return f"🚀 Bắt đầu di chuyển từ {name if name else 'điểm xuất phát'}."
     
     if step_type == "arrive":
-        side = maneuver.get("modifier", "")
-        side_text = "ở bên phải" if side == "right" else ("ở bên trái" if side == "left" else "")
         return f"🏁 Đã đến điểm đến {side_text}."
 
     if step_type == "roundabout":
@@ -780,7 +886,8 @@ def api_get_route():
         steps = []
         for leg in route.get("legs", []):
             for step in leg.get("steps", []):
-                s = describe_osrm_step(step)
+                # ✅ Truyền thêm profile vào đây
+                s = describe_osrm_step(step, profile=profile) 
                 if s: steps.append(s)
 
         complexity = analyze_route_complexity(distance_km, duration_min, len(steps), profile)
