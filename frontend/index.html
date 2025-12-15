@@ -188,68 +188,64 @@
     <script>
     function logoutUser() {
         localStorage.removeItem('loggedInUserEmail');
-        window.location.href = location.reload(); // Hoặc reload lại trang
+        location.reload(); 
     }
 
     function formatEmail(email) {
         if (!email) return "Người dùng";
-        const parts = email.split('@');
-        return parts[0]; 
+        return email.split('@')[0]; 
     }
 
     function updateNavbarForLoggedInUser() {
         const userEmail = localStorage.getItem('loggedInUserEmail'); 
         const navbarRoot = document.getElementById('navbar-root');
         
-        // Đảm bảo navbar đã được load xong mới thao tác
-        if (navbarRoot.innerHTML.trim() !== "") {
+        if (navbarRoot && navbarRoot.innerHTML.trim() !== "") {
             const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
 
             if (userEmail) {
                 const displayName = formatEmail(userEmail);
                 if (loginButtonContainer) {
                     loginButtonContainer.innerHTML = `
-                        <div class="user-info-group">
-                            <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
-                            <button class="btn-logout" onclick="logoutUser()">
-                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                        <div class="user-info-group" style="display:flex; align-items:center; gap:10px;">
+                            <span class="user-greeting" style="color:white;">👋 Xin chào, <strong>${displayName}</strong></span>
+                            <button class="btn-logout" onclick="logoutUser()" style="padding:5px 10px; cursor:pointer;">
                                 <span>Đăng xuất</span>
                             </button>
                         </div>
-                    `;
-                }
-            } else {
-                // Nếu chưa đăng nhập, đảm bảo hiện nút Login
-                if (loginButtonContainer) {
-                    loginButtonContainer.innerHTML = `
-                        <a href="login.html" class="btn-login">
-                            <img src="/images/login.png" class="login-icon">
-                            <span>Đăng nhập</span>
-                        </a>
                     `;
                 }
             }
         }
     }
 
-    // 2. Logic chạy khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
-        // Load Navbar component
+        // 1. Tải Navbar
         fetch('components/navbar.html')
             .then(r => r.text())
             .then(html => { 
                 document.getElementById('navbar-root').innerHTML = html; 
                 
-                // QUAN TRỌNG: Sau khi HTML của navbar hiện lên, mới gọi hàm cập nhật user
+                // 2. Cập nhật trạng thái đăng nhập
                 updateNavbarForLoggedInUser();
+
+                // 3. --- QUAN TRỌNG: GỌI HÀM DỊCH ---
+                const currentLang = localStorage.getItem('lang') || 'vi';
+                
+                // Gọi đúng tên hàm trong static_trans.js là loadLanguage
+                if (typeof loadLanguage === 'function') {
+                    loadLanguage(currentLang); 
+                } else {
+                    console.error("Vẫn chưa thấy hàm loadLanguage. Hãy kiểm tra file static_trans.js đã được link chưa!");
+                }
             })
             .catch(e => console.warn('Không thể load navbar component', e));
     });
-    </script>
-
+</script>
+    
+    <script src="js/navbar_loader.js"></script>
     <script src="js/chatbot.js"></script>
     <script src="js/static_trans.js"></script>
-    <script src="js/rec_accomodation.js"></script>
     <script src="js/homepage.js"></script>
     <script src="js/routing_homepage.js"></script>
     <script src="js/display_results.js"></script>

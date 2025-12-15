@@ -121,40 +121,83 @@ body {
     width: 20px;
 }
 
-/* Menu ẩn mặc định */
+/* --- SỬA PHẦN DROPDOWN --- */
+
+.dropdown {
+    position: relative;
+    height: 100%; /* Đảm bảo chiều cao full để hover dễ hơn */
+    display: flex;
+    align-items: center;
+}
+
 .dropdown-menu {
     display: none;
     position: absolute;
-    top: 100%;
-    left: 0;
-
+    top: 100%; /* Hiển thị ngay dưới nút */
+    right: 0;  /* Căn lề phải để không bị tràn ra ngoài màn hình */
+    left: auto; /* Bỏ left: 0 mặc định */
+    
     background: white;
     list-style: none;
-    padding: 8px 0;
-    margin: 0;
-    border-radius: 6px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-    min-width: 150px;
-    z-index: 999;
+    padding: 10px 0;
+    margin-top: 10px; /* Tạo khoảng cách nhỏ */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    min-width: 160px;
+    z-index: 9999; /* Tăng chỉ số này lên cao nhất để đè lên Hero image */
 }
 
-/* Từng mục trong dropdown */
-.dropdown-menu li {
-    width: 100%;
+/* Mũi tên giả để menu đẹp hơn */
+.dropdown-menu::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    transform: rotate(45deg);
+    border-top: 1px solid #eee;
+    border-left: 1px solid #eee;
+}
+
+/* --- THÊM ĐOẠN NÀY VÀO NAVBAR.CSS ĐỂ SỬA LỖI --- */
+
+/* Tạo một lớp "cầu nối" vô hình nằm đè lên khoảng hở 10px */
+.dropdown-menu::after {
+    content: "";
+    position: absolute;
+    top: -20px;    /* Đẩy lên trên để lấp khoảng trống */
+    left: 0;
+    width: 100%;   /* Phủ kín chiều ngang */
+    height: 25px;  /* Chiều cao đủ để che margin-top */
+    background: transparent; /* Trong suốt (không màu) */
+    display: block;
 }
 
 .dropdown-menu li a {
     display: block;
-    padding: 8px 12px;
-    color: black;
+    padding: 10px 20px;
+    color: #333; /* Màu chữ đậm hơn */
     text-decoration: none;
+    font-size: 14px;
+    transition: 0.2s;
+    white-space: nowrap; /* Không xuống dòng */
 }
 
 .dropdown-menu li a:hover {
-    background: #eeeeee;
+    background: #f0f7ff; /* Màu nền khi hover xanh nhạt */
+    color: #0056b3;
 }
 
-/* Khi hover vào nút hay menu → hiện menu */
+/* Giữ menu hiển thị khi hover */
 .dropdown:hover .dropdown-menu {
     display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Hiệu ứng hiện menu mượt mà */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

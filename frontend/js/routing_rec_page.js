@@ -3,324 +3,418 @@
 // =======================================================
 let routingItem = null;
 let map = null;
-let myCurrentLat = 10.7769; // Mặc định TP.HCM
-let myCurrentLon = 106.7009;
-let isUsingGPS = false; 
+let routeLine = null;
+let markerStart = null;
+let markerEnd = null;
+
+// Tọa độ giả lập (Sửa thành TP.HCM - Quận 1 để demo cho đẹp)
+// Bạn có thể dùng navigator.geolocation để lấy vị trí thật
+let YOUR_LAT = 10.7769;
+let YOUR_LON = 106.7009;
 
 // =======================================================
-// 1. MỞ MODAL & KHỞI TẠO (Đã sửa lỗi hiển thị tiện ích)
+// 1. MỞ MODAL (VÀO BƯỚC 1)
 // =======================================================
 function openRoutingModal(index) {
     if (!window.homeResults || !window.homeResults[index]) {
         console.error("Không tìm thấy dữ liệu tại index:", index);
         return;
     }
+    
+    const item = window.homeResults[index];
+    routingItem = item;
 
-    routingItem = window.homeResults[index];
-    const overlay = document.getElementById("routing-overlay");
-    if (overlay) overlay.classList.remove("hidden");
-
+    // Reset giao diện về Bước 1
     switchView(1);
 
-    const item = routingItem;
-    document.getElementById("info-name").innerText = item.name;
-    document.getElementById("info-address").innerText = item.address || "";
+    // --- XỬ LÝ NGÔN NGỮ ---
+    const currentLang = localStorage.getItem('userLang') || 'vi';
     
-    const priceText = item.price ? Number(item.price).toLocaleString() + " VND" : "Liên hệ";
-    document.getElementById("info-price").innerText = priceText;
-    
-    document.getElementById("info-rating").innerText = item.rating || "N/A";
-    document.getElementById("target-dest").value = item.name;
+    // --- LƯU Ý: ĐÃ BỎ PHẦN MÔ TẢ (DESC) VÀ ẢNH (IMG) TẠI ĐÂY ---
 
-    // --- XỬ LÝ HIỆN TIỆN ÍCH ---
+    // 1. Tiện ích (Dịch từ Key sang Chữ)
     const amenityContainer = document.getElementById("info-amenities");
     if (amenityContainer) {
         amenityContainer.innerHTML = ""; 
-        if (item.amenities && Array.isArray(item.amenities) && item.amenities.length > 0) {
-            item.amenities.forEach(amenity => {
+        if (item.amenities && item.amenities.length > 0) {
+            item.amenities.forEach(key => {
                 const span = document.createElement("span");
-                // Style inline để đảm bảo đẹp ngay lập tức
-                span.style.cssText = "background:#f1f1f1; padding:4px 10px; border-radius:15px; font-size:0.85rem; margin:0 5px 5px 0; display:inline-block; color:#555;";
-                span.innerText = amenity.charAt(0).toUpperCase() + amenity.slice(1);
+                span.className = "amenity-tag";
+                // Lấy từ điển ra dịch
+                const translatedText = (window.langData && window.langData[key]) ? window.langData[key] : key;
+                span.innerText = translatedText;
                 amenityContainer.appendChild(span);
             });
-        } else {
-            amenityContainer.innerHTML = "<span style='color:#999; font-style:italic; font-size:0.9rem;'>Không có thông tin tiện ích</span>";
         }
     }
 
-    // Tự động kích hoạt GPS
-    getUserLocation();
+    // --- ĐIỀN THÔNG TIN CƠ BẢN ---
+    // Không set src cho info-img
+    document.getElementById("info-name").innerText = item.name;
+    document.getElementById("info-address").innerText = item.address;
+    document.getElementById("info-price").innerText = Number(item.price).toLocaleString() + " VND";
+    document.getElementById("info-rating").innerText = item.rating;
+
+    // ====================== FAVORITE CHECK ======================
+    // Định nghĩa hàm xử lý nút yêu thích
+    function setupFavoriteButton(currentHotelData) {
+        const favBtn = document.getElementById("fav-toggle");
+        if (!favBtn) return;
+
+        // Hàm kiểm tra trạng thái
+        const checkFavoriteStatus = () => {
+            const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+            const isFav = favorites.some(i => i.name === currentHotelData.name); 
+            
+            favBtn.textContent = isFav ? "❤️" : "♡";
+            favBtn.style.color = isFav ? "red" : "#333";
+            favBtn.style.cursor = "pointer";
+        };
+
+        checkFavoriteStatus();
+
+        // Xử lý sự kiện Click
+        favBtn.onclick = function() {
+            let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+            const index = favorites.findIndex(i => i.name === currentHotelData.name);
+
+            if (index > -1) {
+                favorites.splice(index, 1);
+                alert("Đã xóa khỏi danh sách yêu thích!");
+            } else {
+                favorites.push(currentHotelData);
+                alert("Đã thêm vào danh sách yêu thích!");
+            }
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+            checkFavoriteStatus();
+        };
+    }
+    // Gọi hàm setup nút yêu thích
+    setupFavoriteButton(item);
+
+    
+    // Gán giá trị cho ô input "Vị trí của bạn" (nếu có data-i18n)
+    const myLocInput = document.querySelector('input[data-i18n="val_my_location"]');
+    if(myLocInput && window.langData) {
+        myLocInput.value = window.langData["val_my_location"];
+    }
+    
+    // Gán đích đến
+    document.getElementById("target-dest").value = item.name;
+
+    // Hiển thị modal (Xóa class hidden)
+    document.getElementById("routing-overlay").classList.remove("hidden");
 }
 
 // =======================================================
-// 2. XỬ LÝ GEOCODING (Hàm bị thiếu gây lỗi của bạn)
+// 2. XỬ LÝ TÌM ĐƯỜNG (CHẠY LOCAL - KHÔNG MOCK)
 // =======================================================
-async function resolveStartCoordinates() {
-    const inputStart = document.getElementById("start-location");
-    const query = inputStart.value.trim();
-
-    // Nếu ô nhập trống hoặc đang là text GPS mặc định
-    if (isUsingGPS || query === "" || query.includes("Vị trí của bạn")) {
-        return { lat: myCurrentLat, lon: myCurrentLon };
-    }
-
-    // Gọi API tìm kiếm địa chỉ (Nominatim)
-    try {
-        const btn = document.getElementById("btn-find-route");
-        if(btn) btn.innerText = "🔍 Đang tìm địa chỉ...";
-        
-        console.log("Đang tìm tọa độ cho:", query);
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-        
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data && data.length > 0) {
-            console.log("✅ Tìm thấy:", data[0].display_name);
-            return { 
-                lat: parseFloat(data[0].lat), 
-                lon: parseFloat(data[0].lon) 
-            };
-        } else {
-            alert("Không tìm thấy địa điểm: " + query);
-            return null;
-        }
-    } catch (e) {
-        console.error("Lỗi Geocoding:", e);
-        alert("Lỗi khi tìm địa điểm. Vui lòng kiểm tra mạng.");
-        return null;
-    }
-}
-
-// =======================================================
-// 3. HÀM TÌM ĐƯỜNG (EXECUTE)
-// =======================================================
-async function executeFindRoute(forceMode = null) {
-    console.log("🚀 Bắt đầu tìm đường...");
-
-    // A. Xử lý tọa độ điểm xuất phát
-    const startCoords = await resolveStartCoordinates();
-    if (!startCoords) {
-        const btn = document.getElementById("btn-find-route");
-        if(btn) { btn.innerText = "🗺️ Tìm đường đi"; btn.disabled = false; }
-        return; 
-    }
-
-    // B. Xác định phương tiện
-    let mode = 'driving';
-    if (forceMode) {
-        mode = forceMode;
-    } else {
-        const isStep2 = !document.getElementById("view-step-2").classList.contains("hidden");
-        const quickSelect = document.getElementById("quick-transport-change");
-        if (isStep2 && quickSelect) {
-            mode = quickSelect.value;
-        } else {
-            const radio = document.querySelector('input[name="transport"]:checked');
-            if (radio) mode = radio.value;
-        }
-    }
-
-    // C. Chuẩn hoá Profile cho OSRM
-    if (mode === 'foot' || mode === 'di_bo') mode = 'walking';
-    if (mode === 'bike' || mode === 'bicycle') mode = 'cycling';
-    if (mode === 'car' || mode === 'oto') mode = 'driving';
-
-    // D. Gửi Request
+document.getElementById("btn-find-route").addEventListener("click", () => {
+    // Lấy phương tiện đang chọn
+    const modeEl = document.querySelector('input[name="transport"]:checked');
+    const mode = modeEl ? modeEl.value : 'driving';
+    
+    // Hiển thị loading
     const btn = document.getElementById("btn-find-route");
-    const originalText = "🗺️ Tìm đường đi"; 
-    if(btn) { btn.innerText = "⏳ Đang tính toán..."; btn.disabled = true; }
+    const originalText = btn.innerText;
+    btn.innerText = (window.langData && window.langData["status_calculating"]) ? window.langData["status_calculating"] : "⏳ Đang tính toán...";
+    btn.disabled = true;
+    btn.classList.add("btn-loading");
 
+    // Lấy ngôn ngữ để gửi cho Backend
     const currentLang = localStorage.getItem('userLang') || 'vi';
 
-    // Lưu ý: Không có dấu / ở cuối domain nếu trong đường dẫn đã có /
-const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
+    // Chỉ trỏ về gốc server Python Local
+    const BASE_URL = 'http://127.0.0.1:8000'; 
 
-    fetch(`${BASE_URL}/api/recommend-hotel`, {
+    fetch(`${BASE_URL}/api/route`, {  
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            src: { lat: startCoords.lat, lon: startCoords.lon },
+            src: { lat: YOUR_LAT, lon: YOUR_LON },
             dst: { lat: routingItem.lat, lon: routingItem.lon },
             profile: mode,
-            lang: currentLang
+            lang: currentLang 
         })
     })
     .then(r => r.json())
     .then(data => {
         if (data.status === "success") {
+            // Chuyển sang Bước 2
             switchView(2);
             
-            // Đồng bộ Dropdown Step 2
+            // Đồng bộ select box ở bước 2
             const quickSelect = document.getElementById("quick-transport-change");
-            if (quickSelect) {
-                if(mode === 'walking') quickSelect.value = 'foot'; 
-                else if(mode === 'cycling') quickSelect.value = 'cycling';
-                else quickSelect.value = 'driving';
-            }
+            if(quickSelect) quickSelect.value = mode;
 
-            renderAnalysis(data.info);
-            renderSteps(data.instructions);
-            
-            // Vẽ bản đồ với tọa độ thực tế tìm được
-            initMap(data.path, startCoords); 
+            // --- HIỂN THỊ DỮ LIỆU THẬT TỪ SERVER ---
+            if (data.info) renderAnalysis(data.info);
+            if (data.instructions) renderSteps(data.instructions);
+            if (data.path) initMap(data.path);
+
         } else {
-            alert("Lỗi: " + (data.message || "Không tìm thấy đường"));
+            // Xử lý lỗi từ server trả về
+            const errorMsg = (window.langData && window.langData["error_not_found"]) 
+                             ? window.langData["error_not_found"] 
+                             : "Không tìm thấy đường đi";
+            alert(`${errorMsg}: ${data.message || ""}`);
         }
     })
     .catch(err => {
-        console.error(err);
-        alert("Lỗi kết nối Server!");
+        console.error("Fetch Error:", err);
+        const serverError = (window.langData && window.langData["error_server"]) 
+                            ? window.langData["error_server"] 
+                            : "Lỗi kết nối Server Local!";
+        alert(serverError + "\nHãy kiểm tra xem Python backend đã chạy chưa?");
     })
     .finally(() => {
-        if(btn) { btn.innerText = originalText; btn.disabled = false; }
+        btn.innerText = originalText; 
+        btn.disabled = false;
+        btn.classList.remove("btn-loading");
     });
-}
+});
 
 // =======================================================
-// 4. CÁC HÀM HỖ TRỢ UI & MAP
+// 3. CÁC HÀM HỖ TRỢ (UI & MAP)
 // =======================================================
-
-function getUserLocation() {
-    const inputStart = document.getElementById("start-location");
-    if (!inputStart) return;
-
-    if (navigator.geolocation) {
-        inputStart.value = "⏳ Đang lấy vị trí...";
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                myCurrentLat = position.coords.latitude;
-                myCurrentLon = position.coords.longitude;
-                isUsingGPS = true;
-                inputStart.value = "📍 Vị trí của bạn (GPS)";
-                console.log("📍 GPS OK:", myCurrentLat, myCurrentLon);
-            },
-            (error) => {
-                console.warn("GPS Fail:", error.message);
-                inputStart.value = ""; 
-                inputStart.placeholder = "Nhập địa chỉ của bạn...";
-                isUsingGPS = false;
-            }
-        );
-    } else {
-        alert("Trình duyệt không hỗ trợ GPS");
-    }
-}
 
 function switchView(step) {
     const v1 = document.getElementById("view-step-1");
     const v2 = document.getElementById("view-step-2");
+    
     if (step === 1) {
-        v1?.classList.remove("hidden");
-        v2?.classList.add("hidden");
+        if(v1) v1.classList.remove("hidden");
+        if(v2) v2.classList.add("hidden");
     } else {
-        v1?.classList.add("hidden");
-        v2?.classList.remove("hidden");
+        if(v1) v1.classList.add("hidden");
+        if(v2) v2.classList.remove("hidden");
     }
 }
 
 function renderAnalysis(info) {
-    document.getElementById("res-distance").innerText = info.distance_text;
-    document.getElementById("res-duration").innerText = info.duration_text;
-    document.getElementById("res-label").innerText = info.complexity_label;
-    document.getElementById("res-summary").innerText = info.complexity_summary;
-    document.getElementById("res-advice").innerText = info.recommendation_msg;
+    // 1. Điền thông tin cơ bản
+    // Dùng try-catch để tránh lỗi nếu thiếu thẻ HTML
+    try {
+        if(document.getElementById("res-distance")) 
+            document.getElementById("res-distance").innerText = info.distance_text;
+        if(document.getElementById("res-duration"))
+            document.getElementById("res-duration").innerText = info.duration_text;
+    } catch(e) { console.warn("Thiếu thẻ res-distance hoặc res-duration"); }
+    
+    // 2. Lấy dữ liệu an toàn
+    const complexity = info.complexity || {};
+    const recommendation = info.recommendation || {};
 
-    const ul = document.getElementById("res-details");
-    ul.innerHTML = "";
-    if (info.analysis_details) {
-        info.analysis_details.forEach(detail => {
-            const li = document.createElement("li");
-            li.innerText = detail;
-            ul.appendChild(li);
-        });
+    // 3. Xác định màu sắc cho nhãn độ khó
+    let badgeColor = '#28a745'; // Xanh (Dễ)
+    let badgeText = complexity.label || "Dễ đi";
+    
+    if (complexity.level === 'medium') badgeColor = '#fd7e14'; // Cam
+    if (complexity.level === 'high') badgeColor = '#dc3545';   // Đỏ
+
+    // 4. [FIX LỖI] Tìm thẻ cha để render nội dung
+    // Ưu tiên tìm ID cũ "analysis-content-area", nếu không thấy thì tìm class ".complexity-box" (giống Homepage)
+    let contentArea = document.getElementById("analysis-content-area");
+    
+    if (!contentArea) {
+        contentArea = document.querySelector(".complexity-box");
+    }
+
+    // Nếu tìm thấy thẻ thì mới render
+    if (contentArea) {
+        contentArea.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <strong style="font-size:1.1rem; color:#333;">Đánh giá lộ trình:</strong>
+                <span style="background:${badgeColor}; color:white; padding:4px 10px; border-radius:12px; font-size:0.9rem; font-weight:bold;">
+                    ${badgeText}
+                </span>
+            </div>
+
+            <p style="color:#555; margin-bottom:8px; line-height:1.4;">
+                ${complexity.summary || ""}
+            </p>
+
+            ${(complexity.reasons && complexity.reasons.length > 0) ? 
+                `<ul style="margin:5px 0 10px 20px; color:#dc3545; font-size:0.9rem;">
+                    ${complexity.reasons.map(r => `<li>${r}</li>`).join('')}
+                </ul>` 
+            : ''}
+
+            <div style="background:#e3f2fd; border-left:4px solid #2196f3; padding:12px; border-radius:4px; margin-top:10px; display:flex; gap:10px;">
+                <span style="font-size:1.2rem;">💡</span>
+                <div>
+                    <strong style="display:block; font-size:0.85rem; color:#1565c0; margin-bottom:2px;">Gợi ý di chuyển:</strong>
+                    <p style="margin:0; font-size:0.95rem; color:#0d47a1; line-height:1.4;">
+                        ${recommendation.message || "Không có gợi ý cụ thể."}
+                    </p>
+                </div>
+            </div>
+        `;
+    } else {
+        console.error("LỖI: Không tìm thấy thẻ <div id='analysis-content-area'> hoặc <div class='complexity-box'> trong HTML!");
     }
 }
 
 function renderSteps(instructions) {
     const list = document.getElementById("steps-list");
     list.innerHTML = "";
-    if (instructions) {
+    if(instructions) {
         instructions.forEach((stepText, i) => {
             const div = document.createElement("div");
             div.className = "step-item";
-            div.innerHTML = `<div class="step-icon">${i + 1}</div><div class="step-text">${stepText}</div>`;
+            // Thêm delay animation
+            div.style.animationDelay = `${i * 0.05}s`;
+            div.innerHTML = `
+                <div class="step-icon">${i + 1}</div>
+                <div class="step-text">${stepText}</div>
+            `;
             list.appendChild(div);
         });
     }
 }
 
-// --- HÀM VẼ MAP (Đã sửa lỗi màn hình trắng) ---
-function initMap(pathCoords, startCoords) {
+function initMap(pathCoords) {
     console.log("--- BẮT ĐẦU VẼ MAP ---");
 
+    // 1. KIỂM TRA & XỬ LÝ TOẠ ĐỘ
     let finalPath = pathCoords || [];
-    // Đảo chiều nếu tọa độ bị ngược (Lng, Lat)
-    if (finalPath.length > 0 && finalPath[0][0] > 90) {
-        finalPath = finalPath.map(p => [p[1], p[0]]);
+    if (finalPath.length > 0) {
+        if (finalPath[0][0] > 90) {
+            console.log("⚠️ Toạ độ bị ngược [Lng, Lat], đang đảo chiều...");
+            finalPath = finalPath.map(p => [p[1], p[0]]);
+        }
+    } else {
+        console.error("❌ Không có toạ độ đường đi!");
+        return;
     }
 
-    if (map) { map.remove(); map = null; }
+    // 2. XOÁ MAP CŨ
+    if (map) {
+        map.remove();
+        map = null;
+    }
 
+    // 3. TẠO MAP MỚI
     try {
-        map = L.map("rt-map", { zoomControl: false, attributionControl: false });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-        L.control.zoom({ position: 'topleft' }).addTo(map);
-
-        const startLat = startCoords ? startCoords.lat : myCurrentLat;
-        const startLon = startCoords ? startCoords.lon : myCurrentLon;
-        
-        const startGroup = L.marker([startLat, startLon]).addTo(map).bindPopup("Điểm xuất phát");
-        const endGroup = L.marker([routingItem.lat, routingItem.lon]).addTo(map).bindPopup("Đích đến");
-
-        let routeLayer = null;
-        if (finalPath.length > 0) {
-            routeLayer = L.polyline(finalPath, { color: 'blue', weight: 5, opacity: 0.8 }).addTo(map);
+        const mapContainer = document.getElementById("rt-map");
+        if (!mapContainer) {
+            console.error("❌ Không tìm thấy thẻ <div id='rt-map'> trong HTML!");
+            return;
         }
 
-        // --- CHIẾN THUẬT FORCE UPDATE (Quan trọng) ---
-        const forceUpdateMap = () => {
-            if (!map) return;
-            map.invalidateSize(); 
-            if (routeLayer) map.fitBounds(routeLayer.getBounds(), { padding: [50, 50], animate: false });
-            else map.fitBounds(L.featureGroup([startGroup, endGroup]).getBounds(), { padding: [50, 50] });
-        };
+        map = L.map("rt-map", {
+            zoomControl: false, 
+            attributionControl: false
+        });
+    } catch (e) {
+        console.error("❌ Lỗi khởi tạo Leaflet:", e);
+        return;
+    }
 
-        forceUpdateMap(); 
-        setTimeout(forceUpdateMap, 300);
-        setTimeout(forceUpdateMap, 600);
-        setTimeout(forceUpdateMap, 1000);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    } catch (e) { console.error("Lỗi Map:", e); }
+    // 4. VẼ ĐỐI TƯỢNG
+    const startGroup = L.marker([YOUR_LAT, YOUR_LON]).addTo(map).bindPopup("Bạn ở đây");
+    const endGroup = L.marker([routingItem.lat, routingItem.lon]).addTo(map).bindPopup("Đích đến");
+    
+    let routeLayer = null;
+    if (finalPath.length > 0) {
+        routeLayer = L.polyline(finalPath, {
+            color: 'blue',
+            weight: 5,
+            opacity: 0.8
+        }).addTo(map);
+    }
+
+    // 5. CHIẾN THUẬT "CƯỠNG ÉP" CẬP NHẬT GIAO DIỆN (Fix lỗi render map khi modal trượt)
+    const forceUpdateMap = () => {
+        if (!map) return;
+        map.invalidateSize(); 
+
+        if (routeLayer) {
+            map.fitBounds(routeLayer.getBounds(), { padding: [50, 50], animate: false });
+        } else {
+            const group = L.featureGroup([startGroup, endGroup]);
+            map.fitBounds(group.getBounds(), { padding: [50, 50], animate: false });
+        }
+    };
+
+    forceUpdateMap(); 
+    setTimeout(forceUpdateMap, 300);
+    setTimeout(forceUpdateMap, 600);
+    setTimeout(forceUpdateMap, 1000);
 }
 
 // =======================================================
-// 5. EVENT LISTENERS
+// 4. SỰ KIỆN NÚT BẤM
 // =======================================================
 
-const inputStart = document.getElementById("start-location");
-if(inputStart) {
-    inputStart.addEventListener("input", () => { isUsingGPS = false; });
-}
+// XỬ LÝ NÚT LẤY VỊ TRÍ (GPS)
+const btnGPS = document.getElementById("btn-use-gps");
+if (btnGPS) {
+    btnGPS.addEventListener("click", () => {
+        const startInput = document.getElementById("start-location");
+        
+        if (!navigator.geolocation) {
+            alert("Trình duyệt không hỗ trợ GPS.");
+            return;
+        }
 
-const btnGps = document.getElementById("btn-use-gps");
-if(btnGps) {
-    btnGps.addEventListener("click", getUserLocation);
-}
+        const originalText = btnGPS.innerText;
+        btnGPS.innerText = "⏳";
+        btnGPS.disabled = true;
+        if(startInput) startInput.value = "Đang lấy vị trí...";
 
-document.getElementById("btn-find-route").addEventListener("click", () => executeFindRoute());
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                YOUR_LAT = position.coords.latitude;
+                YOUR_LON = position.coords.longitude;
+                console.log("📍 GPS:", YOUR_LAT, YOUR_LON);
 
-// Sự kiện đổi phương tiện nhanh ở bước 2
-const quickSelect = document.getElementById("quick-transport-change");
-if (quickSelect) {
-    quickSelect.addEventListener("change", function() {
-        executeFindRoute(this.value);
+                if(startInput) startInput.value = `Vị trí của tôi `;
+                btnGPS.innerText = "📍";
+                btnGPS.disabled = false;
+                
+                if (map && markerStart) {
+                    markerStart.setLatLng([YOUR_LAT, YOUR_LON]).bindPopup("Vị trí hiện tại").openPopup();
+                    map.setView([YOUR_LAT, YOUR_LON], 13);
+                }
+            },
+            (error) => {
+                console.error("Lỗi GPS:", error);
+                alert("Không thể lấy vị trí. Hãy kiểm tra quyền truy cập.");
+                if(startInput) startInput.value = "";
+                btnGPS.innerText = originalText;
+                btnGPS.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     });
 }
 
-document.getElementById("btn-back-step1").addEventListener("click", () => switchView(1));
-document.getElementById("btn-close-step1").addEventListener("click", () => document.getElementById("routing-overlay").classList.add("hidden"));
+// Nút Quay lại
+document.getElementById("btn-back-step1").addEventListener("click", () => {
+    switchView(1);
+});
+
+// Nút Đóng Modal
+document.getElementById("btn-close-step1").addEventListener("click", () => {
+    document.getElementById("routing-overlay").classList.add("hidden");
+});
+
 document.getElementById("routing-overlay").addEventListener("click", (e) => {
-    if (e.target.id === "routing-overlay") document.getElementById("routing-overlay").classList.add("hidden");
+    if (e.target.id === "routing-overlay") {
+        document.getElementById("routing-overlay").classList.add("hidden");
+    }
+});
+
+// Xử lý đổi phương tiện nhanh
+document.getElementById("quick-transport-change").addEventListener("change", (e) => {
+    const mode = e.target.value;
+    const radio = document.querySelector(`input[name="transport"][value="${mode}"]`);
+    if(radio) radio.checked = true;
+    document.getElementById("btn-find-route").click();
 });

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/rec_accomodation.css">
     <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/routing.css">
+    <link rel="stylesheet" href="css/chatbot.css">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -26,28 +27,6 @@
         <div class="form-group">
             <label data-i18n="label_city">Thành phố Điểm đến</label>
             <input type="text" id="city" value="Hồ Chí Minh" placeholder="Nhập tên thành phố...">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Ngày nhận phòng</label>
-                <input type="date" id="checkin">
-            </div>
-            <div class="form-group">
-                <label>Ngày trả phòng</label>
-                <input type="date" id="checkout">
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Người lớn</label>
-                <input type="number" id="adults" value="2" min="1" max="20">
-            </div>
-            <div class="form-group">
-                <label>Trẻ em</label>
-                <input type="number" id="children" value="0" min="0" max="10">
-            </div>
         </div>
 
         <div class="form-row">
@@ -181,7 +160,14 @@
                     <div class="analysis-box">
                         <h4>📊 Kết quả phân tích</h4>
                         <div class="stats-grid"><div class="stat">Khoảng cách: <span id="res-distance">...</span></div><div class="stat">Thời gian: <span id="res-duration">...</span></div></div>
-                        <div class="complexity-box"><strong id="res-label">...</strong><p id="res-summary">...</p><ul id="res-details"></ul></div>
+                        <div class="complexity-box">
+                            <strong id="res-label">...</strong>
+                            <p id="res-summary">...</p>
+                            
+                            <p id="res-advice" style="font-style: italic; color: #555; font-size: 0.9rem; margin-top: 5px;">...</p>
+                            
+                            <ul id="res-details"></ul>
+                        </div>
                     </div>
                     <div class="steps-box"><h4>📝 Hướng dẫn</h4><div id="steps-list" class="steps-scroll"></div></div>
                 </div> 
@@ -217,7 +203,7 @@
                         <div class="user-info-group">
                             <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
                             <button class="btn-logout" onclick="logoutUser()">
-                                <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+                                <img src="images/logout.png" class="logout-icon" style="height: 16px;">
                                 <span>Đăng xuất</span>
                             </button>
                         </div>
@@ -228,7 +214,7 @@
                 if (loginButtonContainer) {
                     loginButtonContainer.innerHTML = `
                         <a href="login.html" class="btn-login">
-                            <img src="../images/login.png" class="login-icon">
+                            <img src="images/login.png" class="login-icon">
                             <span>Đăng nhập</span>
                         </a>
                     `;
@@ -239,19 +225,35 @@
 
     // 2. Logic chạy khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
-        // Load Navbar component
         fetch('components/navbar.html')
             .then(r => r.text())
             .then(html => { 
                 document.getElementById('navbar-root').innerHTML = html; 
                 
-                // QUAN TRỌNG: Sau khi HTML của navbar hiện lên, mới gọi hàm cập nhật user
+                // 1. Cập nhật user đăng nhập
                 updateNavbarForLoggedInUser();
+
+                // --- 2. THÊM ĐOẠN NÀY ĐỂ KÍCH HOẠT DỊCH (FIX LỖI) ---
+                // Lấy ngôn ngữ từ localStorage hoặc mặc định là 'vi'
+                const currentLang = localStorage.getItem('lang') || 'vi';
+                
+                // Kiểm tra nếu hàm loadAndApplyLanguage (từ file static_trans.js) đã sẵn sàng
+                if (typeof loadAndApplyLanguage === 'function') {
+                    loadAndApplyLanguage(currentLang).then(() => {
+                         // Nếu cần làm gì sau khi dịch xong thì viết ở đây
+                         console.log("Đã dịch sang: " + currentLang);
+                    });
+                } else {
+                    console.warn("Chưa tìm thấy hàm loadAndApplyLanguage. Kiểm tra lại file static_trans.js");
+                }
+                // -----------------------------------------------------
             })
             .catch(e => console.warn('Không thể load navbar component', e));
-        });
+    });
     </script>
     
+    <script src="js/navbar_loader.js"></script>
+    <script src="js/chatbot.js"></script>
     <script src="js/static_trans.js"></script>
     <script src="js/display_result_rec.js"></script> 
     <script src="js/routing_rec_page.js"></script>

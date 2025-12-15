@@ -9,8 +9,8 @@ let markerEnd = null;
 
 // Tọa độ giả lập (Sửa thành TP.HCM - Quận 1 để demo cho đẹp)
 // Bạn có thể dùng navigator.geolocation để lấy vị trí thật
-const YOUR_LAT = 10.7769;
-const YOUR_LON = 106.7009;
+let YOUR_LAT = 10.7769;
+let YOUR_LON = 106.7009;
 // =======================================================
 // 1. MỞ MODAL (VÀO BƯỚC 1)
 // =======================================================
@@ -124,6 +124,9 @@ function setupFavoriteButton(currentHotelData) {
 // =======================================================
 // 2. XỬ LÝ TÌM ĐƯỜNG (CHUYỂN SANG BƯỚC 2)
 // =======================================================
+// =======================================================
+// 2. XỬ LÝ TÌM ĐƯỜNG (CHẠY LOCAL - KHÔNG MOCK)
+// =======================================================
 document.getElementById("btn-find-route").addEventListener("click", () => {
     // Lấy phương tiện đang chọn
     const modeEl = document.querySelector('input[name="transport"]:checked');
@@ -132,25 +135,26 @@ document.getElementById("btn-find-route").addEventListener("click", () => {
     // Hiển thị loading
     const btn = document.getElementById("btn-find-route");
     const originalText = btn.innerText;
-    btn.innerText = window.langData["status_calculating"] || "⏳ ...";
+    btn.innerText = (window.langData && window.langData["status_calculating"]) ? window.langData["status_calculating"] : "⏳ Đang tính toán...";
     btn.disabled = true;
     btn.classList.add("btn-loading");
 
     // Lấy ngôn ngữ để gửi cho Backend
     const currentLang = localStorage.getItem('userLang') || 'vi';
 
-    // Gọi API Backend Python
-    // Lưu ý: Không có dấu / ở cuối domain nếu trong đường dẫn đã có /
-const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
+    // --- SỬA LẠI ĐOẠN NÀY ---
+    // Chỉ trỏ về gốc server Python Local
+    const BASE_URL = 'http://127.0.0.1:8000'; 
 
-    fetch(`${BASE_URL}/api/recommend-hotel`, {
+    // 2. ENDPOINT MỚI: /api/route (Không phải /api/recommend-hotel)
+    fetch(`${BASE_URL}/api/route`, {  
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             src: { lat: YOUR_LAT, lon: YOUR_LON },
             dst: { lat: routingItem.lat, lon: routingItem.lon },
             profile: mode,
-            lang: currentLang // Gửi ngôn ngữ cho server
+            lang: currentLang 
         })
     })
     .then(r => r.json())
@@ -163,23 +167,29 @@ const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
             const quickSelect = document.getElementById("quick-transport-change");
             if(quickSelect) quickSelect.value = mode;
 
-            // Render dữ liệu phân tích
-            renderAnalysis(data.info);
-            renderSteps(data.instructions);
-            
-            // Render Bản đồ
-            initMap(data.path);
+            // --- HIỂN THỊ DỮ LIỆU THẬT TỪ SERVER ---
+            // Server phải trả về đúng cấu trúc: info, instructions, path
+            if (data.info) renderAnalysis(data.info);
+            if (data.instructions) renderSteps(data.instructions);
+            if (data.path) initMap(data.path);
 
         } else {
-            alert((window.langData["error_not_found"] || "Error") + ": " + (data.message || ""));
+            // Xử lý lỗi từ server trả về
+            const errorMsg = (window.langData && window.langData["error_not_found"]) 
+                             ? window.langData["error_not_found"] 
+                             : "Không tìm thấy đường đi";
+            alert(`${errorMsg}: ${data.message || ""}`);
         }
     })
     .catch(err => {
-        console.error(err);
-        alert(window.langData["error_server"] || "Server Connection Error!");
+        console.error("Fetch Error:", err);
+        const serverError = (window.langData && window.langData["error_server"]) 
+                            ? window.langData["error_server"] 
+                            : "Lỗi kết nối Server Local (Port 5000)!";
+        alert(serverError + "\nHãy kiểm tra xem Python backend đã chạy chưa?");
     })
     .finally(() => {
-        btn.innerText = originalText; // Trả lại tên nút cũ (hoặc lấy từ langData)
+        btn.innerText = originalText; 
         btn.disabled = false;
         btn.classList.remove("btn-loading");
     });
@@ -202,32 +212,61 @@ function switchView(step) {
     }
 }
 
+// Trong file js/routing_rec_page.js
+
 function renderAnalysis(info) {
+    // 1. Điền thông tin cơ bản (Khoảng cách, Thời gian)
     document.getElementById("res-distance").innerText = info.distance_text;
     document.getElementById("res-duration").innerText = info.duration_text;
     
-    const labelEl = document.getElementById("res-label");
-    labelEl.innerText = info.complexity_label;
+    // 2. Lấy dữ liệu an toàn
+    const complexity = info.complexity || {};
+    const recommendation = info.recommendation || {};
+
+    // 3. Xác định màu sắc cho nhãn độ khó
+    let badgeColor = '#28a745'; // Xanh (Dễ)
+    let badgeText = complexity.label || "Dễ đi";
     
-    // Đổi màu chữ theo độ khó
-    if(info.complexity_level === 'low') labelEl.style.color = 'green';
-    else if(info.complexity_level === 'medium') labelEl.style.color = 'orange';
-    else labelEl.style.color = 'red';
+    if (complexity.level === 'medium') badgeColor = '#fd7e14'; // Cam (Trung bình)
+    if (complexity.level === 'high') badgeColor = '#dc3545';   // Đỏ (Khó)
 
-    document.getElementById("res-summary").innerText = info.complexity_summary;
-    document.getElementById("res-advice").innerText = info.recommendation_msg;
+    // 4. [QUAN TRỌNG] Thay vì gán text, ta thay đổi HTML của hộp cha
+    // Tìm thẻ cha chứa phần phân tích (trong file HTML bạn cần đặt id cho div bao quanh)
+    // Ở đây ta sẽ render đè vào thẻ div có class "complexity-box"
+    
+    const container = document.querySelector(".complexity-box");
+    
+    if (container) {
+        container.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <strong style="font-size:1.1rem; color:#333;">Đánh giá lộ trình:</strong>
+                <span style="background:${badgeColor}; color:white; padding:4px 10px; border-radius:12px; font-size:0.9rem; font-weight:bold;">
+                    ${badgeText}
+                </span>
+            </div>
 
-    const ul = document.getElementById("res-details");
-    ul.innerHTML = "";
-    if(info.analysis_details) {
-        info.analysis_details.forEach(detail => {
-            const li = document.createElement("li");
-            li.innerText = detail;
-            ul.appendChild(li);
-        });
+            <p style="color:#555; margin-bottom:8px; line-height:1.4;">
+                ${complexity.summary || ""}
+            </p>
+
+            ${(complexity.reasons && complexity.reasons.length > 0) ? 
+                `<ul style="margin:5px 0 10px 20px; color:#dc3545; font-size:0.9rem;">
+                    ${complexity.reasons.map(r => `<li>${r}</li>`).join('')}
+                </ul>` 
+            : ''}
+
+            <div style="background:#e3f2fd; border-left:4px solid #2196f3; padding:12px; border-radius:4px; margin-top:10px; display:flex; gap:10px;">
+                <span style="font-size:1.2rem;">💡</span>
+                <div>
+                    <strong style="display:block; font-size:0.85rem; color:#1565c0; margin-bottom:2px;">Gợi ý di chuyển:</strong>
+                    <p style="margin:0; font-size:0.95rem; color:#0d47a1; line-height:1.4;">
+                        ${recommendation.message || "Không có gợi ý cụ thể."}
+                    </p>
+                </div>
+            </div>
+        `;
     }
 }
-
 function renderSteps(instructions) {
     const list = document.getElementById("steps-list");
     list.innerHTML = "";
@@ -335,6 +374,82 @@ function initMap(pathCoords) {
 // =======================================================
 // 4. SỰ KIỆN NÚT BẤM
 // =======================================================
+
+// =======================================================
+// XỬ LÝ NÚT LẤY VỊ TRÍ (GPS)
+// =======================================================
+const btnGPS = document.getElementById("btn-use-gps");
+
+if (btnGPS) {
+    btnGPS.addEventListener("click", () => {
+        const startInput = document.getElementById("start-location");
+        
+        // 1. Kiểm tra trình duyệt có hỗ trợ không
+        if (!navigator.geolocation) {
+            alert("Trình duyệt của bạn không hỗ trợ định vị GPS.");
+            return;
+        }
+
+        // 2. Hiệu ứng đang tải
+        const originalText = btnGPS.innerText;
+        btnGPS.innerText = "⏳";
+        btnGPS.disabled = true;
+        if(startInput) startInput.value = "Đang lấy vị trí...";
+
+        // 3. Gọi API lấy vị trí
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // --- THÀNH CÔNG ---
+                YOUR_LAT = position.coords.latitude;
+                YOUR_LON = position.coords.longitude;
+
+                console.log("📍 GPS:", YOUR_LAT, YOUR_LON);
+
+                // Cập nhật giao diện
+                if(startInput) {
+                    startInput.value = `Vị trí của tôi `;
+                }
+                
+                // Trả lại nút bấm
+                btnGPS.innerText = "📍"; // Hoặc icon cũ
+                btnGPS.disabled = false;
+                
+                // Nếu bản đồ đang mở, cập nhật luôn marker xuất phát
+                if (map && markerStart) {
+                    markerStart.setLatLng([YOUR_LAT, YOUR_LON]).bindPopup("Vị trí hiện tại").openPopup();
+                    map.setView([YOUR_LAT, YOUR_LON], 13);
+                }
+            },
+            (error) => {
+                // --- THẤT BẠI ---
+                console.error("Lỗi GPS:", error);
+                let msg = "Không thể lấy vị trí.";
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        msg = "Bạn đã từ chối cấp quyền vị trí.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        msg = "Không xác định được vị trí.";
+                        break;
+                    case error.TIMEOUT:
+                        msg = "Hết thời gian chờ lấy vị trí.";
+                        break;
+                }
+                
+                alert(msg);
+                if(startInput) startInput.value = ""; // Xóa trắng nếu lỗi
+                btnGPS.innerText = originalText;
+                btnGPS.disabled = false;
+            },
+            {
+                enableHighAccuracy: true, // Lấy chính xác cao nhất có thể
+                timeout: 10000,           // Chờ tối đa 10 giây
+                maximumAge: 0             // Không dùng cache cũ
+            }
+        );
+    });
+}
 
 // Nút Quay lại (B2 -> B1)
 document.getElementById("btn-back-step1").addEventListener("click", () => {

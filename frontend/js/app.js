@@ -47,7 +47,7 @@ function updateNavbarForLoggedInUser() {
     <div class="user-info-group">
         <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
         <button class="btn-logout" onclick="logoutUser()">
-            <img src="../../images/logout.png" class="logout-icon" style="height: 16px;">
+            <img src="../images/logout.png" class="logout-icon" style="height: 16px;">
             <span data-i18n="nav_logout">Đăng xuất</span>
         </button>
     </div>
@@ -62,32 +62,19 @@ function getTranslation(key) {
     return currentTranslations[key] || key;
 }
 
-// Thay thế hàm applyTranslations cũ bằng hàm này
 function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(element => {
-        const keyRaw = element.getAttribute('data-i18n');
+        const key = element.getAttribute('data-i18n');
+        const translation = getTranslation(key);
         
-        // Kiểm tra xem có phải dịch thuộc tính không (ví dụ: [placeholder]val_my_location)
-        if (keyRaw.startsWith('[') && keyRaw.includes(']')) {
-            const parts = keyRaw.split(']');
-            const attribute = parts[0].replace('[', ''); // Lấy tên thuộc tính (vd: placeholder)
-            const key = parts[1]; // Lấy key (vd: val_my_location)
-            
-            // Dịch và gán vào thuộc tính
-            element.setAttribute(attribute, getTranslation(key));
-        } else {
-            // Dịch nội dung text bình thường
-            const translation = getTranslation(keyRaw);
-            if (element.tagName === 'BUTTON' || element.tagName === 'A') {
-                // Giữ lại icon nếu có, chỉ thay text node cuối cùng
-                if (element.lastChild && element.lastChild.nodeType === 3) {
-                    element.lastChild.textContent = translation;
-                } else {
-                    element.textContent = translation;
-                }
+        if (element.tagName === 'BUTTON' || element.tagName === 'A') {
+            if (element.lastChild && element.lastChild.nodeType === 3) {
+                element.lastChild.textContent = translation;
             } else {
                 element.textContent = translation;
             }
+        } else {
+            element.textContent = translation;
         }
     });
 }
@@ -145,7 +132,7 @@ function closeMenuOutside(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Load Navbar
-    fetch('components/navbar.html')
+    fetch('../components/navbar.html')
         .then(r => r.text())
         .then(html => { 
             document.getElementById('navbar-root').innerHTML = html; 

@@ -1,56 +1,40 @@
 // ================================================================
-// SUBMIT SEARCH - Updated for Python 3-Stage Backend
+// SUBMIT SEARCH - Đã lược bỏ Ngày & Số lượng khách
 // ================================================================
 
 function submitSearch() {
     // 1. Thu thập dữ liệu Cơ bản
     const city = document.getElementById("city").value;
+    
+    // Xử lý giá tiền (Nếu không nhập thì lấy mặc định)
     const priceMin = parseFloat(document.getElementById("price-min").value) || 0;
     const priceMax = parseFloat(document.getElementById("price-max").value) || 10000000;
     
-    // 2. Thu thập dữ liệu MỚI (Khách & Ngày)
-    const adults = parseInt(document.getElementById("adults").value) || 2;
-    const children = parseInt(document.getElementById("children").value) || 0;
-    const groupSize = adults + children;
-
-    const checkin = document.getElementById("checkin").value;   // YYYY-MM-DD
-    const checkout = document.getElementById("checkout").value; // YYYY-MM-DD
-
-    // 3. Thu thập Checkbox & Select
+    // 2. Thu thập Checkbox & Select (Loại hình, Hạng sao)
     const types = Array.from(document.querySelectorAll(".type-checkbox:checked")).map(c => c.value);
     
-    // Xử lý Hạng sao tối thiểu (Lấy giá trị nhỏ nhất được tick, hoặc 0 nếu không tick)
+    // Xử lý Hạng sao tối thiểu
     const starCheckboxes = Array.from(document.querySelectorAll(".star-checkbox:checked")).map(c => parseInt(c.value));
     const starsMin = starCheckboxes.length > 0 ? Math.min(...starCheckboxes) : 0;
 
-    // --- SỬA LỖI TẠI ĐÂY (Thay thế phần lấy min-rating và radius cũ) ---
-    
-    // Tìm thẻ input radio nào có name="min_rating" và đang được checked
+    // Xử lý Đánh giá (Rating) & Bán kính (Radius)
     const ratingEl = document.querySelector('input[name="min_rating"]:checked');
-    const ratingMin = ratingEl ? parseFloat(ratingEl.value) : 3; // Mặc định là 3 nếu chưa chọn
+    const ratingMin = ratingEl ? parseFloat(ratingEl.value) : 3; // Mặc định 3 sao
 
-    // Tìm thẻ input radio nào có name="radius" và đang được checked
     const radiusEl = document.querySelector('input[name="radius"]:checked');
-    const radiusKm = radiusEl ? parseFloat(radiusEl.value) : 5;  // Mặc định là 5km nếu chưa chọn
-
-    // -------------------------------------------------------------------
+    const radiusKm = radiusEl ? parseFloat(radiusEl.value) : 5;  // Mặc định 5km
 
     const amenitiesPreferred = Array.from(document.querySelectorAll(".amenity-preferred:checked")).map(c => c.value);
     const priority = document.getElementById("priority").value;
 
-    // 4. Tạo Payload chuẩn khớp với `SearchQuery` dataclass trong Python
+    // 3. Tạo Payload chuẩn (Đã bỏ group_size, checkin, checkout)
     const payload = {
         city: city,
-        group_size: groupSize,
-        adults: adults,       // MỚI
-        children: children,   // MỚI
-        checkin: checkin,     // MỚI
-        checkout: checkout,   // MỚI
         price_min: priceMin,
         price_max: priceMax,
         types: types,
         rating_min: ratingMin,
-        stars_min: starsMin,  // MỚI
+        stars_min: starsMin,
         amenities_preferred: amenitiesPreferred,
         radius_km: radiusKm,
         priority: priority
@@ -61,10 +45,11 @@ function submitSearch() {
     // Hiển thị loading
     showLoading(true);
     const relaxationNote = document.getElementById("relaxation-note");
-    if(relaxationNote) relaxationNote.style.display = 'none'; // Ẩn note cũ
+    if(relaxationNote) relaxationNote.style.display = 'none';
 
-    // Lưu ý: Không có dấu / ở cuối domain nếu trong đường dẫn đã có /
-const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
+    // Lưu ý: Đổi URL nếu deploy lên server thật (ví dụ: https://your-app.railway.app)
+    // Nếu chạy local thì giữ nguyên http://127.0.0.1:8000
+    const BASE_URL = 'http://127.0.0.1:8000'; 
 
     fetch(`${BASE_URL}/api/recommend-hotel`,{
         method: "POST",
@@ -79,7 +64,7 @@ const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
         console.log("✅ Backend Response:", response);
         showLoading(false);
 
-        // Xử lý Relaxation Note (Thông báo nếu hệ thống nới lỏng tiêu chí)
+        // Xử lý Relaxation Note
         if (response.relaxation_note) {
             const noteDiv = document.getElementById("relaxation-note");
             if (noteDiv) {
@@ -100,15 +85,16 @@ const BASE_URL = 'https://smart-tourism-system-production.up.railway.app';
         let displayList = [];
         if (response.results && response.results.length > 0) {
             displayList = response.results.map(item => {
-                // Merge score vào object accommodation để hiển thị
-                let acc = item.accommodation;
-                acc.match_score = item.score; 
+                let acc = item.accommodation ? item.accommodation : item;
+                if (item.score !== undefined) {
+                    acc.match_score = item.score;
+                }
                 return acc;
             });
 
             console.log("🎨 Rendering list:", displayList);
             if (typeof renderResults === 'function') {
-                renderResults(displayList);
+                renderResults(displayList, city); 
             }
         } else {
             showNoResults();
@@ -129,7 +115,7 @@ function showLoading(isLoading) {
             <div style="text-align:center; padding:50px;">
                 <div class="spinner" style="font-size:30px;">⏳</div>
                 <p>Đang tìm kiếm & xếp hạng theo thời gian thực...</p>
-                <small style="color:#666;">Quá trình này có thể mất vài giây để lấy dữ liệu mới nhất từ Google.</small>
+                <small style="color:#666;">Hệ thống đang lấy dữ liệu mới nhất từ Google...</small>
             </div>`;
     }
 }

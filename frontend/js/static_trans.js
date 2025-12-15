@@ -1,60 +1,63 @@
+// File: js/static_trans.js
+
 window.langData = {};
-let currentLang = 'vi';
+let currentLang = localStorage.getItem('lang') || 'vi'; 
 
 async function loadLanguage(lang) {
     try {
         currentLang = lang;
-        // LƯU Ý: Đường dẫn '../i18n/' giả định file html nằm trong thư mục con (vd: /pages/). 
-        // Nếu file html nằm ở root, hãy sửa thành 'i18n/'
-        const response = await fetch(`../i18n/${lang}.json`); 
-        if (!response.ok) throw new Error(`Không tải được ngôn ngữ ${lang}`);
-        
-        window.langData = await response.json();
-        localStorage.setItem('userLang', lang);
+        localStorage.setItem('lang', lang); 
 
-        // --- CẬP NHẬT LOGIC RENDER ---
-        // 1. Render lại danh sách (nếu có) để cập nhật nội dung động
-        if (typeof window.renderAccommodationList === 'function') {
-            // Trang Gợi ý
-            window.renderAccommodationList(); 
-        } else if (typeof window.renderResults === 'function' && window.homeResults) {
-            // Trang Yêu thích (Favorite)
-            window.renderResults(window.homeResults);
+        // --- SỬA LOGIC ĐƯỜNG DẪN ---
+        // Giả định mặc định file html nằm cùng cấp với folder i18n
+        let path = `i18n/${lang}.json`;
+        
+        // Kiểm tra thử xem có cần lùi ra thư mục cha không (cho các trang con)
+        const response = await fetch(path);
+        
+        if (!response.ok) {
+            // Nếu không tìm thấy, thử lùi lại 1 cấp (dành cho file trong folder con)
+            path = `../i18n/${lang}.json`;
+            const response2 = await fetch(path);
+            if (!response2.ok) throw new Error(`Không tìm thấy file ngôn ngữ tại: ${path}`);
+            window.langData = await response2.json();
+        } else {
+            window.langData = await response.json();
         }
 
-        // 2. Dịch các text tĩnh (data-i18n)
         applyTranslations();
-        
-        console.log(`Đã chuyển sang ngôn ngữ: ${lang}`);
+        console.log(`Đã tải ngôn ngữ: ${lang}`);
     } catch (e) {
-        console.error(e);
+        console.error("Lỗi tải ngôn ngữ:", e);
     }
 }
 
 function applyTranslations() {
+    if (!window.langData) return;
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        // Kiểm tra xem key có tồn tại trong langData không
-        if (window.langData && window.langData[key]) {
+        if (window.langData[key]) {
             if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
                 el.placeholder = window.langData[key];
                 if(el.classList.contains('input-readonly') && key === 'val_my_location') {
                      el.value = window.langData[key];
                 }
             } else {
-                // Sử dụng innerHTML nếu muốn chèn icon hoặc tag b, strong...
-                // Nếu chỉ là text thuần thì dùng innerText
-                el.innerText = window.langData[key];
+                el.innerHTML = window.langData[key];
             }
         }
     });
 }
 
 function changeLanguage(lang) {
-    loadLanguage(lang);
+    localStorage.setItem('lang', lang);
+    loadLanguage(lang); // Tải lại ngôn ngữ ngay lập tức
 }
 
+// Tự động chạy khi load trang
 document.addEventListener("DOMContentLoaded", () => {
-    const savedLang = localStorage.getItem('userLang') || 'vi';
-    loadLanguage(savedLang);
+    // Nếu trang không có navbar loader (trang lẻ), tự chạy luôn
+    if (!document.getElementById('navbar-root')) {
+        loadLanguage(currentLang);
+    }
 });

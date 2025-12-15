@@ -12,7 +12,7 @@
     <div class="language-selector">
         <div class="dropdown">
             <a href="#" class="dropdown-btn" onclick="toggleLanguageMenu(); return false;"> 
-                <img src="../../images/translation.png" class="icon" alt="Language Icon"> 
+                <img src="images/translation.png" class="icon" alt="Language Icon"> 
                 <span data-i18n="nav_language">Dịch</span>
                 <span> 🔽</span>
             </a>
@@ -109,7 +109,7 @@
     }
 
     async function loadAndApplyLanguage(lang) {
-        const filePath = `../i18n/${lang}.json`;
+        const filePath = `i18n/${lang}.json`;
         
         try {
             const response = await fetch(filePath);
