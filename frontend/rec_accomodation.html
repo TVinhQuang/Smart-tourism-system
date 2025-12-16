@@ -186,79 +186,71 @@
     </div>
 
     <script>
-    function logoutUser() {
-        localStorage.removeItem('loggedInUserEmail');
-        window.location.href = location.reload(); // Hoặc reload lại trang
-    }
+        // 1. Logic xử lý user đăng nhập
+        function logoutUser() {
+            localStorage.removeItem('loggedInUserEmail');
+            location.reload(); 
+        }
 
-    function formatEmail(email) {
-        if (!email) return "Người dùng";
-        const parts = email.split('@');
-        return parts[0]; 
-    }
+        function formatEmail(email) {
+            if (!email) return "Người dùng";
+            return email.split('@')[0]; 
+        }
 
-    function updateNavbarForLoggedInUser() {
-        const userEmail = localStorage.getItem('loggedInUserEmail'); 
-        const navbarRoot = document.getElementById('navbar-root');
-        
-        // Đảm bảo navbar đã được load xong mới thao tác
-        if (navbarRoot.innerHTML.trim() !== "") {
-            const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
-
-            if (userEmail) {
-                const displayName = formatEmail(userEmail);
-                if (loginButtonContainer) {
+        function updateNavbarForLoggedInUser() {
+            const userEmail = localStorage.getItem('loggedInUserEmail'); 
+            const navbarRoot = document.getElementById('navbar-root');
+            
+            // Chỉ chạy khi navbar đã có nội dung
+            if (navbarRoot && navbarRoot.innerHTML.trim() !== "") {
+                const loginButtonContainer = navbarRoot.querySelector('.nav-right'); 
+                if (userEmail && loginButtonContainer) {
+                    const displayName = formatEmail(userEmail);
                     loginButtonContainer.innerHTML = `
                         <div class="user-info-group">
-                            <span class="user-greeting">👋 Xin chào, <strong>${displayName}</strong></span>
+                            <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
                             <button class="btn-logout" onclick="logoutUser()">
                                 <img src="images/logout.png" class="logout-icon" style="height: 16px;">
-                                <span>Đăng xuất</span>
+                                <span data-i18n="nav_logout">Đăng xuất</span>
                             </button>
                         </div>
                     `;
                 }
-            } else {
-                // Nếu chưa đăng nhập, đảm bảo hiện nút Login
-                if (loginButtonContainer) {
-                    loginButtonContainer.innerHTML = `
-                        <a href="login.html" class="btn-login">
-                            <img src="images/login.png" class="login-icon">
-                            <span>Đăng nhập</span>
-                        </a>
-                    `;
-                }
             }
         }
-    }
 
-    // 2. Logic chạy khi tải trang
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('components/navbar.html')
-            .then(r => r.text())
-            .then(html => { 
-                document.getElementById('navbar-root').innerHTML = html; 
-                
-                // 1. Cập nhật user đăng nhập
-                updateNavbarForLoggedInUser();
+        // 2. Chạy khi trang load xong
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Load Navbar từ components/navbar.html (Đường dẫn đúng)
+            fetch('components/navbar.html')
+                .then(response => {
+                    if (!response.ok) throw new Error("Lỗi tải Navbar: " + response.status);
+                    return response.text();
+                })
+                .then(html => { 
+                    // Kiểm tra xem server có trả về lỗi 404 text không
+                    if (html.includes("Cannot GET") || html.startsWith("<!DOCTYPE")) {
+                        console.error("Nội dung Navbar không đúng định dạng HTML");
+                        return;
+                    }
 
-                // --- 2. THÊM ĐOẠN NÀY ĐỂ KÍCH HOẠT DỊCH (FIX LỖI) ---
-                // Lấy ngôn ngữ từ localStorage hoặc mặc định là 'vi'
-                const currentLang = localStorage.getItem('lang') || 'vi';
-                
-                // Kiểm tra nếu hàm loadAndApplyLanguage (từ file static_trans.js) đã sẵn sàng
-                if (typeof loadAndApplyLanguage === 'function') {
-                    loadAndApplyLanguage(currentLang).then(() => {
-                         // Nếu cần làm gì sau khi dịch xong thì viết ở đây
-                         console.log("Đã dịch sang: " + currentLang);
-                    });
-                } else {
-                    console.warn("Chưa tìm thấy hàm loadAndApplyLanguage. Kiểm tra lại file static_trans.js");
-                }
-                // -----------------------------------------------------
-            })
-            .catch(e => console.warn('Không thể load navbar component', e));
-    });
+                    document.getElementById('navbar-root').innerHTML = html; 
+                    
+                    // Cập nhật giao diện người dùng
+                    updateNavbarForLoggedInUser();
+
+                    // Kích hoạt dịch thuật sau khi Navbar đã chèn vào DOM
+                    const currentLang = localStorage.getItem('lang') || 'vi';
+                    // Kiểm tra hàm loadLanguage từ file static_trans.js
+                    if (typeof loadLanguage === 'function') {
+                        loadLanguage(currentLang);
+                    } else if (typeof loadAndApplyLanguage === 'function') {
+                        loadAndApplyLanguage(currentLang);
+                    }
+                })
+                .catch(e => console.error('Lỗi script navbar:', e));
+        });
     </script>
     
     <script src="js/navbar_loader.js"></script>

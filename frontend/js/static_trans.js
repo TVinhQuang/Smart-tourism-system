@@ -15,17 +15,16 @@ async function loadLanguage(lang) {
         // Kiểm tra thử xem có cần lùi ra thư mục cha không (cho các trang con)
         const response = await fetch(path);
         
-        if (!response.ok) {
-            // Nếu không tìm thấy, thử lùi lại 1 cấp (dành cho file trong folder con)
-            path = `../i18n/${lang}.json`;
-            const response2 = await fetch(path);
-            if (!response2.ok) throw new Error(`Không tìm thấy file ngôn ngữ tại: ${path}`);
-            window.langData = await response2.json();
-        } else {
-            window.langData = await response.json();
-        }
+        window.langData = await response.json();
 
         applyTranslations();
+
+        // 2. [THÊM MỚI] Dịch nội dung động (Danh sách khách sạn)
+        // Kiểm tra nếu hàm renderAccommodationList tồn tại (được load từ homepage.js) thì chạy lại nó
+        if (typeof window.renderAccommodationList === 'function') {
+            window.renderAccommodationList();
+        }
+
         console.log(`Đã tải ngôn ngữ: ${lang}`);
     } catch (e) {
         console.error("Lỗi tải ngôn ngữ:", e);

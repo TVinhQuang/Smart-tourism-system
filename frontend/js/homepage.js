@@ -263,7 +263,8 @@ function renderAccommodationList() {
     if (!container) return;
     container.innerHTML = "";
 
-    const currentLang = localStorage.getItem('userLang') || 'vi'; 
+    // Sửa 'userLang' thành 'lang' để khớp với static_trans.js
+    const currentLang = localStorage.getItem('lang') || 'vi';
     const STORAGE_KEY = 'favoriteAccommodations';
     let favorites = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 

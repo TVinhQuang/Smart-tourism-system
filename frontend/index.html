@@ -208,7 +208,7 @@
                 if (loginButtonContainer) {
                     loginButtonContainer.innerHTML = `
                         <div class="user-info-group" style="display:flex; align-items:center; gap:10px;">
-                            <span class="user-greeting" style="color:white;">👋 Xin chào, <strong>${displayName}</strong></span>
+                            <span class="user-greeting">👋 <span data-i18n="nav_greeting">Xin chào,</span> <strong>${displayName}</strong></span>
                             <button class="btn-logout" onclick="logoutUser()" style="padding:5px 10px; cursor:pointer;">
                                 <span>Đăng xuất</span>
                             </button>

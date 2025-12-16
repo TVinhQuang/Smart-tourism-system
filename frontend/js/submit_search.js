@@ -23,7 +23,12 @@ function submitSearch() {
     const amenitiesPreferred = Array.from(document.querySelectorAll(".amenity-preferred:checked")).map(c => c.value);
     const priority = document.getElementById("priority")?.value || "price";
 
-    // 3. Tạo Payload chuẩn
+    // ... (Đoạn thu thập dữ liệu city, priceMin...)
+
+    // 1. Lấy ngôn ngữ hiện tại (Thêm đoạn này)
+    const currentLang = localStorage.getItem('userLang') || 'vi';
+
+    // 2. Tạo Payload chuẩn (Sửa đoạn này)
     const payload = {
         city: city,
         price_min: priceMin,
@@ -33,7 +38,8 @@ function submitSearch() {
         radius_km: radiusKm,
         amenities_preferred: amenitiesPreferred,
         stars_min: starsMin,
-        priority: priority
+        priority: priority,
+        lang: currentLang // <--- QUAN TRỌNG: Gửi ngôn ngữ lên server
     };
 
     console.log("📤 Sending Payload:", payload);
